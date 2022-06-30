@@ -1,0 +1,4 @@
+numpy
+pint
+forex_python
+jsons

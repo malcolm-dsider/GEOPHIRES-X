@@ -1,0 +1,4 @@
+#Gradient
+[gradient] = [temperature] / [length]
+CooperC = degC/km = deg.C/km
+CooperF = CooperC * 1.60934 * 1.7999 = degF/mi = deg.F/mi
