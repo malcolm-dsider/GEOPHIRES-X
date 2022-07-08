@@ -1,8 +1,7 @@
 import sys
 import math
 import numpy as np
-from GeoPHIRESUtils import DumpObjectAsJson, ReadParameter
-from Parameter import floatParameter, intParameter, boolParameter, strParameter, OutputParameter
+from Parameter import floatParameter, intParameter, boolParameter, strParameter, OutputParameter, ReadParameter
 from Units import *
 import Model
 from OptionList import ReservoirModel
@@ -13,12 +12,12 @@ class WellBores:
         The __init__ function is the constructor for a class.  It is called whenever an instance of the class is created.  The __init__ function can take arguments, but self is always the first one. Self refers to the instance of the object that has already been created and it's used to access variables that belong to that object.&quot;
         
         :param self: Reference the class object itself
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
 
         :return: Nothing, and is used to initialize the class
         :doc-author: Malcolm Ross
         """
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #Set up all the Parameters that will be predefined by this class using the different types of parameter classes.  Setting up includes giving it a name, a default value, The Unit Type (length, volume, temperature, etc) and Unit Name of that value, sets it as required (or not), sets allowable range, the error message if that range is exceeded, the ToolTip Text, and the name of teh class that created it.
         #This includes setting up temporary variables that will be available to all the class but noy read in by user, or used for Output
@@ -43,6 +42,7 @@ class WellBores:
         self.Phydrostatic = self.ParameterDict[self.Phydrostatic.Name] = floatParameter("Reservoir Hydrostatic Pressure", value = 1E2, Min=1E2, Max=1E5, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL, ErrMessage = "calculate reservoir hydrostatic pressure using built-in correlation", ToolTipText="Reservoir hydrostatic far-field pressure.  Default value is calculated with built-in modified Xie-Bloomfield-Shook equation (DOE, 2016).")
         self.II = self.ParameterDict[self.II.Name] = floatParameter("Injectivity Index", value = 10.0, Min=1E-2, Max=1E4, UnitType = Units.INJECTIVITY_INDEX, PreferredUnits = InjectivityIndexUnit.KGPERSECPERBAR, CurrentUnits = InjectivityIndexUnit.KGPERSECPERBAR, ErrMessage = "assume default injectivity index (10 kg/s/bar)", ToolTipText="Injectivity index defined as ratio of injection well flow rate over injection well outflow pressure drop (flowing bottom hole pressure - hydrostatic reservoir pressure).")
         self.PI = self.ParameterDict[self.PI.Name] = floatParameter("Productivity Index", value = 10.0, Min=1E-2, Max=1E4, UnitType = Units.PRODUCTIVITY_INDEX, PreferredUnits = ProductivityIndexUnit.KGPERSECPERBAR, CurrentUnits = ProductivityIndexUnit.KGPERSECPERBAR, ErrMessage = "assume default productivity index (10 kg/s/bar)", ToolTipText="Productivity index defined as ratio of production well flow rate over production well inflow pressure drop (see docs)")
+        self.maxdrawdown = self.ParameterDict[self.maxdrawdown.Name] = floatParameter("Maximum Drawdown", value = 1.0, Min=0.0, Max=1.000001, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage = "assume default maximum drawdown (1)", ToolTipText="Maximum allowable thermal drawdown before redrilling of all wells into new reservoir (most applicable to EGS-type reservoirs with heat farming strategies). E.g. a value of 0.2 means that all wells are redrilled after the production temperature (at the wellhead) has dropped by 20% of its initial temperature")
 
         #MIR
         self.Pinjwellhead = 0.0
@@ -66,36 +66,25 @@ class WellBores:
         self.DP3 = self.OutputParameterDict[self.DP3.Name] = OutputParameter(Name = "Production Well Pump Pressure Drop", value=-999.9, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
         self.DP4 = self.OutputParameterDict[self.DP4.Name] = OutputParameter(Name = "Bouyancy Pressure Drop", value=-999.9, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
         self.ProducedTemperature = self.OutputParameterDict[self.ProducedTemperature.Name] = OutputParameter(Name = "Produced Temperature", value=-999.9, UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
-        self.PumpingPower = self.OutputParameterDict[self.PumpingPower.Name] = OutputParameter(Name = "Pumping Power", value=-999.9, UnitType = Units.ELECTRICITY, PreferredUnits = ElectricityUnit.MW, CurrentUnits = ElectricityUnit.MW)
+        self.PumpingPower = self.OutputParameterDict[self.PumpingPower.Name] = OutputParameter(Name = "Pumping Power", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
         self.Pprodwellhead = self.OutputParameterDict[self.Pprodwellhead.Name] = OutputParameter(Name = "Production wellhead pressure", value=-999.9, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
 
-        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
     def __str__(self):
         return "WellBores"
-
-    def dump_self_as_Json(self)->str: return(DumpObjectAsJson(self))
-
-    def read_parameter_from_Json(self, dJson):
-        for item in dJson.items():
-            if item[0] in self.ParameterDict:
-                if isinstance(self.ParameterDict[item[0]], floatParameter): val = float(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], intParameter): val = int(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], boolParameter): val = bool(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], strParameter): val = str(item[1]['Value'])
-                self.ParameterDict[item[0]].value = val
 
     def read_parameters(self, model:Model) -> None:
         """
         The read_parameters function reads in the parameters from a dictionary and stores them in the aparmeters.  It also handles special cases that need to be handled after a value has been read in and checked.  If you choose to sublass this master class, you can also choose to override this method (or not), and if you do
         
         :param self: Access variables that belong to a class
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
 
         :return: None
         :doc-author: Malcolm Ross
         """
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #Deal with all the parameter values that the user has provided.  They should really only provide values that they want to change from the default values, but they can provide a value that is already set because it is a defaulr value set in __init__.  It will ignore those.
         #This also deals with all the special cases that need to be talen care of after a vlaue has been read in and checked.
@@ -129,7 +118,7 @@ class WellBores:
                         else: self.usebuiltinppwellheadcorrelation = False
         else:
             model.logger.info("No parameters read becuase no content provided")
-        model.logger.info("read parameters complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("read parameters complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
     
     def vaporpressurewater(self, Twater) -> float: 
         if Twater < 100:
@@ -149,11 +138,11 @@ class WellBores:
         This function can be called multiple times, and will only recalculate what has changed each time it is called.
         
         :param self: Access variables that belongs to the class
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
         :return: Nothing, but it does make calculations and set values in the model
         :doc-author: Malcolm Ross
         """
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #This is where all the calcualtions are made using all the values that have been set.
         #If you sublcass this class, you can choose to run these calculations before (or after) your calculations, but that assumes you have set all the values that are required for these calculations
@@ -178,7 +167,7 @@ class WellBores:
 
         #redrilling
         if model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.SINGLE_FRACTURE, ReservoirModel.ANNUAL_PERCENTAGE]: #only applies to the built-in analytical reservoir models
-            indexfirstmaxdrawdown = np.argmax(self.ProducedTemperature.value<(1-model.reserv.maxdrawdown.value)*self.ProducedTemperature.value[0])
+            indexfirstmaxdrawdown = np.argmax(self.ProducedTemperature.value<(1-model.wellbores.maxdrawdown.value)*self.ProducedTemperature.value[0])
             if indexfirstmaxdrawdown > 0:   #redrilling necessary
                 self.redrill = int(np.floor(len(self.ProducedTemperature.value)/indexfirstmaxdrawdown))
                 ProducedTemperatureRepeatead = np.tile(self.ProducedTemperature.value[0:indexfirstmaxdrawdown], self.redrill+1)
@@ -310,4 +299,4 @@ class WellBores:
             #negative pumping power values become zero (b/c we are not generating electricity)
             self.PumpingPower.value = [0. if x<0. else x for x in self.PumpingPower.value]
       
-        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)

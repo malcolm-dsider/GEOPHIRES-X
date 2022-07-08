@@ -1,0 +1,151 @@
+End-Use Option,2
+Circulation Pump Efficiency,0.75
+Utilization Factor,0.55
+End-Use Efficiency Factor,0.9
+CHP Fraction,0.5
+CHP Bottoming Entering Temperature,150
+Plant Outlet Pressure,-1
+Number of Production Wells,1
+Production Well Diameter,7
+Number of Injection Wells,1
+Injection Well Diameter,7
+Number of Segments,3
+Gradient 1,33.2
+Thickness 1,1
+Gradient 2,45.2
+Thickness 2,0.4
+Gradient 3,25.4
+Thickness 3,0.4
+Gradient 4,42
+Thickness 4,0.07
+Ramey Production Wellbore Model,1
+Production Wellbore Temperature Drop,5
+Injection Wellbore Temperature Gain,0
+Production Flow Rate per Well,20
+Production Wellhead Pressure,2500
+Reservoir Model,1
+Reservoir Depth,1.547
+Reservoir Volume Option,4
+Reservoir Volume,1000000000
+Reservoir Heat Capacity,840
+Reservoir Density,2700
+Reservoir Thermal Conductivity,1.30
+Reservoir Porosity,0.04
+Reservoir Permeability,1E-13
+Reservoir Thickness,250
+Reservoir Width,500
+Well Separation,1000
+Water Loss Fraction,0.02
+Reservoir Impedance,0.1
+Productivity Index,5
+Injectivity Index,5
+Reservoir Hydrostatic Pressure,-1
+Maximum Drawdown,1
+Drawdown Parameter,0.005
+Reservoir Output File Name,0
+TOUGH2 Model/File Name,0
+Fracture Shape,3
+Number of Fractures,10
+Fracture Separation,0.5
+Fracture Area,25
+Fracture Height,2
+Fracture Width,500
+Economic Model,1
+Plant Lifetime,30
+Plant Construction,1
+Total Capital Cost,-1
+Well Drilling and Completion Capital Cost,-1
+Reservoir Stimulation Capital Cost,-1
+Exploration Capital Cost,-1
+Surface Plant Capital Cost,-1
+Total O&M Cost,-1
+Wellfield O&M Cost,-1
+Surface Plant O&M Cost,-1
+Water Cost,-1
+ElecStartPrice,50
+ElecEndPrice,100
+ElecEscalationRate,5
+ElecEscalationStart,10
+HeatStartPrice,10
+HeatEndPrice,30
+HeatEscalationRate,1
+HeatEscalationStart,7
+Fixed Charge Rate,0.05
+Discount Rate,0.07
+Fraction of Investment in Bonds,0.5
+Inflated Bond Interest Rate,0.05
+Inflated Equity Interest Rate,0.1
+Inflation Rate,0.02
+Combined Income Tax Rate,0.3
+Gross Revenue Tax Rate,0
+Investment Tax Credit Rate,0
+Property Tax Rate,0
+Well Drilling and Completion Capital Cost Adjustment Factor,1
+Reservoir Stimulation Capital Cost Adjustment Factor,1
+Surface Plant Capital Cost Adjustment Factor,1
+Field Gathering System Capital Cost Adjustment Factor,1
+Exploration Capital Cost Adjustment Factor,1
+Wellfield O&M Cost Adjustment Factor,1
+Water Cost Adjustment Factor,1
+Surface Plant O&M Cost Adjustment Factor,1
+Inflation Rate During Construction,0
+Fixed Internal Rate,6.25
+Electricity Rate,0.07
+Heat Rate,0.02
+Well Drilling Cost Correlation,1
+Annual License etc,0
+Flat License etc,0
+Total Grant,0
+Tax Relief,0
+Other Incentives,0
+LACE Target,-1
+LACE Year,2024
+LACE Region,0
+Surface Temperature,15
+Ambient Temperature,15
+Injection Temperature,22
+Maximum Temperature,65
+Gradient,0
+CarbonModel,0
+CCUSStartPrice,40
+CCUSEndPrice,200
+CCUSYearsAfterStart,5
+CCUSEscalationStart,10
+CCUSEscalationRate,30
+CCUSGridCO2,477.55
+Section 45Q US tax credit applies,0
+Section 45Q US tax credit,0
+EU (or other) carbon tax credit applies,0
+Time steps per year,6
+Print Output to Console,1
+include Add-ons,0
+Add-on1Nickname,DesalPlant
+Add1CAPEX,0
+Add1OPEX,0
+Add1ElecGained,0
+Add1HeatGained,0
+Add1AdditionalProfit,0
+Add-on2Nickname,LithiumExtractionPlant
+Add2CAPEX,0
+Add2OPEX,0
+Add2ElecGained,0
+Add2HeatGained,0
+Add2AdditionalProfit,0
+Add-on3Nickname,Greenhouse
+Add3CAPEX,0
+Add3OPEX,0
+Add3ElecGained,0
+Add3HeatGained,0
+Add3AdditionalProfit,0
+Add-on4Nickname,MethaneProcessing
+Add4CAPEX,0
+Add4OPEX,0
+Add4ElecGained,0
+Add4HeatGained,0
+Add4AdditionalProfit,0
+Add-on5Nickname,CarbonProcessing
+Add5CAPEX,0
+Add5OPEX,0
+Add5ElecGained,0
+Add5HeatGained,0
+Add5AdditionalProfit,0

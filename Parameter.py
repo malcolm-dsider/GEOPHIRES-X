@@ -1,21 +1,20 @@
 import sys
 from array import array
+from typing import List
 from dataclasses import dataclass, field
 from enum import IntEnum
-import jsons
 from forex_python.converter import CurrencyRates, CurrencyCodes
 import pint
+import Model
 from Units import *
 
 ureg = pint.UnitRegistry()
 ureg.load_definitions('GEOPHIRES3_newunits.txt') 
 
 @dataclass
-class ParameterEntry(jsons.JsonSerializable):
+class ParameterEntry():
     """A dataclass that contains the three fields that are being read from thje user-provided file
 
-    Args:
-        jsons.JsonSerializable (???): Makes thi class serializable
     Attributes:
         Name (str): The official name of the parmeter that the user wants to set
         sValue (str): The value that the user wants it to be set to, as a string.
@@ -101,7 +100,7 @@ class intParameter(Parameter):
     """
     value: int = 0
     DefaultValue: int = 0
-    AllowableRange: list[int] = field(default_factory=list)
+    AllowableRange: List[int] = field(default_factory=list)
  
 @dataclass
 class floatParameter(Parameter):
@@ -142,8 +141,8 @@ class listParameter(Parameter):
         Min (float, -1.8e308): minimum valid value of each value in the list - not that it is set to a very small value, which means that any value is valid by default
         Min (float, 1.8e308): maximum valid value of each va;ue in the list - not that it is set to a very large value, which means that any value is valid by default 
     """
-    value:  list[int] = field(default_factory=list)
-    DefaultValue: list[int] = field(default_factory=list)
+    value:  List[float] = field(default_factory=list)
+    DefaultValue: List[float] = field(default_factory=list)
     Min: float = -1.8e308
     Max: float = 1.8e308
 
@@ -162,13 +161,13 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
     Yields:
         None
     """
-    model.logger.info("Init " + str(__name__) + ": " + sys._getframe(  ).f_code.co_name + " for " + ParamToModify.Name)
+    model.logger.info("Init " + str(__name__) + ": " + sys._getframe().f_code.co_name + " for " + ParamToModify.Name)
     if isinstance(ParamToModify, boolParameter) and isinstance(ParamToModify, strParameter):        #these Parameter Types don't have units so don't do anything fancy, and ingore it if the user has supplied units
         if isinstance(ParamToModify, boolParameter): ParamToModify.value = bool(ParameterReadIn.sValue)
         else: ParamToModify.value = ParameterReadIn.sValue
         ParamToModify.Provided = True      #set provided to true because we are using a user provide value now
         ParamToModify.Valid = True      #set Valid to true because it passed the validation tests
-        model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
         return
 
     #deal with the case where the value has a unit involved - that will be indicated by a space in it
@@ -185,7 +184,7 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
         if not (New_val in ParamToModify.AllowableRange):   #user provided value is out of range, so announce it, leave set to whatever it was set to (default value)
             if len(ParamToModify.ErrMessage) > 0: print("Warning: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
             if len(ParamToModify.ErrMessage) > 0: model.logger.warning("Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
-            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
+            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
             return
         else:   #All is good
             ParamToModify.value = New_val     #set the new value
@@ -194,12 +193,12 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
     elif isinstance(ParamToModify, floatParameter):
         New_val = float(ParameterReadIn.sValue)
         if New_val == ParamToModify.value:
-            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
+            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
             return #We have nothing to change - user provide value that was the same as the existing value (likely, the default value)
         if (New_val < float(ParamToModify.Min)) or (New_val > float(ParamToModify.Max)):   #user provided value is out of range, so announce it, leave set to whatever it was set to (default value)
             if len(ParamToModify.ErrMessage) > 0: print("Warning: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
             if len(ParamToModify.ErrMessage) > 0: model.logger.warning("Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
-            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
+            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
             return
         else:   #All is good
             ParamToModify.value = New_val     #set the new value
@@ -210,7 +209,7 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
         if (New_val < float(ParamToModify.Min)) or (New_val > float(ParamToModify.Max)):   #user provided value is out of range, so announce it, leave set to whatever it was set to (default value)
             if len(ParamToModify.ErrMessage) > 0: print("Warning: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
             if len(ParamToModify.ErrMessage) > 0: model.logger.warning("Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
-            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
+            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
             return
         else:   #All is good.  With a list, we have to use the last character of the Description to get the position.  I.e., "Gradient 1" should yield a position = 0 ("1" - 1)
             parts = ParameterReadIn.Name.split(' ')
@@ -223,7 +222,7 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
         if ParameterReadIn.sValue == "0": New_val = False
         else: New_val = True
         if New_val == ParamToModify.value:
-           model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
+           model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
            return   #We have nothing to change - user provide value that was the same as the existing value (likely, the default value)
         ParamToModify.value = New_val     #set the new value
         ParamToModify.Provided = True      #set provided to true because we are using a user provide value now
@@ -235,7 +234,7 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
         ParamToModify.Provided = True      #set provided to true because we are using a user provide value now
         ParamToModify.Valid = True      #set Valid to true because it passed the validation tests
 
-    model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
+    model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
     
 def CovertUnits(ParamToModify, strUnit: str,  model) -> str:
     """
@@ -249,13 +248,10 @@ def CovertUnits(ParamToModify, strUnit: str,  model) -> str:
     Returns:
         str: The new value as a string (without the units, because they are already held in PreferredUnits of ParamToModify)
     """
-    model.logger.info("Init " + str(__name__) + ": " + sys._getframe(  ).f_code.co_name + " for " + ParamToModify.Name)
+    model.logger.info("Init " + str(__name__) + ": " + sys._getframe().f_code.co_name + " for " + ParamToModify.Name)
     
     #deal with the currency case
-    if ParamToModify.UnitType == Units.CURRENCY:
-        prefFactor = 1.0
-        PrefperYear = ""
-        CurrperYear = ""
+    if ParamToModify.UnitType in [Units.CURRENCY, Units.CURRENCYFREQUENCY, Units.COSTPERMASS, Units.ENERGYCOST]:
         prefType = ParamToModify.PreferredUnits.value
         parts = strUnit.split(' ')
         val = parts[0].strip()
@@ -265,93 +261,66 @@ def CovertUnits(ParamToModify, strUnit: str,  model) -> str:
             ParamToModify.UnitsMatch = True
             ParamToModify.CurrentUnits = currType
             return strUnit
+
+        #First we need to deal the the possibility that there is a suffix on the units (like /yr, kwh, or /tonne) that will make it not be recognized by the currency conversion engine.
+        #generally, we will just strip the suffux off of a copy of the string that represents the units, then allow the conversion to happen. For now, we ignore the suffix.
+        #this has the consequence that we don't do any conversion based on that suffix, so units like EUR/MMBTU will trigger a conversion to USD/MMBTU, where MMBY+TU dosesn't get converted to KW (or whatever)  
+        currSuff = prefSuff = ""
+        elements = currType.split("/")
+        if len(elements) > 1:
+            currType = elements[0]    #strip off the suffix, but save it
+            currSuff = "/" + elements[1]
+        elements = prefType.split("/")
+        if len(elements) > 1:
+            prefType = elements[0]    #strip off the suffix, but save it
+            prefSuff = "/" + elements[1]
             
-        if prefType.endswith("/yr"):  #handle the /yr situation
-            PrefperYear = "/yr"
-            prefType = prefType.replace("/yr", "")
-        if currType.endswith("/yr"):
-            CurrperYear = "/yr"
-            currType = currType.replace("/yr", "")
+        # Let's try to deal with first the simple conversion where the required units have a prefix like M (m) or K (k) that means "million" or "thousand", like MUSD (or KUSD), and the user provided USD (or KUSD) or KEUR, MEUR
+        # we have to deal with the case that the M, m, K, or k are NOT prefixes, but rather are a part of the currency name.
+        cc = CurrencyCodes()
+        currFactor = prefFactor = 1.0
+        currPrefix = prefPrefix = False
+        Factor = 1.0
+        prefShort = prefType
+        currShort = currType
+        symbol = cc.get_symbol(prefType[1:])    # if either of these returns a symbol, then we must have prefixes we need to deal with
+        symbol2 = cc.get_symbol(currType[1:])
+        if symbol != None: prefPrefix = True
+        if symbol2 != None: currPrefix = True
+        if prefPrefix and prefType[0] in ['M', 'm']: prefFactor = prefFactor * 1000000.0
+        elif prefPrefix and prefType[0] in ['K', 'k']: prefFactor = prefFactor * 1000.0
+        if currPrefix and currType[0] in ['M', 'm']: currFactor = currFactor / 1000000.0
+        elif currPrefix and currType[0] in ['K', 'k']: currFactor = currFactor / 1000.0
+        Factor = currFactor * prefFactor
+        if prefPrefix: prefShort = prefType[1:]
+        if currPrefix: currShort = currType[1:]
+        if prefShort == currShort:      # this is true, then we just have a conversion between KUSD and USD, MUSD to KUSD, MUER to EUR, etc, so just do the simple factor conversion
+            val = float(val) * Factor
+            strUnit = str(val)
+            ParamToModify.UnitsMatch = True
+            ParamToModify.CurrentUnits = currType
+            return strUnit
             
-        if prefType.endswith("/kwh"):  #handle the /yr situation
-            PrefperYear = "/kwh"
-            prefType = prefType.replace("/kwh", "")
-        if currType.endswith("/kwh"):
-            CurrperYear = "/kwh"
-            currType = currType.replace("/kwh", "")
-
-        if prefType.startswith("MUSD") and currType.startswith("USD"):     # if the type are not equal, the user provided that is not the preferred type.  Let's try to deal with first the simple case where the require units are MUSD (or KUSD), and the user provided USD (or KUSD)
-            ParamToModify.UnitsMatch = False
-            ParamToModify.CurrentUnits = currType + CurrperYear
-            val = float(val) / 1000000.0
-            strUnit = str(val)
-            prefType = prefType.replace("M","", 1)
-        elif prefType.startswith("KUSD") and currType.startswith("USD"):
-            ParamToModify.UnitsMatch = False
-            ParamToModify.CurrentUnits = currType + CurrperYear
-            val = float(val) / 1000.0
-            strUnit = str(val)
-            prefType = prefType.replace("K","", 1)
-        elif prefType.startswith("USD") and currType.startswith("MUSD"):
-            ParamToModify.CurrentUnits = currType + CurrperYear
-            ParamToModify.UnitsMatch = False
-            val = float(val) * 1000000.0
-            strUnit = str(val)
-            currType = prefType.replace("M","", 1)
-        elif prefType.startswith("USD") and currType.startswith("KUSD"):
-            ParamToModify.UnitsMatch = False
-            ParamToModify.CurrentUnits = currType + CurrperYear
-            val = float(val) / 1000.0
-            strUnit = str(val)
-            currType = prefType.replace("K","", 1)
-
-        if prefType != currType:      #Now lets deal with the case where the units still don't match.  Could be a straight EUR to USD conversion, but the units need to be MEUR to MUSD.
-            cc = CurrencyCodes()
-            symbol = cc.get_symbol(currType)     #if we have a symbol for a currency type, then the type is known to the library.  If we don't try dsome tricks to make it into something it does do recognize
-            if symbol == None:
-                if currType.startswith('M') or currType.startswith('m') or currType.startswith('K') or currType.startswith('k'):   # maybe they put a K or k in front of a currency type (i,e. KUSD) to denote kilo or an M or m (MUSD) to denote million (but note that some currency symbols start with M or K, so we can't assume anything)
-                    if currType.startswith('M'): currType2 = currType.replace("M","", 1)
-                    if currType.startswith('m'): currType2 = currType.replace("m","", 1)
-                    x = cc.get_symbol(currType2)   #check to see if we get a symbol from that type.  If we do, then we know they used MUSD
-                    if x == None:
-                        if currType.startswith('K'): currType2 = currType.replace("K","", 1)
-                        if currType.startswith('k'): currType2 = currType.replace("k","", 1)
-                        x = cc.get_symbol(currType)
-                        if x == None:    #No idea what they did!!!
-                            print("Error: GEOPHIRES failed to convert your currency for " + ParamToModify.Name + " to something it understands. You gave " + strUnit + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + ParamToModify.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
-                            model.logger.critical("Error: GEOPHIRES failed to convert your currency for " + ParamToModify.Name + " to something it understands. You gave " + strUnit + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + ParamToModify.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
-                            sys.exit()
-                        else:
-                            currType  = currType2
-                            prefFactor = 1/1000.0
-                    else:
-                        currType  = currType2
-                        prefFactor = 1/1000000.0
-
-            if prefType.startswith("MUSD"):     # User has used the MUSD as the shorthand preferred unit.  This means nothing to the exchange rate library, change it to something that the library understands, and set a multiplier factor
-                prefFactor = 1000000.0 * prefFactor
-                prefType = prefType.replace("M","", 1)
-            elif prefType.startswith("KUSD"):
-                prefFactor = 1000.0 * prefFactor
-                prefType = prefType.replace("K","", 1)
-            try:
-                cr = CurrencyRates()
-                conv_rate = cr.get_rate(currType, prefType)
-            except BaseException as ex:
-                print (str(ex))
-                print("Error: GEOPHIRES failed to convert your currency for " + ParamToModify.Name + " to something it understands. You gave " + strUnit + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + ParamToModify.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
-                model.logger.critical(str(ex))
-                model.logger.critical("Error: GEOPHIRES failed to convert your currency for " + ParamToModify.Name + " to something it understands. You gave " + strUnit + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + ParamToModify.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
-                sys.exit()                
-            New_val = (conv_rate * float(val)) / prefFactor
-            strUnit = str(New_val)
-            ParamToModify.UnitsMatch = False
-            ParamToModify.CurrentUnits = parts[1]
-        else:
-            if len(PrefperYear) > 0: prefType = prefType + PrefperYear   #set it back the way it was
-            if len(CurrperYear) > 0: currType = currType + CurrperYear
-            parts = strUnit.split(' ')
-            strUnit = parts[0]
+        # if we come here, we have a currency conversion to do (USD->EUR, etc).
+        try:
+            cr = CurrencyRates()
+            conv_rate = cr.get_rate(currShort, prefShort)
+        except BaseException as ex:
+            print (str(ex))
+            print("Error: GEOPHIRES failed to convert your currency for " + ParamToModify.Name + " to something it understands. You gave " + strUnit + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + ParamToModify.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
+            model.logger.critical(str(ex))
+            model.logger.critical("Error: GEOPHIRES failed to convert your currency for " + ParamToModify.Name + " to something it understands. You gave " + strUnit + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + ParamToModify.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
+            sys.exit()                
+        New_val = (conv_rate * float(val)) * Factor
+        strUnit = str(New_val)
+        ParamToModify.UnitsMatch = False
+        ParamToModify.CurrentUnits = parts[1]
+    
+        if len(prefSuff) > 0: prefType = prefType + prefSuff   #set it back the way it was
+        if len(currSuff) > 0: currType = currType + currSuff
+        parts = strUnit.split(' ')
+        strUnit = parts[0]
+        return strUnit
 
     else:  #must be something other than boolean, string, or currency
         if isinstance(strUnit, pint.Quantity):
@@ -373,7 +342,7 @@ def CovertUnits(ParamToModify, strUnit: str,  model) -> str:
             sys.exit()
 
         if Old_valQ.units != New_valQ.units:    #do the transformation only if the units don't match
-            ParamToModify.CurrentUnits = LookupUnits(currType, ParamToModify.UnitType)
+            ParamToModify.CurrentUnits = LookupUnits(currType)[0]
             try:
                 New_valQ.ito(Old_valQ) #ParamToModify.PreferredUnits.value)    #update The quanity to the preferred units so we don't have to change the underlying calculations.  This assumes that PInt recognizes our unit.  If we have a new unit, we have to add it to the Pint configuration text file
             except BaseException as ex:
@@ -389,7 +358,7 @@ def CovertUnits(ParamToModify, strUnit: str,  model) -> str:
             parts = strUnit.split(' ')
             strUnit = parts[0]
 
-    model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
+    model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
     return strUnit
 
 def CovertUnitsBack(ParamToModify, model):
@@ -400,82 +369,54 @@ def CovertUnitsBack(ParamToModify, model):
         ParamToModify (Parameter): The Parameter that will be modified.
         model (Model):  The container class of the application, giving access to everything else, including the logger
     """
-    model.logger.info("Init " + str(__name__) + ": " + sys._getframe(  ).f_code.co_name + " for " + ParamToModify.Name)
+    model.logger.info("Init " + str(__name__) + ": " + sys._getframe().f_code.co_name + " for " + ParamToModify.Name)
     
     #deal with the currency case
-    if ParamToModify.UnitType == Units.CURRENCY:
+    if ParamToModify.UnitType in [Units.CURRENCY, Units.CURRENCYFREQUENCY, Units.COSTPERMASS, Units.ENERGYCOST]:
         prefType = ParamToModify.PreferredUnits.value
         currType = ParamToModify.CurrentUnits
 
-        #Let's try to deal with first the simple conversion where the require units are MUSD (or KUSD), and the user provided USD (or KUSD)
-        if prefType.startswith("MUSD") and currType.startswith("USD"):
-            ParamToModify.value = ParamToModify.value * 1000000.0
-            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
-            return
-        elif prefType.startswith("KUSD") and currType.startswith("USD"):
-            ParamToModify.value = ParamToModify.value * 1000.0
-            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
-            return
-        elif prefType.startswith("USD") and currType.startswith("MUSD"):
-            ParamToModify.value = ParamToModify.value / 1000000.0
-            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
-            return
-        elif prefType.startswith("USD") and currType.startswith("KUSD"):
-            ParamToModify.value = ParamToModify.value / 1000.0
-            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
-            return
-
-        #Now lets deal with the case where the units still don't match.  Could be a straight EUR to USD conversion, but the units need to be MEUR to MUSD.
-        prefFactor = 1.0
-        PrefperYear = ""
-        CurrperYear = ""
-        val = ParamToModify.value
-
-        #handle the /yr situation
-        if prefType.endswith("/yr"):
-            PrefperYear = "/yr"
-            prefType = prefType.replace("/yr", "")
-        if currType.endswith("/yr"):
-            CurrperYear = "/yr"
-            currType = currType.replace("/yr", "")
-        
-        #handle the /kwh situation
-        if prefType.endswith("/kwh"):
-            PrefperYear = "/kwh"
-            prefType = prefType.replace("/kwh", "")
-        if currType.endswith("/kwh"):
-            CurrperYear = "/kwh"
-            currType = currType.replace("/kwh", "")
-
-            #start the currency conversion process
+        #First we need to deal the the possibility that there is a suffix on the units (like /yr, kwh, or /tonne) that will make it not be recognized by the currency conversion engine.
+        #generally, we will just strip the suffux off of a copy of the string that represents the units, then allow the conversion to happen. For now, we ignore the suffix.
+        #this has the consequence that we don't do any conversion based on that suffix, so units like EUR/MMBTU will trigger a conversion to USD/MMBTU, where MMBY+TU dosesn't get converted to KW (or whatever)  
+        currSuff = prefSuff = ""
+        elements = currType.split("/")
+        if len(elements) > 1:
+            currType = elements[0]    #strip off the suffix, but save it
+            currSuff = "/" + elements[1]
+        elements = prefType.split("/")
+        if len(elements) > 1:
+            prefType = elements[0]    #strip off the suffix, but save it
+            prefSuff = "/" + elements[1]
+            
+        # Let's try to deal with first the simple conversion where the required units have a prefix like M (m) or K (k) that means "million" or "thousand", like MUSD (or KUSD), and the user provided USD (or KUSD) or KEUR, MEUR
+        # we have to deal with the case that the M, m, K, or k are NOT prefixes, but rather are a part of the currency name.
         cc = CurrencyCodes()
-        symbol = cc.get_symbol(currType)     #if we have a symbol for a currency type, then the type is known to the library.  If we don't try dsome tricks to make it into something it does do recognize
-        if symbol == None:
-            if currType.startswith('M') or currType.startswith('m') or currType.startswith('K') or currType.startswith('k'):   # maybe they put a K or k in front of a currency type (i,e. KUSD) to denote kilo or an M or m (MUSD) to denote million (but note that some currency symbols start with M or K, so we can't assume anything)
-                if currType.startswith('M'): currType2 = currType.replace("M","", 1)
-                if currType.startswith('m'): currType2 = currType.replace("m","", 1)
-                x = cc.get_symbol(currType2)   #check to see if we get a symbol from that type.  If we do, then we know they used MUSD
-                if x == None:
-                    if currType.startswith('K'): currType2 = currType.replace("K","", 1)
-                    if currType.startswith('k'): currType2 = currType.replace("k","", 1)
-                    x = cc.get_symbol(currType)
-                    if x == None:    #No idea what they did!!!
-                        print("Error: GEOPHIRES failed to convert your currency for " + ParamToModify.Name + " to something it understands. You gave " + currType + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + ParamToModify.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
-                        model.logger.critical("Error: GEOPHIRES failed to convert your currency for " + ParamToModify.Name + " to something it understands. You gave " + currType + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + ParamToModify.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
-                        sys.exit()
-                    else:
-                        currType  = currType2
-                        prefFactor = 1/1000.0
-                else:
-                    currType  = currType2
-                    prefFactor = 1/1000000.0
+        currFactor = prefFactor = 1.0
+        currPrefix = prefPrefix = False
+        Factor = 1.0
+        prefShort = prefType
+        currShort = currType
+        symbol = cc.get_symbol(prefType[1:])    # if either of these returns a symbol, then we must have prefixes we need to deal with
+        symbol2 = cc.get_symbol(currType[1:])
+        if symbol != None: prefPrefix = True
+        if symbol2 != None: currPrefix = True
+        if prefPrefix and prefType[0] in ['M', 'm']: prefFactor = prefFactor * 1000000.0
+        elif prefPrefix and prefType[0] in ['K', 'k']: prefFactor = prefFactor * 1000.0
+        if currPrefix and currType[0] in ['M', 'm']: currFactor = currFactor / 1000000.0
+        elif currPrefix and currType[0] in ['K', 'k']: currFactor = currFactor / 1000.0
+        Factor = currFactor * prefFactor
+        if prefPrefix: prefShort = prefType[1:]
+        if currPrefix: currShort = currType[1:]
+        if prefShort == currShort:      # this is true, then we just have a conversion between KUSD and USD, MUSD to KUSD, MUER to EUR, etc, so just do the simple factor conversion
+            ParamToModify.value = ParamToModify.value * Factor
+            ParamToModify.UnitsMatch = True
+            ParamToModify.CurrentUnits = currType
+            return
 
-        if prefType.startswith("MUSD"):     # User has used the MUSD as the shorthand preferred unit.  This means nothing to the exchange rate library, change it to something that the library understands, and set a multiplier factor
-            prefFactor = 1000000.0 * prefFactor
-            prefType = prefType.replace("M","", 1)
-        elif prefType.startswith("KUSD"):
-            prefFactor = 1000.0 * prefFactor
-            prefType = prefType.replace("K","", 1)
+        #Now lets deal with the case where the units still don't match so we have a real converrncy conversion, like USD to EUR
+        #start the currency conversion process
+        cc = CurrencyCodes()
         try:
             cr = CurrencyRates()
             conv_rate = cr.get_rate(currType, prefType)
@@ -485,10 +426,9 @@ def CovertUnitsBack(ParamToModify, model):
             model.logger.critical(str(ex))
             model.logger.critical("Error: GEOPHIRES failed to convert your currency for " + ParamToModify.Name + " to something it understands. You gave " + currType + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + ParamToModify.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
             sys.exit()                
-        New_val = (conv_rate * float(val)) / prefFactor
-        ParamToModify.value - New_val
+        ParamToModify.value = (conv_rate * float(ParamToModify.value)) / prefFactor
         ParamToModify.UnitsMatch = False
-        model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
         return
 
     else:  #must be something other than currency
@@ -526,46 +466,51 @@ def CovertUnitsBack(ParamToModify, model):
 
         #rest the vakue
         ParamToModify.value = currQ.magnitude
-    model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe(  ).f_code.co_name)
+    model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
 
-def LookupUnits(sUnitText:str, uType:Enum)->Enum:
+def LookupUnits(sUnitText:str):
     """
-    LookupUnits Given a unit class and a text string, this will return the string from the Enumneration if it is there (or return noting if it is not)
+    LookupUnits Given a unit class and a text string, this will return the value from the Enumneration if it is there (or return nothing if it is not)
 
     Args:
         sUnitText (str): The units desired to be checked (e.g., "ft", "degF")
-        uType (Enum): The UnitClass
 
     Returns:
-        Enum: The Enumerated Text as string
+        Enum: The Enumerated value and the Unit class Enumberation
     """
-    if uType == Units.LENGTH: MyEnum = LengthUnit
-    elif uType == Units.AREA: MyEnum = AreaUnit
-    elif uType == Units.VOLUME: MyEnum = VolumeUnit
-    elif uType == Units.DENSITY: MyEnum = DensityUnit
-    elif uType == Units.TEMPERATURE: MyEnum = TemperatureUnit
-    elif uType == Units.PRESSURE: MyEnum = PressureUnit
-    elif uType == Units.TIME: MyEnum = TimeUnit
-    elif uType == Units.FLOWRATE: MyEnum = FlowRateUnit
-    elif uType == Units.TEMP_GRADIENT: MyEnum = TemperatureGradientUnit
-    elif uType == Units.DRAWDOWN: MyEnum = DrawdownUnit
-    elif uType == Units.IMPEDANCE: MyEnum = ImpedanceUnit
-    elif uType == Units.PRODUCTIVITY_INDEX: MyEnum = ProductivityIndexUnit
-    elif uType == Units.INJECTIVITY_INDEX: MyEnum = InjectivityIndexUnit
-    elif uType == Units.HEAT_CAPACITY: MyEnum = HeatCapacityUnit
-    elif uType == Units.THERMAL_CONDUCTIVITY: MyEnum = ThermalConductivityUnit
-    elif uType == Units.CURRENCY: MyEnum = CurrencyUnit
-    elif uType == Units.PERCENT: MyEnum = PercentUnit
-    elif uType == Units.ELECTRICITY: MyEnum = ElectricityUnit
-    elif uType == Units.HEAT: MyEnum = HeatUnit
-    elif uType == Units.AVAILABILITY: MyEnum = AvailabilityUnit
+    for uType in Units:
+        MyEnum = None
+        if uType == Units.LENGTH: MyEnum = LengthUnit
+        elif uType == Units.AREA: MyEnum = AreaUnit
+        elif uType == Units.VOLUME: MyEnum = VolumeUnit
+        elif uType == Units.DENSITY: MyEnum = DensityUnit
+        elif uType == Units.TEMPERATURE: MyEnum = TemperatureUnit
+        elif uType == Units.PRESSURE: MyEnum = PressureUnit
+        elif uType == Units.TIME: MyEnum = TimeUnit
+        elif uType == Units.FLOWRATE: MyEnum = FlowRateUnit
+        elif uType == Units.TEMP_GRADIENT: MyEnum = TemperatureGradientUnit
+        elif uType == Units.DRAWDOWN: MyEnum = DrawdownUnit
+        elif uType == Units.IMPEDANCE: MyEnum = ImpedanceUnit
+        elif uType == Units.PRODUCTIVITY_INDEX: MyEnum = ProductivityIndexUnit
+        elif uType == Units.INJECTIVITY_INDEX: MyEnum = InjectivityIndexUnit
+        elif uType == Units.HEAT_CAPACITY: MyEnum = HeatCapacityUnit
+        elif uType == Units.THERMAL_CONDUCTIVITY: MyEnum = ThermalConductivityUnit
+        elif uType == Units.CURRENCY: MyEnum = CurrencyUnit
+        elif uType == Units.CURRENCYFREQUENCY: MyEnum = CurrencyFrequencyUnit
+        elif uType == Units.PERCENT: MyEnum = PercentUnit
+        elif uType == Units.ENERGY: MyEnum = EnergyUnit
+        elif uType == Units.ENERGYCOST: MyEnum = EnergyCostUnit
+        elif uType == Units.ENERGYFREQUENCY: MyEnum = EnergyFrequencyUnit
+        elif uType == Units.COSTPERMASS: MyEnum = CostPerMassUnit
+        elif uType == Units.AVAILABILITY: MyEnum = AvailabilityUnit
 
-    for item in MyEnum:
-        if item.value == sUnitText:
-            return item
-    return None
+        if MyEnum != None:
+            for item in MyEnum:
+                if item.value == sUnitText:
+                    return item, uType
+    return None, None
 
-def ConvertOutputUnits(oparam:OutputParameter, model):
+def ConvertOutputUnits(oparam:OutputParameter, newUnit:Units, model:Model):
     """
     ConvertOutputUnits Given an output paremeter, convert the value(s) from what they contain (as calculated by GEOPHIRES) to what the user specified as what they want for outputs.  Conversion happens inline.
 
@@ -578,54 +523,121 @@ def ConvertOutputUnits(oparam:OutputParameter, model):
     """
     if isinstance(oparam.value, str): return   #strings have no units
     elif isinstance(oparam.value, bool): return   #booleans have no units
-    for UnitName in model.outputs.ParameterDict.items():
-        if oparam.UnitType.name == UnitName[0]:
-            desiredType = model.outputs.ParameterDict[UnitName[0]].value
-            if oparam.PreferredUnits.value != desiredType:
-                if isinstance(oparam.value, float) or isinstance(oparam.value, int): #this is a simple unit conversion
-                    try:
-                        fromQ = ureg.Quantity(oparam.value, str(oparam.PreferredUnits.value))      #Make a Pint Quanity out of the from value
-                        toQ = ureg.Quantity(0, desiredType)      #Make a Pint Quanity out of the new value
-                    except BaseException as ex:
-                        print (str(ex))
-                        print("Warning: GEOPHIRES failed to initialize your units for " + oparam.Name + " to something it understands. You gave " + desiredType + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?  continuing without output conversion.")
-                        model.logger.warning(str(ex))
-                        model.logger.warning("Warning: GEOPHIRES failed to initialize your units for " + oparam.Name + " to something it understands. You gave " + desiredType + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?    continuing without output conversion.")
-                        return
-                    try:
-                        toQ = fromQ.to(toQ) #update The quanity to the units that the user wanted
-                    except BaseException as ex:
-                        print (str(ex))
-                        print("Warning: GEOPHIRES failed to convert your units for " + oparam.Name + " to something it understands. You gave " + desiredType + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?    continuing without output conversion.")
-                        model.logger.warning(str(ex))
-                        model.logger.warning("Warning: GEOPHIRES failed to convert your units for " + oparam.Name + " to something it understands. You gave " + desiredType + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?   continuing without output conversion.")
-                        return
+    DefUnit, UnitSystem = LookupUnits(newUnit.value)
+    
+    if UnitSystem not in [Units.CURRENCY, Units.CURRENCYFREQUENCY, Units.COSTPERMASS, Units.ENERGYCOST]:
+        if isinstance(oparam.value, float) or isinstance(oparam.value, int): #this is a simple unit conversion- could be just units (neters->feet) or simple currency ($->EUR) or compund Currency (MUSD-EUR)
+            try:
+                fromQ = ureg.Quantity(oparam.value, str(oparam.PreferredUnits.value))      #Make a Pint Quanity out of the from value
+                toQ = ureg.Quantity(0, str(newUnit.value))      #Make a Pint Quanity out of the new value
+            except BaseException as ex:
+                print (str(ex))
+                print("Warning: GEOPHIRES failed to initialize your units for " + oparam.Name + " to something it understands. You gave " + newUnit.value + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?  continuing without output conversion.")
+                model.logger.warning(str(ex))
+                model.logger.warning("Warning: GEOPHIRES failed to initialize your units for " + oparam.Name + " to something it understands. You gave " + newUnit.value + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?    continuing without output conversion.")
+                return
+            try:
+                toQ = fromQ.to(toQ) #update The quanity to the units that the user wanted
+            except BaseException as ex:
+                print (str(ex))
+                print("Warning: GEOPHIRES failed to convert your units for " + oparam.Name + " to something it understands. You gave " + newUnit.value + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?    continuing without output conversion.")
+                model.logger.warning(str(ex))
+                model.logger.warning("Warning: GEOPHIRES failed to convert your units for " + oparam.Name + " to something it understands. You gave " + newUnit.value + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?   continuing without output conversion.")
+                return
+            #reset the value and current units
+            oparam.value = toQ.magnitude
+            oparam.CurrentUnits = newUnit
 
-                    #rest the value and current units
-                    oparam.value = toQ.magnitude
-                    oparam.CurrentUnits = LookupUnits(desiredType, oparam.UnitType)
-                if isinstance(oparam.value, array):
-                    i = 0
-                    for arrayval in oparam.value:
-                        try:
-                            fromQ = ureg.Quantity(oparam.value[i], str(oparam.PreferredUnits.value))      #Make a Pint Quanity out of the from value
-                            toQ = ureg.Quantity(0, desiredType)      #Make a Pint Quanity out of the new value
-                        except BaseException as ex:
-                            print (str(ex))
-                            print("Warning: GEOPHIRES failed to initialize your units for " + oparam.Name + " to something it understands. You gave " + desiredType + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?  continuing without output conversion.")
-                            model.logger.warning(str(ex))
-                            model.logger.warning("Warning: GEOPHIRES failed to initialize your units for " + oparam.Name + " to something it understands. You gave " + desiredType + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?    continuing without output conversion.")
-                            return
-                        try:
-                            toQ = fromQ.to(toQ) #update The quanity to the units that the user wanted
-                        except BaseException as ex:
-                            print (str(ex))
-                            print("Warning: GEOPHIRES failed to convert your units for " + oparam.Name + " to something it understands. You gave " + desiredType + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?    continuing without output conversion.")
-                            model.logger.warning(str(ex))
-                            model.logger.warning("Warning: GEOPHIRES failed to convert your units for " + oparam.Name + " to something it understands. You gave " + desiredType + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?   continuing without output conversion.")
-                            return
+        elif isinstance(oparam.value, array):  #handle the array case
+            i = 0
+            for arrayval in oparam.value:
+                try:
+                    fromQ = ureg.Quantity(oparam.value[i], str(oparam.PreferredUnits.value))      #Make a Pint Quanity out of the from value
+                    toQ = ureg.Quantity(0, str(newUnit.value))      #Make a Pint Quanity out of the new value
+                except BaseException as ex:
+                    print (str(ex))
+                    print("Warning: GEOPHIRES failed to initialize your units for " + oparam.Name + " to something it understands. You gave " + str(newUnit.value) + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?  continuing without output conversion.")
+                    model.logger.warning(str(ex))
+                    model.logger.warning("Warning: GEOPHIRES failed to initialize your units for " + oparam.Name + " to something it understands. You gave " + str(newUnit.value) + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?    continuing without output conversion.")
+                    return
+                try:
+                    toQ = fromQ.to(toQ) #update The quanity to the units that the user wanted
+                except BaseException as ex:
+                    print (str(ex))
+                    print("Warning: GEOPHIRES failed to convert your units for " + oparam.Name + " to something it understands. You gave " + desiredType + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?    continuing without output conversion.")
+                    model.logger.warning(str(ex))
+                    model.logger.warning("Warning: GEOPHIRES failed to convert your units for " + oparam.Name + " to something it understands. You gave " + desiredType + " - Are the units defined for Pint library, or have you defined them in the user defined units file (GEOPHIRES3_newunits)?   continuing without output conversion.")
+                    return
 
-                        #rest the value and current units
-                        oparam.value[i] = toQ.magnitude
-                        oparam.CurrentUnits = LookupUnits(desiredType, oparam.UnitType)
-                        i = i +1
+                #reset the value and current units
+                oparam.value[i] = toQ.magnitude
+                oparam.CurrentUnits = newUnit
+                i = i + 1
+
+    else: #must be a currency thing.
+        prefType = oparam.PreferredUnits.value
+        currType = newUnit.value
+
+        #First we need to deal the the possibility that there is a suffix on the units (like /yr, kwh, or /tonne) that will make it not be recognized by the currency conversion engine.
+        #generally, we will just strip the suffux off of a copy of the string that represents the units, then allow the conversion to happen. For now, we ignore the suffix.
+        #this has the consequence that we don't do any conversion based on that suffix, so units like EUR/MMBTU will trigger a conversion to USD/MMBTU, where MMBY+TU dosesn't get converted to KW (or whatever)  
+        currSuff = prefSuff = ""
+        elements = currType.split("/")
+        if len(elements) > 1:
+            currType = elements[0]    #strip off the suffix, but save it
+            currSuff = "/" + elements[1]
+        elements = prefType.split("/")
+        if len(elements) > 1:
+            prefType = elements[0]    #strip off the suffix, but save it
+            prefSuff = "/" + elements[1]
+            
+        # Let's try to deal with first the simple conversion where the required units have a prefix like M (m) or K (k) that means "million" or "thousand", like MUSD (or KUSD), and the user provided USD (or KUSD) or KEUR, MEUR
+        # we have to deal with the case that the M, m, K, or k are NOT prefixes, but rather are a part of the currency name.
+        cc = CurrencyCodes()
+        currFactor = prefFactor = 1.0
+        currPrefix = prefPrefix = False
+        Factor = 1.0
+        prefShort = prefType
+        currShort = currType
+        symbol = cc.get_symbol(prefType[1:])    # if either of these returns a symbol, then we must have prefixes we need to deal with
+        symbol2 = cc.get_symbol(currType[1:])
+        if symbol != None: prefPrefix = True
+        if symbol2 != None: currPrefix = True
+        if prefPrefix and prefType[0] in ['M', 'm']: prefFactor = prefFactor * 1000000.0
+        elif prefPrefix and prefType[0] in ['K', 'k']: prefFactor = prefFactor * 1000.0
+        if currPrefix and currType[0] in ['M', 'm']: currFactor = currFactor / 1000000.0
+        elif currPrefix and currType[0] in ['K', 'k']: currFactor = currFactor / 1000.0
+        Factor = currFactor * prefFactor
+        if prefPrefix: prefShort = prefType[1:]
+        if currPrefix: currShort = currType[1:]
+        if prefShort == currShort:      # this is true, then we just have a conversion between KUSD and USD, MUSD to KUSD, MUER to EUR, etc, so just do the simple factor coversion and exit
+            oparam.value = oparam.value * Factor
+            oparam.CurrentUnits = DefUnit
+            oparam.UnitsMatch = False
+            return
+
+        #start the currency conversion process
+        symbol = cc.get_symbol(currShort)     #if we have a symbol for a currency type, then the type is known to the library.  If we don't try dsome tricks to make it into something it does do recognize
+        if symbol == None:
+            print("Error: GEOPHIRES failed to convert your currency for " + oparam.Name + " to something it understands. You gave " + currType + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + oparam.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
+            model.logger.critical("Error: GEOPHIRES failed to convert your currency for " + oparam.Name + " to something it understands. You gave " + currType + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + oparam.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
+            sys.exit()
+ 
+        symbol = cc.get_symbol(prefShort)     #if we have a symbol for a currency type, then the type is known to the library.  If we don't try dsome tricks to make it into something it does do recognize
+        if symbol == None:
+            print("Error: GEOPHIRES failed to convert your currency for " + oparam.Name + " to something it understands. You gave " + prefType + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + oparam.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
+            model.logger.critical("Error: GEOPHIRES failed to convert your currency for " + oparam.Name + " to something it understands. You gave " + prefType + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + oparam.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
+            sys.exit()
+        try:
+            cr = CurrencyRates()
+            conv_rate = cr.get_rate(prefShort, currShort)
+        except BaseException as ex:
+            print (str(ex))
+            print("Error: GEOPHIRES failed to convert your currency for " + oparam.Name + " to something it understands. You gave " + currType + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + oparam.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
+            model.logger.critical(str(ex))
+            model.logger.critical("Error: GEOPHIRES failed to convert your currency for " + oparam.Name + " to something it understands. You gave " + currType + " - Are these currency units defined for forex-python?  or perhaps the currency server is down?  Please change your units to " + oparam.PreferredUnits.value + "to contine. Cannot continue unless you do.  Exiting.")
+            sys.exit()                
+        oparam.value = (Factor * conv_rate * float(oparam.value))
+        oparam.CurrentUnits = DefUnit
+        oparam.UnitsMatch = False
+        model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)

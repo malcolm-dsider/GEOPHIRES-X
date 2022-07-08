@@ -1,0 +1,99 @@
+Warning: No valid reservoir volume provided. GEOPHIRES will assume default reservoir volume (1.25E8 m3)
+Warning: No valid water loss fraction provided. GEOPHIRES will assume default water loss fraction (0)
+
+----------------------------
+GEOPHIRES Simulation Results
+----------------------------
+
+1. Simulation Metadata
+----------------------
+ GEOPHIRES Version = 2.0
+ GEOPHIRES Build Date = 2018-01-02
+ Simulation Date = 2021-04-13
+ Simulation Time = 09:30
+ Calculation Time = 0.496 s
+
+2. Summary of Simulation Results
+--------------------------------
+ End-Use Option = Direct-Use Heat
+ Average Net Heat Production = 21.77 MWth
+ LCOH = 7.1 $/MMBTU
+ Economic Model Used = Standard Levelized Cost Model
+ Discount Rate = 5.00%
+
+3. Reservoir Simulation Results
+-------------------------------
+ Reservoir Model = 1-D Linear Heat Sweep Model
+ Number of Production Wells = 2
+ Number of Injection Wells = 2
+ Number of Times Redrilling = 0
+ Well Depth = 3000.0 m
+ Flow Rate per Production Well = 30 kg/s
+ Initial Reservoir Temperature = 180.0°C
+ Maximum Production Temperature = 172.9°C
+ Average Production Temperature = 165.0°C
+ Minimum Production Temperature = 153.0°C
+ Initial Production Temperature = 170.0°C
+ Average Reservoir Heat Extraction = 24.19 MWth
+ Production Wellbore Heat Transmission Model = Ramey Model
+ Average Production Well Temperature Drop = 6.4°C
+ Total Average Pressure Drop = 11212.2 kPa
+    Average Injection Well Pressure Drop = 114.7 kPa
+    Average Reservoir Pressure Drop = 13267.3 kPa
+    Average Production Well Pressure Drop = 120.5 kPa
+    Average Buoyancy Pressure Drop = -2290.2 kPa
+
+4. Surface Equipment Simulation Results
+---------------------------------------
+ Maximum Net Heat Production = 23.59 MWth
+ Average Net Heat Production = 21.77 MWth
+ Minimum Net Heat Production = 19.04 MWth
+ Initial Net Heat Production = 22.94 MWth
+ Average Annual Heat Production = 171.73 GWh
+ Average Pumping Power = 0.86 MWe
+
+5. Capital and O&M Costs
+------------------------
+ Total Capital Cost = 41.32 M$
+   Wellfield Cost = 21.95 M$
+   Surface Plant Cost = 8.44 M$
+   Exploration Cost = 5.33 M$
+   Field Gathering System Cost = 2.59 M$
+   Stimulation Cost = 3.02 M$
+ Total O&M Cost = 1.45 M$/year
+   Wellfield O&M Cost = 0.43 M$/year
+   Surface Plant O&M Cost = 0.68 M$/year
+   Make-Up Water O&M Cost = 0.00 M$/year
+   Average annual pumping costs = 0.34 M$/year
+
+6. Power Generation Profile
+---------------------------
+  YEAR   THERMAL      GEOFLUID      PUMP      NET
+         DRAWDOWN     TEMPERATURE   POWER     HEAT
+         (-)          (deg C)       (MWe)     (MWth)
+   0     1.0000       170.04        0.8541    22.9371
+   1     1.0072       171.26        0.8533    23.2175
+   2     1.0109       171.89        0.8530    23.3615
+   3     1.0128       172.22        0.8527    23.4366
+   4     1.0141       172.44        0.8526    23.4862
+   5     1.0150       172.60        0.8525    23.5229
+   6     1.0158       172.72        0.8524    23.5517
+   7     1.0164       172.82        0.8524    23.5753
+   8     0.9948       169.16        0.8579    22.7357
+   9     0.9906       168.44        0.8590    22.5704
+  10     0.9861       167.68        0.8602    22.3957
+  11     0.9814       166.88        0.8614    22.2126
+  12     0.9765       166.05        0.8626    22.0216
+  13     0.9714       165.18        0.8639    21.8233
+  14     0.9662       164.29        0.8653    21.6184
+  15     0.9608       163.37        0.8666    21.4072
+  16     0.9552       162.42        0.8680    21.1902
+  17     0.9495       161.45        0.8694    20.9678
+  18     0.9437       160.46        0.8708    20.7405
+  19     0.9377       159.45        0.8723    20.5086
+  20     0.9317       158.42        0.8737    20.2725
+  21     0.9255       157.37        0.8752    20.0326
+  22     0.9193       156.31        0.8767    19.7891
+  23     0.9129       155.23        0.8782    19.5424
+  24     0.9065       154.15        0.8797    19.2928
+  25     0.9001       153.05        0.8812    19.0407

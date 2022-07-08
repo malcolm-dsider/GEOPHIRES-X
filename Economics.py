@@ -2,9 +2,8 @@ import math
 import sys
 import numpy as np
 import Model
-from GeoPHIRESUtils import DumpObjectAsJson, ReadParameter
 from OptionList import WellDrillingCostCorrelation, EconomicModel, EndUseOptions, PowerPlantType
-from Parameter import boolParameter, intParameter, floatParameter, strParameter, OutputParameter
+from Parameter import boolParameter, intParameter, floatParameter, strParameter, OutputParameter, ReadParameter
 from Units import *
 
 class Economics:
@@ -18,12 +17,12 @@ class Economics:
         The __init__ function is used to set up all the parameters in Economics.
         
         :param self: Store data that will be used by the class
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
         :return: None
         :doc-author: Malcolm Ross
         """
 
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #Set up all the Parameters that will be predefined by this class using the different types of parameter classes.  Setting up includes giving it a name, a default value, The Unit Type (length, volume, temperature, etc) and Unit Name of that value, sets it as required (or not), sets allowable range, the error message if that range is exceeded, the ToolTip Text, and the name of teh class that created it.
         #This includes setting up temporary variables that will be available to all the class but noy read in by user, or used for Output
@@ -42,18 +41,18 @@ class Economics:
         self.ccexpladjfactor = self.ParameterDict[self.ccexpladjfactor.Name] = floatParameter("Exploration Capital Cost Adjustment Factor", value = 1.0, Min=0, Max=10, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, Provided = False, Valid = True, ToolTipText = "Multiplier for built-in exploration capital cost correlation")
         self.ccwellfixed = self.ParameterDict[self.ccwellfixed.Name] = floatParameter("Well Drilling and Completion Capital Cost", value = -1.0, Min=0, Max=200, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS, Provided = False, Valid = False, ToolTipText = "Well Drilling and Completion Capital Cost")
         self.ccwelladjfactor = self.ParameterDict[self.ccwelladjfactor.Name] = floatParameter("Well Drilling and Completion Capital Cost Adjustment Factor", value = 1.0, Min=0, Max=10, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, Provided = False, Valid = True, ToolTipText = "Well Drilling and Completion Capital Cost Adjustment Factor")
-        self.oamwellfixed = self.ParameterDict[self.oamwellfixed.Name] = floatParameter("Wellfield O&M Cost", value = -1.0, Min=0, Max=100, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyUnit.MDOLLARSPERYEAR, Provided = False, Valid = False, ToolTipText = "Total annual wellfield O&M cost")
+        self.oamwellfixed = self.ParameterDict[self.oamwellfixed.Name] = floatParameter("Wellfield O&M Cost", value = -1.0, Min=0, Max=100, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, Provided = False, Valid = False, ToolTipText = "Total annual wellfield O&M cost")
         self.oamwelladjfactor = self.ParameterDict[self.oamwelladjfactor.Name] = floatParameter("Wellfield O&M Cost Adjustment Factor", value = 1.0, Min=0, Max=10, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, Provided = False, Valid = True, ToolTipText = "Multiplier for built-in wellfield O&M cost correlation")
         self.ccplantfixed = self.ParameterDict[self.ccplantfixed.Name] = floatParameter("Surface Plant Capital Cost", value = -1.0, Min=0, Max=1000, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS, Provided = False, Valid = False, ToolTipText = "Total surface plant capital cost")
         self.ccplantadjfactor = self.ParameterDict[self.ccplantadjfactor.Name] = floatParameter("Surface Plant Capital Cost Adjustment Factor", value = 1.0, Min=0, Max=10, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, Provided = False, Valid = True, ToolTipText = "Multiplier for built-in surface plant capital cost correlation")
         self.ccgathfixed = self.ParameterDict[self.ccgathfixed.Name] = floatParameter("Field Gathering System Capital Cost", value = -1.0, Min=0, Max=100, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS, Provided = False, Valid = False, ToolTipText = "Total field gathering system capital cost")
         self.ccgathadjfactor = self.ParameterDict[self.ccgathadjfactor.Name] = floatParameter("Field Gathering System Capital Cost Adjustment Factor", value = 1.0, Min=0, Max=10, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, Provided = False, Valid = True, ToolTipText = "Multiplier for built-in field gathering system capital cost correlation")
-        self.oamplantfixed = self.ParameterDict[self.oamplantfixed.Name] = floatParameter("Surface Plant O&M Cost", value = -1.0, Min=0, Max=100, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyUnit.MDOLLARSPERYEAR, Provided = False, Valid = False, ToolTipText = "Total annual surface plant O&M cost")
+        self.oamplantfixed = self.ParameterDict[self.oamplantfixed.Name] = floatParameter("Surface Plant O&M Cost", value = -1.0, Min=0, Max=100, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, Provided = False, Valid = False, ToolTipText = "Total annual surface plant O&M cost")
         self.oamplantadjfactor = self.ParameterDict[self.oamplantadjfactor.Name] = floatParameter("Surface Plant O&M Cost Adjustment Factor", value = 1.0, Min=0, Max=10, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, Provided = False, Valid = True, ToolTipText = "Multiplier for built-in surface plant O&M cost correlation")
-        self.oamwaterfixed = self.ParameterDict[self.oamwaterfixed.Name] = floatParameter("Water Cost", value = -1.0, Min=0, Max=100, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyUnit.MDOLLARSPERYEAR, Provided = False, Valid = False, ToolTipText = "Total annual make-up water cost")
+        self.oamwaterfixed = self.ParameterDict[self.oamwaterfixed.Name] = floatParameter("Water Cost", value = -1.0, Min=0, Max=100, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, Provided = False, Valid = False, ToolTipText = "Total annual make-up water cost")
         self.oamwateradjfactor = self.ParameterDict[self.oamwateradjfactor.Name] = floatParameter("Water Cost Adjustment Factor", value = 1.0, Min=0, Max=10, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, Provided = False, Valid = True, ToolTipText = "Multiplier for built-in make-up water cost correlation")
         self.totalcapcost = self.ParameterDict[self.totalcapcost.Name] = floatParameter("Total Capital Cost", value = -1.0, Min=0, Max=1000, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS, Provided = False, Valid = False, ErrMessage="calculate total capital cost using user-provided costs or built-in correlations for each category.", ToolTipText="Total initial capital cost.")
-        self.oamtotalfixed = self.ParameterDict[self.oamtotalfixed.Name] = floatParameter("Total O&M Cost", value = -1.0, Min=0, Max=100, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyUnit.MDOLLARSPERYEAR, Provided = False, Valid = False, ErrMessage="calculate total O&M cost using user-provided costs or built-in correlations for each category.", ToolTipText="Total initial O&M cost.")
+        self.oamtotalfixed = self.ParameterDict[self.oamtotalfixed.Name] = floatParameter("Total O&M Cost", value = -1.0, Min=0, Max=100, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, Provided = False, Valid = False, ErrMessage="calculate total O&M cost using user-provided costs or built-in correlations for each category.", ToolTipText="Total initial O&M cost.")
         self.timestepsperyear = self.ParameterDict[self.timestepsperyear.Name] = intParameter("Time steps per year", value = 4, AllowableRange=list(range(1,101,1)), UnitType = Units.NONE, Required=True, ErrMessage="assume default number of time steps per year (4)", ToolTipText="Number of internal simulation time steps per year")
         self.FCR = self.ParameterDict[self.FCR.Name] = floatParameter("Fixed Charge Rate", value = 0.1, Min=0.0, Max = 1.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage="assume default fixed charge rate (0.1)", ToolTipText="Fixed charge rate (FCR) used in the Fixed Charge Rate Model")
         self.discountrate = self.ParameterDict[self.discountrate.Name] = floatParameter("Discount Rate", value=0.07, Min=0.0, Max = 1.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage="assume default discount rate (0.07)", ToolTipText="Discount rate used in the Standard Levelized Cost Model")
@@ -78,38 +77,25 @@ class Economics:
         self.C1well = 0.0
 
         #results
-        self.Price = self.OutputParameterDict[self.Price.Name] = OutputParameter(Name = "Price", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.CENTSSPERKWH, CurrentUnits = CurrencyUnit.CENTSSPERKWH)
+        self.LCOE = self.OutputParameterDict[self.LCOE.Name] = OutputParameter(Name = "LCOE", value=-999.9, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
+        self.LCOH = self.OutputParameterDict[self.LCOH.Name] = OutputParameter(Name = "LCOH", value=-999.9, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERMMBTU, CurrentUnits = EnergyCostUnit.DOLLARSPERMMBTU)    #$/MMBTU
         self.Cstim = self.OutputParameterDict[self.Cstim.Name] = OutputParameter(Name = "O&M Surface Plant costs", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
         self.Cexpl = self.OutputParameterDict[self.Cexpl.Name] = OutputParameter(Name = "Exploration cost", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
         self.Cwell = self.OutputParameterDict[self.Cwell.Name] = OutputParameter(Name = "Wellfield cost", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
-        self.Coamwell = self.OutputParameterDict[self.Coamwell.Name] = OutputParameter(Name = "O&M Wellfield cost", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyUnit.MDOLLARSPERYEAR)
+        self.Coamwell = self.OutputParameterDict[self.Coamwell.Name] = OutputParameter(Name = "O&M Wellfield cost", value=-999.9, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
         self.Cplant = self.OutputParameterDict[self.Cplant.Name] = OutputParameter(Name = "Surface Plant cost", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
-        self.Coamplant = self.OutputParameterDict[self.Coamplant.Name] = OutputParameter(Name = "O&M Surface Plant costs", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyUnit.MDOLLARSPERYEAR)
+        self.Coamplant = self.OutputParameterDict[self.Coamplant.Name] = OutputParameter(Name = "O&M Surface Plant costs", value=-999.9, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
         self.Cgath = self.OutputParameterDict[self.Cgath.Name] = OutputParameter(Name = "Field gathering system cost", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
         self.Cpiping = self.OutputParameterDict[self.Cpiping.Name] = OutputParameter(Name = "Transmission pipeline costs", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
-        self.Coamwater = self.OutputParameterDict[self.Coamwater.Name] = OutputParameter(Name = "O&M Make-up Water costs", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyUnit.MDOLLARSPERYEAR)
+        self.Coamwater = self.OutputParameterDict[self.Coamwater.Name] = OutputParameter(Name = "O&M Make-up Water costs", value=-999.9, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
         self.CCap = self.OutputParameterDict[self.CCap.Name] = OutputParameter(Name = "Total Capital Cost", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
-        self.Coam = self.OutputParameterDict[self.Coam.Name] = OutputParameter(Name = "Total O & M Cost", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyUnit.MDOLLARSPERYEAR)
-        self.averageannualpumpingcosts = self.OutputParameterDict[self.averageannualpumpingcosts.Name] = OutputParameter(Name = "Average Annual Pumping Costs", value=-0.0, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyUnit.MDOLLARSPERYEAR)
+        self.Coam = self.OutputParameterDict[self.Coam.Name] = OutputParameter(Name = "Total O & M Cost", value=-999.9, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.averageannualpumpingcosts = self.OutputParameterDict[self.averageannualpumpingcosts.Name] = OutputParameter(Name = "Average Annual Pumping Costs", value=-0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
 
-        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
-
-    def __str__(self):
-        return "Economics"
-
-    def dump_self_as_Json(self)->str: return(DumpObjectAsJson(self))
-
-    def read_parameter_from_Json(self, dJson):
-        for item in dJson.items():
-            if item[0] in self.ParameterDict:
-                if isinstance(self.ParameterDict[item[0]], floatParameter): val = float(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], intParameter): val = int(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], boolParameter): val = bool(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], strParameter): val = str(item[1]['Value'])
-                self.ParameterDict[item[0]].value = val
+        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
     def read_parameters(self, model:Model) -> None:
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #Deal with all the parameter values that the user has provided.  They should really only provide values that they want to change from the default values, but they can provide a value that is already set because it is a defaulr value set in __init__.  It will ignore those.
         #This also deals with all the special cases that need to be talen care of after a vlaue has been read in and checked.
@@ -315,7 +301,7 @@ class Economics:
                                 ParameterToModify.value = 1.0
         else:
             model.logger.info("No parameters read becuase no content provided")
-        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
     def Calculate(self, model:Model) -> None:
         """
@@ -323,11 +309,11 @@ class Economics:
         This function can be called multiple times, and will only recalculate what has changed each time it is called.
         
         :param self: Access variables that belongs to the class
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
         :return: Nothing, but it does make calculations and set values in the model
         :doc-author: Malcolm Ross
         """
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #This is where all the calcualtions are made using all the values that have been set.
         #If you sublcass this class, you can choose to run these calculations before (or after) your calculations, but that assumes you have set all the values that are required for these calculations
@@ -542,7 +528,6 @@ class Economics:
             elif model.surfaceplant.enduseoption.value in [EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]: #cogen parallel cycle
                 self.Cplant.value = self.Cplant.value + 1.12*1.15*self.ccplantadjfactor.value*250E-6*np.max(model.surfaceplant.HeatProduced.value/model.surfaceplant.enduseefficiencyfactor.value)*1000.
   
-#MIR Took out if statement and put it back in again
         if not self.totalcapcost.Valid:  
             #exploration costs (same as in Geophires v1.2) (M$)
             if self.ccexplfixed.Valid: self.Cexpl.value = self.ccexplfixed.value
@@ -557,7 +542,7 @@ class Economics:
             self.CCap.value = self.totalcapcost.value
 
         #add in the O&M costs of the AddOns
-        self.CCap.value = self.CCap.value + self.AddOnCAPEXTotal.value
+        self.CCap.value = self.CCap.value
 
         #---------
         #O&M costs
@@ -590,44 +575,51 @@ class Economics:
         else: self.Coam.value = self.oamtotalfixed.value #total O&M cost (M$/year)
 
         #add in the O&M costs of the AddOns
-        self.Coam.value = self.Coam.value + self.AddOnOPEXTotalPerYear.value
+        self.Coam.value = self.Coam.value
 
         if model.wellbores.redrill > 0: model.Coam.value = model.Coam.value + (self.Cwell.value + model.reserv.Cstim.value)*self.redrill/model.surfaceplant.plantlifetime.value   #account for well redrilling
- 
+
+        #Calculate LCOE/LCOH
+        self.CalculateLCOELCOH(model)
+
+        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
+
+    def CalculateLCOELCOH(self, model:Model) -> None:
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         #---------------------------
         #Calculate LCOE/LCOH
         #---------------------------
         if self.econmodel.value == EconomicModel.FCR:
             if model.surfaceplant.enduseoption.value == EndUseOptions.ELECTRICITY:
-                self.Price.value = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value)/np.average(model.surfaceplant.NetkWhProduced.value)*1E8 #cents/kWh
+                self.LCOE.value = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value)/np.average(model.surfaceplant.NetkWhProduced.value)*1E8 #cents/kWh
             elif model.surfaceplant.enduseoption.value == EndUseOptions.HEAT:
                 self.averageannualpumpingcosts.value = np.average(model.surfaceplant.PumpingkWh.value)*model.surfaceplant.elecprice.value/1E6 #M$/year
-                self.Price.value = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value + self.averageannualpumpingcosts.value)/np.average(model.surfaceplant.HeatkWhProduced.value)*1E8 #cents/kWh
-                self.Price.value = self.Price.value*2.931 #$/Million Btu
+                self.LCOH.value = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value + self.averageannualpumpingcosts.value)/np.average(model.surfaceplant.HeatkWhProduced.value)*1E8 #cents/kWh
+                self.LCOH.value = self.LCOH.value*2.931 #$/Million Btu
             elif model.surfaceplant.enduseoption.value not in [EndUseOptions.ELECTRICITY, EndUseOptions.HEAT]: #cogeneration
                 if model.surfaceplant.enduseoption.value in [EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT, EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]: #heat sales is additional income revenue stream
                     averageannualheatincome = np.average(self.HeatkWhProduced.value)*self.heatprice.value/1E6 #M$/year ASSUMING heatprice IS IN $/KWH FOR HEAT SALES
-                    self.Price.value = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value - averageannualheatincome)/np.average(model.surfaceplant.NetkWhProduced.value)*1E8 #cents/kWh   
+                    self.LCOE.value = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value - averageannualheatincome)/np.average(model.surfaceplant.NetkWhProduced.value)*1E8 #cents/kWh   
                 elif model.surfaceplant.enduseoption.value in [EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY]: #electricity sales is additional income revenue stream
                     averageannualelectricityincome =  np.average(model.surfaceplant.NetkWhProduced.value)*model.surfaceplant.elecprice.value/1E6 #M$/year
-                    self.Price.value = (self.CCap.value + self.Coam.value - averageannualelectricityincome)/np.average(model.surfaceplant.HeatkWhProduced.value)*1E8 #cents/kWh
-                    self.Price.value = self.Price.value*2.931 #$/MMBTU
+                    self.LCOH.value = (self.CCap.value + self.Coam.value - averageannualelectricityincome)/np.average(model.surfaceplant.HeatkWhProduced.value)*1E8 #cents/kWh
+                    self.LCOH.value = self.LCOH.value*2.931 #$/MMBTU
         elif self.econmodel.value == EconomicModel.STANDARDIZED_LEVELIZED_COST:
             discountvector = 1./np.power(1+self.discountrate.value,np.linspace(0,model.surfaceplant.plantlifetime.value-1,model.surfaceplant.plantlifetime.value))
             if model.surfaceplant.enduseoption.value == EndUseOptions.ELECTRICITY:
-                self.Price.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum(self.Coam.value*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*discountvector)*1E8 #cents/kWh
+                self.LCOE.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum(self.Coam.value*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*discountvector)*1E8 #cents/kWh
             elif model.surfaceplant.enduseoption.value == EndUseOptions.HEAT:
                 self.averageannualpumpingcosts.value = np.average(model.surfaceplant.PumpingkWh.value)*model.surfaceplant.elecprice.value/1E6 #M$/year
-                self.Price.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value+model.surfaceplant.PumpingkWh.value*model.surfaceplant.elecprice.value/1E6)*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*discountvector)*1E8 #cents/kWh
-                self.Price.value = self.Price.value*2.931 #$/MMBTU
+                self.LCOH.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value+model.surfaceplant.PumpingkWh.value*model.surfaceplant.elecprice.value/1E6)*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*discountvector)*1E8 #cents/kWh
+                self.LCOH.value = self.LCOH.value*2.931 #$/MMBTU
             elif model.surfaceplant.enduseoption.value not in [EndUseOptions.ELECTRICITY, EndUseOptions.HEAT]:
                 if model.surfaceplant.enduseoption.value  in [EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT, EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]: #heat sales is additional income revenue stream
                     annualheatincome = model.surfaceplant.HeatkWhProduced.value*model.surfaceplant.heatprice.value/1E6 #M$/year ASSUMING heatprice IS IN $/KWH FOR HEAT SALES
-                    self.Price.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value-annualheatincome)*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*discountvector)*1E8 #cents/kWh
+                    self.LCOE.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value-annualheatincome)*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*discountvector)*1E8 #cents/kWh
                 elif model.surfaceplant.enduseoption.value in [EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY]: #electricity sales is additional income revenue stream
                     annualelectricityincome = model.surfaceplant.NetkWhProduced.value*self.elecprice.value/1E6 #M$/year
-                    self.Price.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value-annualelectricityincome)*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*discountvector)*1E8 #cents/kWh
-                    self.Price.value = self.Price.value*2.931 #$/MMBTU
+                    self.LCOH.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value-annualelectricityincome)*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*discountvector)*1E8 #cents/kWh
+                    self.LCOH.value = self.LCOH.value*2.931 #$/MMBTU
         elif self.econmodel.value == EconomicModel.BICYCLE:
             iave = self.FIB.value*self.BIR.value*(1-self.CTR.value) + (1-self.FIB.value)*self.EIR.value #average return on investment (tax and inflation adjusted)
             CRF = iave/(1-np.power(1+iave,-model.surfaceplant.plantlifetime.value)) #capital recovery factor
@@ -640,25 +632,27 @@ class Economics:
             if model.surfaceplant.enduseoption.value == EndUseOptions.ELECTRICITY:            
                 NPVoandm = np.sum(self.Coam.value*inflationvector*discountvector)
                 NPVgrt = self.GTR.value/(1-self.GTR.value)*(NPVcap + NPVoandm + NPVfc + NPVit - NPVitc)
-                self.Price.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc)/np.sum(model.surfaceplant.NetkWhProduced.value*inflationvector*discountvector)*1E8
+                self.LCOE.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc)/np.sum(model.surfaceplant.NetkWhProduced.value*inflationvector*discountvector)*1E8
             elif model.surfaceplant.enduseoption.value == EndUseOptions.HEAT:
                 PumpingCosts = model.surfaceplant.PumpingkWh.value*model.surfaceplant.elecprice.value/1E6
                 self.averageannualpumpingcosts.value = np.average(model.surfaceplant.PumpingkWh.value)*model.surfaceplant.elecprice.value/1E6 #M$/year
                 NPVoandm = np.sum((self.Coam.value+PumpingCosts)*inflationvector*discountvector)
                 NPVgrt = self.GTR.value/(1-self.GTR.value)*(NPVcap + NPVoandm + NPVfc + NPVit - NPVitc)
-                self.Price.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc)/np.sum(model.surfaceplant.HeatkWhProduced.value*inflationvector*discountvector)*1E8
-                self.Price.value = self.Price.value*2.931 #$/MMBTU
+                self.LCOH.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc)/np.sum(model.surfaceplant.HeatkWhProduced.value*inflationvector*discountvector)*1E8
+                self.LCOH.value = self.LCOH.value*2.931 #$/MMBTU
             elif model.surfaceplant.enduseoption.value not in [EndUseOptions.ELECTRICITY, EndUseOptions.HEAT]:
                 if model.surfaceplant.enduseoption.value  in [EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT, EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]: #heat sales is additional income revenue stream
                     annualheatincome = model.surfaceplant.HeatkWhProduced.value*model.surfaceplant.heatprice.value/1E6 #M$/year ASSUMING ELECPRICE IS IN $/KWH FOR HEAT SALES
                     NPVoandm = np.sum(self.Coam.value*inflationvector*discountvector)            
                     NPVgrt = self.GTR.value/(1-self.GTR.value)*(NPVcap + NPVoandm + NPVfc + NPVit - NPVitc)
-                    self.Price.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc - np.sum(annualheatincome*inflationvector*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*inflationvector*discountvector)*1E8 
+                    self.LCOE.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc - np.sum(annualheatincome*inflationvector*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*inflationvector*discountvector)*1E8 
                 elif model.surfaceplant.enduseoption.value  in [EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY]: #electricity sales is additional income revenue stream
                     annualelectricityincome = model.surfaceplant.NetkWhProduced.value*model.surfaceplant.elecprice.value/1E6 #M$/year
                     NPVoandm = np.sum(self.Coam.value*inflationvector*discountvector)
                     NPVgrt = self.GTR.value/(1-self.GTR.value)*(NPVcap + NPVoandm + NPVfc + NPVit - NPVitc)
-                    self.Price.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc - np.sum(annualelectricityincome*inflationvector*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*inflationvector*discountvector)*1E8
-                    self.Price.value = self.Price.value*2.931 #$/MMBTU
+                    self.LCOH.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc - np.sum(annualelectricityincome*inflationvector*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*inflationvector*discountvector)*1E8
+                    self.LCOH.value = self.LCOELCOHCombined.value*2.931 #$/MMBTU
         
-        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
+
+    def __str__(self): return "Economics"

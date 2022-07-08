@@ -1,0 +1,106 @@
+Warning: No valid reservoir hydrostatic pressure provided. GEOPHIRES will assume built-in reservoir hydrostatic pressure correlation
+Warning: No valid production wellhead pressure provided. GEOPHIRES will calculate production wellhead pressure using built-in correlation
+Warning: No valid plant outlet pressure provided. GEOPHIRES will calculate plant outlet pressure based on production wellhead pressure and surface equipment pressure drop of 10 psi
+
+----------------------------
+GEOPHIRES Simulation Results
+----------------------------
+
+1. Simulation Metadata
+----------------------
+ GEOPHIRES Version = 2.0
+ GEOPHIRES Build Date = 2018-01-02
+ Simulation Date = 2019-04-25
+ Simulation Time = 14:30
+ Calculation Time = 0.011 s
+
+2. Summary of Simulation Results
+--------------------------------
+ End-Use Option = Electricity
+ Power Plant Type = Subcritical ORC
+ Average Net Electricity Generation = 7.13 MWe
+ LCOE = 10.5 cents/kWh
+ Economic Model Used = BICYCLE Model
+
+3. Reservoir Simulation Results
+-------------------------------
+ Reservoir Model = Annual Percentage Thermal Drawdown Model
+ Annual Thermal Drawdown = 0.500 %/year
+ Number of Production Wells = 3
+ Number of Injection Wells = 2
+ Number of Times Redrilling = 0
+ Well Depth = 2000.0 m
+ Flow Rate per Production Well = 110 kg/s
+ Initial Reservoir Temperature = 145.0°C
+ Maximum Production Temperature = 145.0°C
+ Average Production Temperature = 139.4°C
+ Minimum Production Temperature = 133.8°C
+ Initial Production Temperature = 145.0°C
+ Average Reservoir Heat Extraction = 96.66 MWth
+ Wellbore Heat Transmission Model = Constant Temperature Drop of 0.0°C
+ Average Injection Well Pump Pressure Drop = 1666.4 kPa
+ Average Production Well Pump Pressure Drop = 1069.1 kPa
+
+4. Surface Equipment Simulation Results
+---------------------------------------
+ Maximum Total Electricity Generation = 9.46 MWe
+ Average Total Electricity Generation = 8.31 MWe
+ Minimum Total Electricity Generation = 7.23 MWe
+ Initial Total Electricity Generation = 9.46 MWe
+ Maximum Net Electricity Generation = 8.32 MWe
+ Average Net Electricity Generation = 7.13 MWe
+ Minimum Net Electricity Generation = 6.00 MWe
+ Initial Net Electricity Generation = 8.32 MWe
+ Average Annual Total Electricity Generation = 65.51 GWh
+ Average Annual Net Electricity Generation = 56.19 GWh
+ Average Pumping Power = 1.18 MWe
+
+5. Capital and O&M Costs
+------------------------
+ Total Capital Cost = 52.57 M$
+   Wellfield Cost = 16.43 M$
+   Surface Plant Cost = 28.70 M$
+   Exploration Cost = 3.71 M$
+   Field Gathering System Cost = 3.73 M$
+   Stimulation Cost = 0.00 M$
+ Total O&M Cost = 1.75 M$/year
+   Wellfield O&M Cost = 0.48 M$/year
+   Surface Plant O&M Cost = 1.27 M$/year
+   Make-Up Water O&M Cost = 0.00 M$/year
+
+6. Power Generation Profile
+---------------------------
+  YEAR   THERMAL     GEOFLUID       PUMP      NET      FIRST LAW
+         DRAWDOWN    TEMPERATURE    POWER     POWER    EFFICIENCY
+         (-)         (deg C)        (MWe)     (MWe)    (%)
+   0     1.0000       145.00        1.1407    8.3166    7.9587
+   1     0.9974       144.62        1.1436    8.2331    7.9183
+   2     0.9948       144.25        1.1464    8.1500    7.8781
+   3     0.9922       143.88        1.1493    8.0674    7.8378
+   4     0.9897       143.50        1.1521    7.9853    7.7976
+   5     0.9871       143.12        1.1550    7.9035    7.7573
+   6     0.9845       142.75        1.1578    7.8223    7.7172
+   7     0.9819       142.38        1.1606    7.7415    7.6770
+   8     0.9793       142.00        1.1635    7.6611    7.6369
+   9     0.9767       141.62        1.1663    7.5811    7.5967
+  10     0.9741       141.25        1.1691    7.5016    7.5566
+  11     0.9716       140.88        1.1719    7.4226    7.5166
+  12     0.9690       140.50        1.1746    7.3439    7.4765
+  13     0.9664       140.12        1.1774    7.2658    7.4365
+  14     0.9638       139.75        1.1802    7.1880    7.3964
+  15     0.9612       139.38        1.1829    7.1107    7.3564
+  16     0.9586       139.00        1.1857    7.0338    7.3164
+  17     0.9560       138.62        1.1884    6.9574    7.2765
+  18     0.9534       138.25        1.1912    6.8813    7.2365
+  19     0.9509       137.88        1.1939    6.8058    7.1965
+  20     0.9483       137.50        1.1966    6.7306    7.1566
+  21     0.9457       137.12        1.1993    6.6559    7.1167
+  22     0.9431       136.75        1.2020    6.5816    7.0768
+  23     0.9405       136.38        1.2047    6.5077    7.0369
+  24     0.9379       136.00        1.2074    6.4342    6.9970
+  25     0.9353       135.62        1.2100    6.3612    6.9571
+  26     0.9328       135.25        1.2127    6.2886    6.9172
+  27     0.9302       134.88        1.2153    6.2164    6.8773
+  28     0.9276       134.50        1.2180    6.1446    6.8374
+  29     0.9250       134.12        1.2206    6.0733    6.7976
+  30     0.9224       133.75        1.2233    6.0023    6.7577

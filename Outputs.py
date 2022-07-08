@@ -3,11 +3,10 @@ import time
 import sys
 import numpy as np
 import Model
-from Parameter import strParameter, CovertUnitsBack, ConvertOutputUnits
-from GeoPHIRESUtils import ReadParameter
+from Parameter import strParameter, CovertUnitsBack, ConvertOutputUnits, LookupUnits
 from OptionList import EndUseOptions, EconomicModel, ReservoirModel, FractureShape, ReservoirVolume
-
 from Units import *
+
 NL="\n"
 
 class Outputs:
@@ -18,39 +17,18 @@ class Outputs:
         The __init__ function is used to set up all the parameters in the Outputs.
         
         :param self: Store data that will be used by the class
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
         :return: None
         :doc-author: Malcolm Ross
         """
 
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         
-        #Dictionary to hold the Units definations that the user wants for outputs created by GEOPHIRES.  It contains all the defaults initially
+        #Dictionary to hold the Units definations that the user wants for outputs created by GEOPHIRES.  It is empty by default initially - this will expand as the user desires are read from the inout file
         self.ParameterDict = {}
-        self.UnitsLength = self.ParameterDict[self.UnitsLength.Name] = strParameter(Name = 'LENGTH', value = 'meter')
-        self.UnitsArea = self.ParameterDict[self.UnitsArea.Name] = strParameter(Name = 'AREA', value = 'm**2')
-        self.UnitsVolume = self.ParameterDict[self.UnitsVolume.Name] = strParameter(Name = 'VOLUME', value = 'm**3')
-        self.UnitsDensity = self.ParameterDict[self.UnitsDensity.Name] = strParameter(Name = 'DENSITY', value = 'kg/m**3')
-        self.UnitsTemperature = self.ParameterDict[self.UnitsTemperature.Name] = strParameter(Name = 'TEMPERATURE', value = 'degC')
-        self.UnitsPressure = self.ParameterDict[self.UnitsPressure.Name] = strParameter(Name = 'PRESSURE', value = 'kPa')
-        self.UnitsTime = self.ParameterDict[self.UnitsTime.Name] = strParameter(Name = 'TIME', value = 'yr')
-        self.UnitsFlowRate = self.ParameterDict[self.UnitsFlowRate.Name] = strParameter(Name = 'FLOWRATE', value = 'kg/sec')
-        self.UnitsTemp_Gradient = self.ParameterDict[self.UnitsTemp_Gradient.Name] = strParameter(Name = 'TEMP_GRADIENT', value = 'degC/km')
-        self.UnitsDrawDown = self.ParameterDict[self.UnitsDrawDown.Name] = strParameter(Name = 'DRAWDOWN', value = 'kg/s/m**2')
-        self.UnitsImpedance = self.ParameterDict[self.UnitsImpedance.Name] = strParameter(Name = 'IMPEDANCE', value = 'GPa.s/m**3')
-        self.UnitsProductivity_Index = self.ParameterDict[self.UnitsProductivity_Index.Name] = strParameter(Name = 'PRODUCTIVITY_INDEX', value = 'kg/sec/bar')
-        self.UnitsInjectivity_Index = self.ParameterDict[self.UnitsInjectivity_Index.Name] = strParameter(Name = 'INJECTIVITY_INDEX', value = 'kg/sec/bar')
-        self.UnitsHeat_Capacity = self.ParameterDict[self.UnitsHeat_Capacity.Name] = strParameter(Name = 'HEAT_CAPACITY', value = 'J/kg/kelvin')
-        self.UnitsThermal_Conductivity = self.ParameterDict[self.UnitsThermal_Conductivity.Name] = strParameter(Name = 'THERMAL_CONDUCTIVITY', value = 'watt/m/kelvin')
-        self.UnitsPorosity = self.ParameterDict[self.UnitsPorosity.Name] = strParameter(Name = 'POROSITY', value = '%')
-        self.UnitsPermeability = self.ParameterDict[self.UnitsPermeability.Name] = strParameter(Name = 'PERMEABILITY', value = 'm**2')
-        self.UnitsCurrency = self.ParameterDict[self.UnitsCurrency.Name] = strParameter(Name = 'CURRENCY', value = 'MUSD')
-        self.UnitsPercent = self.ParameterDict[self.UnitsPercent.Name] = strParameter(Name = 'PERCENT', value = '%')
-        self.UnitsElectrcity = self.ParameterDict[self.UnitsElectrcity.Name] = strParameter(Name = 'ELECTRICITY', value = 'MW')
-        self.UnitsHeat = self.ParameterDict[self.UnitsHeat.Name] = strParameter(Name = 'HEAT', value = 'MW')
-        self.UnitsAvailability = self.ParameterDict[self.UnitsAvailability.Name] = strParameter(Name = 'AVAILABILITY', value = 'MW/(kg/s)')
+        self.printoutput = True
 
-        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
     def __str__(self):
         return "Outputs"
@@ -60,34 +38,36 @@ class Outputs:
         The read_parameters function reads in the parameters from a dictionary and stores them in the aparmeters.  It also handles special cases that need to be handled after a value has been read in and checked.  If you choose to sublass this master class, you can also choose to override this method (or not), and if you do
         
         :param self: Access variables that belong to a class
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
 
         :return: None
         :doc-author: Malcolm Ross
-        """
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #Deal with all the parameter values that the user has provided.  They should really only provide values that they want to change from the default values, but they can provide a value that is already set because it is a defaulr value set in __init__.  It will ignore those.
         #This also deals with all the special cases that need to be talen care of after a vlaue has been read in and checked.
         #If you choose to sublass this master class, you can also choose to override this method (or not), and if you do, do it before or after you call you own version of this method.  If you do, you can also choose to call this method from you class, which can effectively modify all these superclass parameters in your class.
+        """
 
         if len(model.InputParameters) > 0:
-            #loop thru all the parameters that the user wishes to set, looking for parameters that match this object
-            for item in self.ParameterDict.items():
-                ParameterToModify = item[1]
-                key = ParameterToModify.Name.strip()
-                if key in model.InputParameters:
-                    ParameterReadIn = model.InputParameters[key]
-                    ParameterToModify.CurrentUnits = ParameterToModify.PreferredUnits    #Before we change the paremeter, let's assume that the unit preferences will match - if they don't, the later code will fix this.
-                    ReadParameter(ParameterReadIn, ParameterToModify, model)   #this should handle all the non-special cases
+             
+            #if the user wants it, we need to know if the user wants to copy the contents of the HDR output file to the screen - this serves as the screen report
+            if "Print Output to Console" in model.InputParameters:
+                ParameterReadIn = model.InputParameters["Print Output to Console"]
+                if ParameterReadIn.sValue == "0": self.printoutput = False
+
+            #loop thru all the parameters that the user wishes to set, looking for parameters that contain the prefix "Units:" - that means we want to set a special case for converting this output parameter to new units
+            for key in model.InputParameters.keys():
+                if key.startswith("Units:"):
+                    self.ParameterDict[key.replace("Units:", "")] = LookupUnits(model.InputParameters[key].sValue)[0]
 
                     #handle special cases
-
-        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        
+        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
     def PrintOutputs(self, model:Model):
-        model.logger.info("Init " + str(__class__)) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
     
         #MIR Deal with converting Units back to PreferredUnits, if required.
         #before we write the outputs, we go thru all the parameters for all of the objects and set the values back to the units that the user entered the data in
@@ -106,7 +86,9 @@ class Outputs:
         
         for obj in [model.reserv, model.wellbores, model.surfaceplant, model.economics]:
             for key in obj.OutputParameterDict:
-                ConvertOutputUnits(obj.OutputParameterDict[key], model)
+                if key in self.ParameterDict:
+                    if self.ParameterDict[key] != obj.OutputParameterDict[key].CurrentUnits:
+                        ConvertOutputUnits(obj.OutputParameterDict[key], self.ParameterDict[key], model)
 
         #---------------------------------------
         #write results to output file and screen
@@ -128,16 +110,16 @@ class Outputs:
                 f.write(NL)
                 f.write('                           ***SUMMARY OF RESULTS***\n')
                 f.write(NL)
-                f.write("      End-Use Option: " + str(model.model.surfaceplant.enduseoption.value.value) + NL)
-                if model.model.surfaceplant.enduseoption.value != EndUseOptions.HEAT:    #there is an electricity component
-                    f.write(f"      Average Net Electricity Production                {np.average(model.model.surfaceplant.NetElectricityProduced.value):10.2f} " + model.model.surfaceplant.NetElectricityProduced.CurrentUnits.value + NL)
-                if model.model.surfaceplant.enduseoption.value != EndUseOptions.ELECTRICITY:    #there is a direct-use component
-                    f.write(f"      Average Direct-Use Heat Production                {np.average(model.model.surfaceplant.HeatProduced.value):10.2f} "+ model.model.surfaceplant.HeatProduced.CurrentUnits.value + NL)
+                f.write("      End-Use Option: " + str(model.surfaceplant.enduseoption.value.value) + NL)
+                if model.surfaceplant.enduseoption.value != EndUseOptions.HEAT:    #there is an electricity component
+                    f.write(f"      Average Net Electricity Production                {np.average(model.surfaceplant.NetElectricityProduced.value):10.2f} " + model.surfaceplant.NetElectricityProduced.CurrentUnits.value + NL)
+                if model.surfaceplant.enduseoption.value != EndUseOptions.ELECTRICITY:    #there is a direct-use component
+                    f.write(f"      Average Direct-Use Heat Production                {np.average(model.surfaceplant.HeatProduced.value):10.2f} "+ model.surfaceplant.HeatProduced.CurrentUnits.value + NL)
 
-                if model.model.surfaceplant.enduseoption.value in [EndUseOptions.ELECTRICITY, EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT,  EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]:    #levelized cost expressed as LCOE
-                    f.write(f"      Electricity breakeven price                       {model.economics.Price.value:10.2f} " + model.economics.Price.CurrentUnits.value + NL)
-                elif model.model.surfaceplant.enduseoption.value in [EndUseOptions.HEAT, EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY,  EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY]:    #levelized cost expressed as LCOH
-                    f.write(f"      Direct-Use heat breakeven price                   {model.economics.Price.value:10.2f} " + model.economics.Price.CurrentUnits.value + NL)
+                if model.surfaceplant.enduseoption.value in [EndUseOptions.ELECTRICITY, EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT,  EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]:    #levelized cost expressed as LCOE
+                    f.write(f"      Electricity breakeven price                       {model.economics.LCOE.value:10.2f} " + model.economics.LCOE.CurrentUnits.value + NL)
+                elif model.surfaceplant.enduseoption.value in [EndUseOptions.HEAT, EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY,  EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY]:    #levelized cost expressed as LCOH
+                    f.write(f"      Direct-Use heat breakeven price                   {model.economics.LCOH.value:10.2f} " + model.economics.LCOH.CurrentUnits.value + NL)
 
                 f.write(f"      Number of production wells                     {model.wellbores.nprod.value:10.0f}"+NL)  
                 f.write(f"      Number of injection wells                      {model.wellbores.ninj.value:10.0f}"+NL)
@@ -165,8 +147,8 @@ class Outputs:
                 elif model.economics.econmodel.value == EconomicModel.BICYCLE:
                     f.write("      Economic Model  = " + model.economics.econmodel.value.value + NL)
                 f.write(f"      Accrued financing during construction             {model.economics.inflrateconstruction.value*100:10.2f} " + model.economics.inflrateconstruction.CurrentUnits.value + NL)   
-                f.write(f"      Project lifetime                               {model.model.surfaceplant.plantlifetime.value:10.0f} " + model.model.surfaceplant.plantlifetime.CurrentUnits.value + NL)
-                f.write(f"      Capacity factor                                  {model.model.surfaceplant.utilfactor.value*100:10.1f} %" + NL)
+                f.write(f"      Project lifetime                               {model.surfaceplant.plantlifetime.value:10.0f} " + model.surfaceplant.plantlifetime.CurrentUnits.value + NL)
+                f.write(f"      Capacity factor                                  {model.surfaceplant.utilfactor.value*100:10.1f} %" + NL)
 
                 f.write(NL)
                 f.write('                          ***ENGINEERING PARAMETERS***\n')
@@ -175,7 +157,7 @@ class Outputs:
                 f.write(f"      Number of Injection Wells:                     {model.wellbores.ninj.value:10.0f}" + NL)
                 f.write(f"      Well depth                                       {model.reserv.depth.value:10.1f} " + model.reserv.depth.CurrentUnits.value + NL)
                 f.write(f"      Water loss rate                                  {model.reserv.waterloss.value*100:10.1f} " + model.reserv.waterloss.CurrentUnits.value + NL)
-                f.write(f"      Pump efficiency                                  {model.model.surfaceplant.pumpeff.value*100:10.1f} " + model.model.surfaceplant.pumpeff.CurrentUnits.value + NL)
+                f.write(f"      Pump efficiency                                  {model.surfaceplant.pumpeff.value*100:10.1f} " + model.surfaceplant.pumpeff.CurrentUnits.value + NL)
                 f.write(f"      Injection temperature                            {model.wellbores.Tinj.value:10.1f} " + model.wellbores.Tinj.CurrentUnits.value + NL)
                 if model.wellbores.rameyoptionprod.value:
                     f.write("      Production Wellbore heat transmission calculated with Ramey's model\n")    
@@ -187,8 +169,8 @@ class Outputs:
                 f.write(f"      Injection well casing ID                           {model.wellbores.injwelldiam.value/0.0254:10.3f} " + model.wellbores.injwelldiam.CurrentUnits.value + NL)
                 f.write(f"      Produciton well casing ID                          {model.wellbores.prodwelldiam.value/0.0254:10.3f} " + model.wellbores.prodwelldiam.CurrentUnits.value + NL)
                 f.write(f"      Number of times redrilling                     {model.wellbores.redrill:10.0f}"+NL)
-                if model.model.surfaceplant.enduseoption.value != EndUseOptions.HEAT:
-                    f.write("      Power plant type                                        " +  str(model.model.surfaceplant.pptype.value.value) + NL)
+                if model.surfaceplant.enduseoption.value != EndUseOptions.HEAT:
+                    f.write("      Power plant type                                        " +  str(model.surfaceplant.pptype.value.value) + NL)
                 f.write(NL)
                 f.write(NL)
                 f.write('                         ***RESOURCE CHARACTERISTICS***\n')
@@ -247,7 +229,7 @@ class Outputs:
                     f.write(f"      Reservoir impedance                               {model.wellbores.impedance.value/1000:10.2f} " + model.wellbores.impedance.CurrentUnits.value + NL)    
                 else:
                     f.write(f"      Reservoir hydrostatic pressure                    {model.wellbores.Phydrostatic.value:10.2f} " + model.wellbores.Phydrostatic.CurrentUnits.value + NL)    
-                    f.write(f"      Plant outlet pressure                             {model.model.surfaceplant.Pplantoutlet.value:10.2f} " + model.surfaceplant.Pplantoutlet.CurrentUnits.value + NL)    
+                    f.write(f"      Plant outlet pressure                             {model.surfaceplant.Pplantoutlet.value:10.2f} " + model.surfaceplant.Pplantoutlet.CurrentUnits.value + NL)    
                     if model.wellbores.productionwellpumping:
                         f.write(f"      Production wellhead pressure                      {model.wellbores.Pprodwellhead.value:10.2f} " + model.wellbores.Pprodwellhead.CurrentUnits.value + NL)
                         f.write(f"      Productivity Index                                {model.wellbores.PI.value:10.2f} " + model.wellbores.PI.CurrentUnits.value + NL)
@@ -307,7 +289,6 @@ class Outputs:
                     f.write(f"         Drilling and completion costs (for redrilling) {model.economics.Cwell.value:10.2f} " + model.economics.Cwell.CurrentUnits.value + NL)
                     f.write(f"      Drilling and completion costs per redrilled well  {(model.economics.Cwell.value/(model.wellbores.nprod.value+model.wellbores.ninj.value)):10.2f} " + model.economics.Cwell.CurrentUnits.value + NL)
                     f.write(f"         Stimulation costs (for redrilling)             {model.economics.Cstim.value:10.2f} " + model.economics.Cstim.CurrentUnits.value + NL)
-                if model.economics.AddOnCAPEXTotal.value > 0: f.write(f"         AddOns costs                                   {model.economics.AddOnCAPEXTotal.value:10.2f} " + model.economics.AddOnCAPEXTotal.CurrentUnits.value + NL)
                 f.write(f"      Total capital costs                               {model.economics.CCap.value:10.2f} " + model.economics.CCap.CurrentUnits.value + NL)
                 if model.economics.econmodel.value == EconomicModel.FCR:
                     f.write(f"      Annualized capital costs                          {(model.economics.CCap.value*(1+model.economics.inflrateconstruction.value)*model.economics.FCR.value):10.2f} " + model.economics.CCap.CurrentUnits.value + NL)
@@ -321,10 +302,8 @@ class Outputs:
                     f.write(f"         Power plant maintenance costs                  {model.economics.Coamplant.value:10.2f} " + model.economics.Coamplant.CurrentUnits.value + NL)
                     f.write(f"         Water costs                                    {model.economics.Coamwater.value:10.2f} " + model.economics.Coamwater.CurrentUnits.value + NL)
                     if model.surfaceplant.enduseoption.value == EndUseOptions.HEAT: f.write(f"         Average annual pumping costs                   {model.economics.averageannualpumpingcosts.value:10.2f} " + model.economics.averageannualpumpingcosts.CurrentUnits.value + NL)
-                    if model.economics.AddOnOPEXTotalPerYear.value > 0: f.write(f"         Annual AddOns costs                            {model.economics.AddOnOPEXTotalPerYear.value:10.2f} " + model.economics.AddOnOPEXTotalPerYear.CurrentUnits.value + NL)
                     f.write(f"      Total operating and maintenance costs             {(model.economics.Coam.value + model.economics.averageannualpumpingcosts.value):10.2f} " + model.economics.Coam.CurrentUnits.value + NL)
                 else:
-                    if model.economics.AddOnOPEXTotalPerYear.value > 0: f.write(f"         Annual AddOns costs                            {model.economics.AddOnOPEXTotalPerYear.value:10.2f} " + model.economics.AddOnOPEXTotalPerYear.CurrentUnits.value + NL)
                     f.write(f"      Total operating and maintenance costs             {model.economics.Coam.value:10.2f} " + model.economics.Coam.CurrentUnits.value + NL)
 
                 f.write(NL)
@@ -432,13 +411,13 @@ class Outputs:
                                                                                                                             model.surfaceplant.RemainingReservoirHeatContent.value[i],
                                                                                                                                                 (model.reserv.InitialReservoirHeatContent.value-model.surfaceplant.RemainingReservoirHeatContent.value[i])*100/model.reserv.InitialReservoirHeatContent.value)+NL)
                 f.write(NL)
-        except BaseException as e:
-            print (str(e))
-            model.logger.critical(str(e))
+        except BaseException as ex:
             tb = sys.exc_info()[2]
-            print ("GEOPHIRES:   ...write file error")
-            print ("GEOPHIRES:   ...Line %i" % tb.tb_lineno)
-            model.logger.critical("GEOPHIRES:   ...write file error")
-            model.logger.critical("GEOPHIRES:   ...Line %i" % tb.tb_lineno)
+            print (str(ex))
+            print("Error: GEOPHIRES failed to Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
+            model.logger.critical(str(ex))
+            model.logger.critical("Error: GEOPHIRES failed to Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
+            sys.exit()        
+            
       
-        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)

@@ -6,6 +6,7 @@ class Units(IntEnum):
     LENGTH = auto()
     AREA = auto()
     VOLUME = auto()
+    MASS = auto()
     DENSITY = auto()
     TEMPERATURE = auto()
     PRESSURE = auto()
@@ -21,9 +22,12 @@ class Units(IntEnum):
     POROSITY = auto()
     PERMEABILITY = auto()
     CURRENCY = auto()
+    CURRENCYFREQUENCY = auto()
+    ENERGYCOST = auto()
+    COSTPERMASS = auto()
     PERCENT = auto()
-    ELECTRICITY = auto()
-    HEAT = auto()
+    ENERGY = auto()
+    ENERGYFREQUENCY = auto()
     AVAILABILITY = auto()
     CO2PRODUCTION = auto()
 
@@ -78,26 +82,20 @@ class DensityUnit(Enum):
     OZPERINCHES3 = "oz/in**3"
     LBSPERMILES3 = "lbs/mi**3"
 
-class ElectricityUnit(Enum):
-    """Electricity Units"""
+class EnergyUnit(Enum):
+    """Energy (electrcity or heat) Units"""
+    W = "W"
+    KW = "kW"
     MW = "MW"
     GW = "GW"
-    KW = "kW"
+    WH = "Wh"
+    KWH = "kWh"
     MWH = "MWh"
     GWH = "GWh"
-    KWH = "kWh"
-    KWPERYEAR = "kW/yr"
-    MWPERYEAR = "MW/yr"
-    GWPERYEAR = "GW/yr"
 
-class HeatUnit(Enum):
-    """Heat Units"""
-    MW = "MW"
-    GW = "GW"
-    KW = "kW"
-    MWH = "MWh"
-    GWH = "GWh"
-    KWH = "kWh"
+class EnergyFrequencyUnit(Enum):
+    """Energy per interval Units"""
+    WPERYEAR = "W/yr"
     KWPERYEAR = "kW/yr"
     MWPERYEAR = "MW/yr"
     GWPERYEAR = "GW/yr"
@@ -105,18 +103,36 @@ class HeatUnit(Enum):
 class CurrencyUnit(Enum):
     """Currency Units"""
     MDOLLARS = "MUSD"
-    MDOLLARSPERYEAR = "MUSD/yr"
-    DOLLARS = "USD"
-    DOLLARSPERYEAR = "USD/yr"
-    DOLLARSPERKWH = "USD/kwh"
-    CENTSSPERMT = "Cents/mt"
-    DOLLARSPERMT = "USD/mt"
-    CENTSSPERLB = "Cents/lb"
-    DOLLARSPERLB = "USD/lb"
-    CENTSSPERKWH = "Cents/kwh"
-    DOLLARSPERMMBTU = "USD/MMBTU"
     KDOLLARS = "KUSD"
+    DOLLARS = "USD"
+    MEUR = "MEUR"
+    KEUR = "KEUR"
+    EUR = "EUR"
+    MMXN = "MMXN"
+    KMXN = "KMXN"
+    MXN = "MXN"
+
+class CurrencyFrequencyUnit(Enum):
+    MDOLLARSPERYEAR = "MUSD/yr"
     KDOLLARSPERYEAR = "KUSD/yr"
+    DOLLARSPERYEAR = "USD/yr"
+    MEURPERYEAR = "MEUR/yr"
+    KEURPERYEAR = "KEUR/yr"
+    EURPERYEAR = "EUR/yr"
+    MMXNPERYEAR = "MXN/yr"
+    KMXNPERYEAR = "KMXN/yr"
+    MXNPERYEAR = "MXN/yr"
+    
+class EnergyCostUnit(Enum):
+    DOLLARSPERKWH = "USD/kWh"
+    CENTSSPERKWH = "cents/kWh"
+    DOLLARSPERMMBTU = "USD/MMBTU"
+    
+class CostPerMassUnit(Enum):
+    CENTSSPERMT = "cents/mt"
+    DOLLARSPERMT = "USD/mt"
+    CENTSSPERLB = "cents/lb"
+    DOLLARSPERLB = "USD/lb"
 
 class PressureUnit(Enum):
     """Pressure Units"""
@@ -181,3 +197,11 @@ class CO2ProductionUnit(Enum):
     LBSPERKWH= "lbs/kWh"
     KPERKWH= "k/kWh"
     TONNEPERMWH = "t/MWh"
+
+class MassUnit(Enum):
+    GRAM = "gram"
+    KILOGRAM = "kilogram"
+    TONNE = "tonne"
+    TON = "ton"
+    LB = "pound"
+    OZ = "ounce"

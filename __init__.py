@@ -1,4 +1,4 @@
-
+"""
 import traceback
 import logging
 #get logging started
@@ -14,3 +14,4 @@ def log_traceback(ex, ex_traceback=None) -> None:
     tb_lines = [ line.rstrip('\n') for line in
                  traceback.format_exception(ex.__class__, ex, ex_traceback)]
     logger.critical(tb_lines)
+"""

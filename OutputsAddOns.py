@@ -1,18 +1,18 @@
 import sys
 import Outputs
-import Model
+import AdvModel
 
 NL="\n"
 
-class OutputsAddOns(Outputs):
+class OutputsAddOns(Outputs.Outputs):
     """description of class"""
-    def PrintOutputs(model:Model):
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+    def PrintOutputs(self, model:AdvModel):
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         # Do the original output
         super().PrintOutputs(model)   # initialize the parent parameters and variables
 
-        if model.economics.AddOnCAPEXTotal.value + model.economics.AddOnOPEXTotalPerYear.value == 0: return   #don't bother if we have nothing to report.
+        if model.addeconomics.AddOnCAPEXTotal.value + model.addeconomics.AddOnOPEXTotalPerYear.value == 0: return   #don't bother if we have nothing to report.
 
         #now do AddOn output, which will append to the original output
         #---------------------------------------
@@ -24,48 +24,59 @@ class OutputsAddOns(Outputs):
                 f.write(NL)
                 f.write("                                ***ADDON ECONOMICS***"+ NL)
                 f.write(NL)
-                f.write(f"      Adjusted CAPEX (after incentives, grants, etc)    {model.economics.AdjustedCAPEX.value:10.2f} M$" + NL)
-                f.write(f"      Adjusted OPEX (after incentives, grants, etc)     {model.economics.AdjustedOPEX.value:10.2f} M$" + NL)
-                f.write(f"      NPV                                               {model.economics.AddOnNPV.value:10.2f} M$" + NL)
-                f.write(f"      IRR                                               {model.economics.AddOnIRR.value:10.2f} %" + NL)
-                f.write(f"      VIR                                               {model.economics.AddOnVIR.value:10.2f}" + NL)
-                f.write(f"      MOIC                                              {model.economics.AddOnMOIC.value:10.2f}" + NL)
-                f.write(f"      Payback Period                                    {model.economics.AddOnPaybackPeriod.value:10.2f} Years" + NL)
-                f.write(f"      Total Add-on CAPEX                                {model.economics.AddOnCAPEXTotal.value:10.2f} M$" + NL)
-                f.write(f"      Total Add-on OPEX                                 {model.economics.AddOnOPEXTotalPerYear.value:10.2f} M$/year" + NL)
-                f.write(f"      Total Add-on Net Elec                             {model.economics.AddOnElecGainedTotalPerYear.value:10.2f} M$/year" + NL)
-                f.write(f"      Total Add-on Net Heat                             {model.economics.AddOnHeatGainedTotalPerYear.value:10.2f} M$/year" + NL)
-                f.write(f"      Total Add-on Profit                               {model.economics.AddOnProfitGainedTotalPerYear.value:10.2f} M$/year" + NL)
+                if model.economics.LCOE.value > -999.0: f.write(f"      Adjusted Project LCOE (after incentives, grants, AddOns,etc)      {model.economics.LCOE.value:10.2f} " + model.economics.LCOE.PreferredUnits.value + NL)
+                if model.economics.LCOH.value > -999.0: f.write(f"      Adjusted Project LCOH (after incentives, grants, AddOns,etc)      {model.economics.LCOH.value:10.2f} " + model.economics.LCOH.PreferredUnits.value + NL)
+                f.write(f"      Adjusted Project CAPEX (after incentives, grants, AddOns, etc)    {model.addeconomics.AdjustedProjectCAPEX.value:10.2f} " + model.addeconomics.AdjustedProjectCAPEX.PreferredUnits.value + NL)
+                f.write(f"      Adjusted Project OPEX (after incentives, grants, AddOns, etc)     {model.addeconomics.AdjustedProjectOPEX.value:10.2f} " + model.addeconomics.AdjustedProjectOPEX.PreferredUnits.value + NL)
+                f.write(f"      Project NPV   (including AddOns)                                  {model.addeconomics.ProjectNPV.value:10.2f} " + model.addeconomics.ProjectNPV.PreferredUnits.value + NL)
+                f.write(f"      Project IRR   (including AddOns)                                  {model.addeconomics.ProjectIRR.value:10.2f} " + model.addeconomics.ProjectIRR.PreferredUnits.value + NL)
+                f.write(f"      Project VIR=PI=PIR   (including AddOns)                           {model.addeconomics.ProjectVIR.value:10.2f}" + NL)
+                f.write(f"      Project MOIC  (including AddOns)                                  {model.addeconomics.ProjectMOIC.value:10.2f}" + NL)
+                f.write(f"      Project Payback Period       (including AddOns)                   {model.addeconomics.ProjectPaybackPeriod.value:10.2f} " + model.addeconomics.ProjectPaybackPeriod.PreferredUnits.value + NL)
+                f.write(f"      Total Add-on CAPEX                                                {model.addeconomics.AddOnCAPEXTotal.value:10.2f} " + model.addeconomics.AddOnCAPEXTotal.PreferredUnits.value + NL)
+                f.write(f"      Total Add-on OPEX                                                 {model.addeconomics.AddOnOPEXTotalPerYear.value:10.2f} " + model.addeconomics.AddOnOPEXTotalPerYear.PreferredUnits.value + NL)
+                f.write(f"      Total Add-on Net Elec                                             {model.addeconomics.AddOnElecGainedTotalPerYear.value:10.2f} " + model.addeconomics.AddOnElecGainedTotalPerYear.PreferredUnits.value + NL)
+                f.write(f"      Total Add-on Net Heat                                             {model.addeconomics.AddOnHeatGainedTotalPerYear.value:10.2f} " + model.addeconomics.AddOnHeatGainedTotalPerYear.PreferredUnits.value + NL)
+                f.write(f"      Total Add-on Profit                                               {model.addeconomics.AddOnProfitGainedTotalPerYear.value:10.2f} " + model.addeconomics.AddOnProfitGainedTotalPerYear.PreferredUnits.value + NL)
+                f.write(f"      AddOns Payback Period                                             {model.addeconomics.AddOnPaybackPeriod.value:10.2f} " + model.addeconomics.AddOnPaybackPeriod.PreferredUnits.value + NL)
                 f.write(NL)
-                f.write(NL)                
-                f.write("                                        ******************************" + NL)
-                f.write("                                        *  ECONOMIC PROFILE          *" + NL)
-                f.write("                                        ******************************" + NL)
-                f.write("Year        Electricity             Heat          Add-on      Annual Cash Cumm. Cash" + NL);
-                f.write("Since     Price   Revenue      Price   Revenue   Revenue          Flow       Flow" + NL);
-                f.write("Start    ($/MWh)   ($M)       ($/MWh)   ($M)      ($M)            ($M)       ($M)" + NL);
+                f.write(NL)
+                f.write("                             ****************************" + NL)
+                f.write("                             *  ADDON ECONOMIC PROFILE  *" + NL)
+                f.write("                             ****************************" + NL)
+                f.write("Year        Electricity             Heat             Add-on  Annual AddOn Cumm. AddOn  Annual Project Cumm. Project" + NL);
+                f.write("Since     Price   Revenue      Price   Revenue      Revenue   Cash Flow    Cash Flow    Cash Flow       Cash Flow" + NL);
+                f.write("Start    ("
+                                    +model.addeconomics.AddOnElecPrice.PreferredUnits.value+
+                                     ")("+model.addeconomics.AddOnElecRevenue.PreferredUnits.value+
+                                               ") ("+model.addeconomics.AddOnHeatPrice.PreferredUnits.value+
+                                                            ")("+model.addeconomics.AddOnHeatRevenue.PreferredUnits.value+
+                                                                     ") ("+model.addeconomics.AddOnRevenue.PreferredUnits.value+
+                                                                            ")    ("+model.addeconomics.AddOnCashFlow.PreferredUnits.value+
+                                                                                    ")  ("+model.addeconomics.AddOnCummCashFlow.PreferredUnits.value +
+                                                                            ")       ("+model.addeconomics.ProjectCashFlow.PreferredUnits.value+
+                                                                                    ")        ("+model.addeconomics.ProjectCummCashFlow.PreferredUnits.value+")" + NL);
                 i = 0
-                for i in range(0, model.economics.ConstructionYears.value, 1):
+                for i in range(0, model.addeconomics.ConstructionYears.value, 1):
                     #construction years...
-                    f.write(f"   {i+1:3.0f}                                                           {model.economics.CashFlow.value[i]:5.2f}     {model.economics.CummCashFlow.value[i]:5.2f}"    + NL)
+                    f.write(f"   {i+1:3.0f}                                                            {model.addeconomics.AddOnCashFlow.value[i]:5.2f}     {model.addeconomics.AddOnCummCashFlow.value[i]:5.2f}      {model.addeconomics.ProjectCashFlow.value[i]:5.2f}           {model.addeconomics.ProjectCummCashFlow.value[i]:5.2f}"    + NL)
                     i = i + 1
                 ii=0
-                for ii in range(0, (model.economics.ConstructionYears.value + model.surfaceplant.plantlifetime.value - 1), 1):
+                for ii in range(0, (model.addeconomics.ConstructionYears.value + model.surfaceplant.plantlifetime.value - 1), 1):
                     #running years...
-                    f.write(f"   {i+1:3.0f}    {model.economics.ElecPrice.value[ii]:5.3f}   {model.economics.ElecRevenue.value[ii]:5.2f}        {model.economics.HeatPrice.value[ii]:5.3f}   {model.economics.HeatRevenue.value[ii]:5.2f}     {model.economics.AddOnRevenue.value[ii]:5.2f}           {model.economics.CashFlow.value[i]:5.2f}     {model.economics.CummCashFlow.value[i]:5.2f}"    + NL)
+                    f.write(f"   {i+1:3.0f}    {model.addeconomics.AddOnElecPrice.value[ii]:5.3f}   {model.addeconomics.AddOnElecRevenue.value[ii]:5.4f}        {model.addeconomics.AddOnHeatPrice.value[ii]:5.3f}   {model.addeconomics.AddOnHeatRevenue.value[ii]:5.4f}        {model.addeconomics.AddOnRevenue.value[ii]:5.2f}        {model.addeconomics.AddOnCashFlow.value[i]:5.2f}     {model.addeconomics.AddOnCummCashFlow.value[i]:5.2f}        {model.addeconomics.ProjectCashFlow.value[i]:5.2f}           {model.addeconomics.ProjectCummCashFlow.value[i]:5.2f}"    + NL)
                     i = i + 1
                     ii = ii + 1
                     
-        except BaseException as e:
-            print (str(e))
-            model.logger.critical(str(e))
+        except BaseException as ex:
             tb = sys.exc_info()[2]
-            print ("GEOPHIRES:   ...write file error")
-            print ("GEOPHIRES:   ...Line %i" % tb.tb_lineno)
-            model.logger.critical("GEOPHIRES:   ...write file error")
-            model.logger.critical("GEOPHIRES:   ...Line %i" % tb.tb_lineno)
+            print (str(ex))
+            print("Error: GEOPHIRES failed to Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
+            model.logger.critical(str(ex))
+            model.logger.critical("Error: GEOPHIRES failed to Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
+            sys.exit()
 
-        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
 
 

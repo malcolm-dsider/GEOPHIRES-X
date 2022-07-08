@@ -1,26 +1,26 @@
 import sys
+import math
 import numpy as np
+import numpy_financial as npf
+import AdvModel
 import Economics
-import Model
-import Economics
-from GeoPHIRESUtils import DumpObjectAsJson, ReadParameter
 from OptionList import EndUseOptions
 from Parameter import boolParameter, intParameter, floatParameter, strParameter, OutputParameter
 from Units import *
 
-class EconomicsCCUS(Economics):
-    def __init__(self, model:Model):
+class EconomicsCCUS(Economics.Economics):
+    def __init__(self, model:AdvModel):
         """
         The __init__ function is called automatically when a class is instantiated. 
         It initializes the attributes of an object, and sets default values for certain arguments that can be overridden by user input. 
         The __init__ function is used to set up all the parameters in the CCUS Economics.
         
         :param self: Store data that will be used by the class
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
         :return: None
         :doc-author: Malcolm Ross
         """
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().__init__(model)   # initialize the parent parameters and variables
 
         #Set up all the Parameters that will be predefined by this class using the different types of parameter classes.  Setting up includes giving it a name, a default value, The Unit Type (length, volume, temperature, etc) and Unit Name of that value, sets it as required (or not), sets allowable range, the error message if that range is exceeded, the ToolTip Text, and the name of teh class that created it.
@@ -31,107 +31,166 @@ class EconomicsCCUS(Economics):
         #set up the parameters using the Parameter Constructors (intParameter, floatParameter, strParameter, etc); initialize with their name, default value, and valid range (if int or float).  Optionally, you can specify:
         # Required (is it reuired to run? default value = False), ErrMessage (what GEOPHIRES will report if the value provided is invalid, "assume default value (see manual)"), ToolTipText (when there is a GIU, this is the text that the user will see, "This is ToolTip Text"),
         # UnitType (the type of units associated with this parameter (length, temperature, density, etc), Units.NONE), CurrentUnits (what the units are for this parameter (meters, celcius, gm/cc, etc, Units:NONE), and PreferredUnits (ususally equal to CurrentUnits, but these are the units that the calculations assume when running, Units.NONE
-        
-        self.CCUSEndPrice = self.ParameterDict[self.CCUSEndPrice.Name] = floatParameter("Ending CCUS Credit Value", value = 0, Min=0, Max=1000, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.DOLLARSPERLB, CurrentUnits = CurrencyUnit.DOLLARSPERLB)
+        self.FixedInternalRate = self.ParameterDict[self.FixedInternalRate.Name] = floatParameter("Fixed Internal Rate", value = 6.25, Min=0.0, Max = 100.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage="assume default for fixed internal rate (6.25%)", ToolTipText="Fixed Internal Rate (used in NPV calculation)")
+        self.ConstructionYears = self.ParameterDict[self.ConstructionYears.Name]  = intParameter("Construction Years", value = 1, AllowableRange=list(range(1,15,1)), UnitType = Units.NONE, ErrMessage="assume default number of years in construction (1)", ToolTipText="Number of years spent in construction (assumes whole years, no fractions)")
+        self.CCUSEndPrice = self.ParameterDict[self.CCUSEndPrice.Name] = floatParameter("Ending CCUS Credit Value", value = 0, Min=0, Max=1000, UnitType = Units.COSTPERMASS, PreferredUnits = CostPerMassUnit.DOLLARSPERLB, CurrentUnits = CostPerMassUnit.DOLLARSPERLB)
         self.CCUSEscalationStart = self.ParameterDict[self.CCUSEscalationStart.Name]  = intParameter("CCUS Escalation Start Year", value = 0, AllowableRange=list(range(0,101,1)), UnitType = Units.TIME, PreferredUnits = TimeUnit.YEAR, CurrentUnits = TimeUnit.YEAR, ErrMessage="assume default CCUS escalation delay time (5 years)", ToolTipText="Number of years after start of project before start of CCUS incentives")
-        self.CCUSEscalationRate = self.ParameterDict[self.CCUSEscalationRate.Name] = floatParameter("CCUS Escalation Rate Per Year", value = 0.0, Min=0.0, Max = 100.0, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.DOLLARSPERMT, CurrentUnits = CurrencyUnit.DOLLARSPERMT, ErrMessage="assume no CCUS credit escalation (0.0)", ToolTipText="additional value per year of price after escalation starts")
-        self.CCUSStartPrice = self.ParameterDict[self.CCUSStartPrice.Name] = floatParameter("Starting CCUS Credit Value", value = 0.0, Min=0, Max=1000, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.DOLLARSPERMT, CurrentUnits = CurrencyUnit.DOLLARSPERMT)
+        self.CCUSEscalationRate = self.ParameterDict[self.CCUSEscalationRate.Name] = floatParameter("CCUS Escalation Rate Per Year", value = 0.0, Min=0.0, Max = 100.0, UnitType = Units.COSTPERMASS, PreferredUnits = CostPerMassUnit.DOLLARSPERMT, CurrentUnits = CostPerMassUnit.DOLLARSPERMT, ErrMessage="assume no CCUS credit escalation (0.0)", ToolTipText="additional value per year of price after escalation starts")
+        self.CCUSStartPrice = self.ParameterDict[self.CCUSStartPrice.Name] = floatParameter("Starting CCUS Credit Value", value = 0.0, Min=0, Max=1000, UnitType = Units.COSTPERMASS, PreferredUnits = CostPerMassUnit.DOLLARSPERMT, CurrentUnits = CostPerMassUnit.DOLLARSPERMT)
         self.CCUSGridCO2 = self.ParameterDict[self.CCUSGridCO2.Name] = floatParameter("Current Grid CO2 production", value = 0.0, Min=0, Max=50000, UnitType = Units.CO2PRODUCTION, PreferredUnits = CO2ProductionUnit.LBSPERKWH, CurrentUnits = CO2ProductionUnit.LBSPERKWH)
+        self.HeatStartPrice = self.ParameterDict[self.HeatStartPrice.Name] = floatParameter("Starting Heat Sale Price", value = 0.025, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
+        self.HeatEndPrice = self.ParameterDict[self.HeatEndPrice.Name] = floatParameter("Ending Heat Sale Price", value = 0.025, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
+        self.HeatEscalationStart = self.ParameterDict[self.HeatEscalationStart.Name]  = intParameter("Heat Escalation Start Year", value = 5, AllowableRange=list(range(0,101,1)), UnitType = Units.TIME, PreferredUnits = TimeUnit.YEAR, CurrentUnits = TimeUnit.YEAR, ErrMessage="assume default heat escalation delay time (5 years)", ToolTipText="Number of years after start of project before start of escalation")
+        self.HeatEscalationRate = self.ParameterDict[self.HeatEscalationRate.Name] = floatParameter("Heat Escalation Rate Per Year", value = 0.0, Min=0.0, Max = 100.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH, ErrMessage="assume no heat price escalation (0.0)", ToolTipText="additional cost per year of price after escalation starts")
+        self.ElecStartPrice = self.ParameterDict[self.ElecStartPrice.Name] = floatParameter("Starting Electricity Sale Price", value = 0.055, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
+        self.ElecEndPrice = self.ParameterDict[self.ElecEndPrice.Name] = floatParameter("Ending Electricity Sale Price", value = 0.055, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
+        self.ElecEscalationStart = self.ParameterDict[self.ElecEscalationStart.Name]  = intParameter("Electricity Escalation Start Year", value = 5, AllowableRange=list(range(0,101,1)), UnitType = Units.TIME, PreferredUnits = TimeUnit.YEAR, CurrentUnits = TimeUnit.YEAR, ErrMessage="assume default electricty escalation delay time (5 years)", ToolTipText="Number of years after start of project before start of escalation")
+        self.ElecEscalationRate = self.ParameterDict[self.ElecEscalationRate.Name] = floatParameter("Electricity Escalation Rate Per Year", value = 0.0, Min=0.0, Max = 100.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH, ErrMessage="assume no electricty price escalation (0.0)", ToolTipText="additional cost per year of price after escalation starts")
 
         #local variables that need initialization        
 
         #results
-        self.CCUSPrice = self.OutputParameterDict[self.CCUSPrice.Name] = OutputParameter("CCUS Incentive Model", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.DOLLARSPERLB, CurrentUnits=CurrencyUnit.DOLLARSPERLB)
-        self.CCUSRevenue = self.OutputParameterDict[self.CCUSRevenue.Name] = OutputParameter("Annual Revenue Generated from CCUS", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyUnit.MDOLLARSPERYEAR)
-        self.CashFlow =  self.OutputParameterDict[self.CashFlow.Name] = OutputParameter("Annual Cash Flow", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyUnit.MDOLLARSPERYEAR)
-        self.CummCashFlow =  self.OutputParameterDict[self.CummCashFlow.Name] = OutputParameter("Cummulative Cash Flow", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.ProjectNPV = self.OutputParameterDict[self.ProjectNPV.Name] = OutputParameter("Project Net Present Value", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.ProjectIRR = self.OutputParameterDict[self.ProjectIRR.Name] = OutputParameter("Project Internal Rate of Return", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.PERCENT, CurrentUnits=PercentUnit.PERCENT)
+        self.ProjectVIR = self.OutputParameterDict[self.ProjectVIR.Name] = OutputParameter("Project Value Investment Ratio", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.TENTH, CurrentUnits=PercentUnit.TENTH)
+        self.ProjectPaybackPeriod = self.OutputParameterDict[self.ProjectPaybackPeriod.Name] = OutputParameter("Project Payback Period", value = -1.0, UnitType = Units.TIME, PreferredUnits=TimeUnit.YEAR, CurrentUnits=TimeUnit.YEAR)
+        self.ProjectMOIC = self.OutputParameterDict[self.ProjectMOIC.Name] = OutputParameter("Project Multiples of Invested Capital", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.TENTH, CurrentUnits=PercentUnit.TENTH)
+        self.ProjectCashFlow =  self.OutputParameterDict[self.ProjectCashFlow.Name] = OutputParameter("Annual Project Cash Flow", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.ProjectCummCashFlow =  self.OutputParameterDict[self.ProjectCummCashFlow.Name] = OutputParameter("Cummulative Project Cash Flow", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.CCUSPrice = self.OutputParameterDict[self.CCUSPrice.Name] = OutputParameter("CCUS Incentive Model", value = 0.0, UnitType = Units.COSTPERMASS, PreferredUnits=CostPerMassUnit.DOLLARSPERLB, CurrentUnits=CostPerMassUnit.DOLLARSPERLB)
+        self.CCUSRevenue = self.OutputParameterDict[self.CCUSRevenue.Name] = OutputParameter("Annual Revenue Generated from CCUS", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.CCUSCashFlow =  self.OutputParameterDict[self.CCUSCashFlow.Name] = OutputParameter("Annual Cash Flow", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.CCUSCummCashFlow =  self.OutputParameterDict[self.CCUSCummCashFlow.Name] = OutputParameter("Cummulative Cash Flow", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.CarbonThatWouldHaveBeenProducedAnnually =  self.OutputParameterDict[self.CarbonThatWouldHaveBeenProducedAnnually.Name] = OutputParameter("Annual Saved Carbon Production", value = 0.0, UnitType = Units.MASS, PreferredUnits=MassUnit.LB, CurrentUnits=MassUnit.LB)
+        self.CarbonThatWouldHaveBeenProducedTotal =  self.OutputParameterDict[self.CarbonThatWouldHaveBeenProducedTotal.Name] = OutputParameter("Annual Saved Carbon Production", value = 0.0, UnitType = Units.MASS, PreferredUnits=MassUnit.LB, CurrentUnits=MassUnit.LB)
+        self.CCUSOnElecPrice = self.ParameterDict[self.CCUSOnElecPrice.Name] = OutputParameter("Electricity Sale Price Model", value = 0.055, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
+        self.CCUSOnHeatPrice = self.ParameterDict[self.CCUSOnHeatPrice.Name] = OutputParameter("Heat Sale Price Model", value = 0.025, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
 
-        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
-    def __str__(self):
-        return "EconomicsCCUS"
-
-    def dump_self_as_Json(self)->str: return(DumpObjectAsJson(self))
-
-    def read_parameter_from_Json(self, dJson): 
-        for item in dJson.items():
-            if item[0] in self.ParameterDict:
-                if isinstance(self.ParameterDict[item[0]], floatParameter): val = float(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], intParameter): val = int(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], boolParameter): val = bool(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], strParameter): val = str(item[1]['Value'])
-                self.ParameterDict[item[0]].value = val
-
-    def read_parameters(self, model:Model) -> None:
+    def read_parameters(self, model:AdvModel) -> None:
         """
         The read_parameters function reads in the parameters from a dictionary and stores them in the aparmeters.  It also handles special cases that need to be handled after a value has been read in and checked.  If you choose to sublass this master class, you can also choose to override this method (or not), and if you do
         
         :param self: Access variables that belong to a class
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
 
         :return: None
         :doc-author: Malcolm Ross
         """
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().read_parameters(model)    #read the paremeters for the parent.
 
         #Deal with all the parameter values that the user has provided that relate to this extension.  super,read_parametesr will have already dealt with all the regular values, but anything unusal may not be dealt with, so check.
         # In this case, all the values are array values, and weren't correctly dealt with, so below is where we process them.
 
-        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
-    def Calculate(self, model) -> None:
+    def Calculate(self, model:AdvModel) -> None:
         """
         The Calculate function is where all the calculations are done.
         This function can be called multiple times, and will only recalculate what has changed each time it is called.
         
         :param self: Access variables that belongs to the class
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
         :return: Nothing, but it does make calculations and set values in the model
         :doc-author: Malcolm Ross
         """
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #This is where all the calcualtions are made using all the values that have been set.
         #If you sublcass this class, you can choose to run these calculations before (or after) your calculations, but that assumes you have set all the values that are required for these calculations
         #If you choose to sublass this master class, you can also choose to override this method (or not), and if you do, do it before or after you call you own version of this method.  If you do, you can also choose to call this method from you class, which can effectively run the calculations of the superclass, making all thr values available to your methods. but you had n=betteer have set all the paremeters!
         
-        #now we are going to run the calculations for the parent
-#        super().Calculate(reserv, wellbores, surfaceplant, model)    #run calculate for the parent.#MIR No need to do this, because it has already been run
-
-        #Now there are some calculations I want to make AFTER the parent class calculations
+        #Calcuate carbon pricew model
         self.CCUSPrice.value = [0.0] * model.surfaceplant.plantlifetime.value
         self.CCUSRevenue.value = [0.0] * model.surfaceplant.plantlifetime.value
-        self.CashFlow.value = [0.0] * model.surfaceplant.plantlifetime.value
-        self.CummCashFlow.value = [0.0] * model.surfaceplant.plantlifetime.value
+        self.CCUSCashFlow.value = [0.0] * model.surfaceplant.plantlifetime.value
+        self.CCUSCummCashFlow.value = [0.0] * model.surfaceplant.plantlifetime.value
+        self.CarbonThatWouldHaveBeenProducedAnnually.value = [0.0] * model.surfaceplant.plantlifetime.value
+        self.CarbonThatWouldHaveBeenProducedTotal.value = 0.0
+        ProjectCapCostPerYear = (model.economics.CCap.value)/self.ConstructionYears.value
 
-        #build the price model
-        for i in range(0,model.surfaceplant.plantlifetime.value,1):
+        #build the carbon credit price model, amking sure to start at the year they requested.
+        for i in range(self.CCUSEscalationStart.value, model.surfaceplant.plantlifetime.value,1):
             self.CCUSPrice.value[i] = self.CCUSStartPrice.value
             if i >= self.CCUSEscalationStart.value: self.CCUSPrice.value[i] = self.CCUSPrice.value[i] + ((i - self.CCUSEscalationStart.value) * self.CCUSEscalationRate.value)
             if self.CCUSPrice.value[i] > self.CCUSEndPrice.value: self.CCUSPrice.value[i] = self.CCUSEndPrice.value
 
+        #build the elec and heat price models
+        self.CCUSOnElecPrice.value = [0.0] * model.surfaceplant.plantlifetime.value
+        self.CCUSOnHeatPrice.value = [0.0] * model.surfaceplant.plantlifetime.value
+        for i in range(0,model.surfaceplant.plantlifetime.value,1):
+            self.CCUSOnElecPrice.value[i] = self.ElecStartPrice.value
+            self.CCUSOnHeatPrice.value[i] = self.HeatStartPrice.value
+            if i >= self.ElecEscalationStart.value: self.CCUSOnElecPrice.value[i] = self.CCUSOnElecPrice.value[i] + ((i - self.ElecEscalationStart.value) * self.ElecEscalationRate.value)
+            if i >= self.HeatEscalationStart.value: self.CCUSOnHeatPrice.value[i] = self.CCUSOnHeatPrice.value[i] + ((i - self.HeatEscalationStart.value) * self.HeatEscalationRate.value)
+            if self.CCUSOnElecPrice.value[i] > self.ElecEndPrice.value: self.CCUSOnElecPrice.value[i] = self.ElecEndPrice.value
+            if self.CCUSOnHeatPrice.value[i] > self.HeatEndPrice.value: self.CCUSOnHeatPrice.value[i] = self.HeatEndPrice.value
+
+        #Figure out how much energy is being produced each year, and the amount of carbon that would have been produced if that energy had been made using the grdi average carbon production.  That then gives us the revenue, since we have a carbon price model 
+        #We can also get annual cash flow from it.
+        self.ProjectCashFlow.value = [0.0] * model.surfaceplant.plantlifetime.value
+        self.ProjectCummCashFlow.value = [0.0] * model.surfaceplant.plantlifetime.value
         for i in range(0,model.surfaceplant.plantlifetime.value,1):
             dElectricalEnergy = 0.0
+            ProjectElectricalEnergy = 0.0
             dHeatEnergy = 0.0
+            ProjectHeatEnergy = 0.0
             dBothEnergy = 0.0
             if model.surfaceplant.enduseoption.value == EndUseOptions.ELECTRICITY: #This option has no heat component
+                ProjectElectricalEnergy = model.surfaceplant.NetkWhProduced.value[i]
                 dElectricalEnergy = model.surfaceplant.NetkWhProduced.value[i]
             elif model.surfaceplant.enduseoption.value == EndUseOptions.HEAT: #has heat component but no electricty
+                ProjectHeatEnergy = model.surfaceplant.HeatkWhProduced.value[i]
                 dHeatEnergy = model.surfaceplant.HeatkWhProduced.value[i]
             else: #everything else has a component of both
+                ProjectElectricalEnergy = model.surfaceplant.NetkWhProduced.value[i]
+                ProjectHeatEnergy = model.surfaceplant.HeatkWhProduced.value[i]
                 dElectricalEnergy = model.surfaceplant.NetkWhProduced.value[i]
                 dHeatEnergy = model.surfaceplant.HeatkWhProduced.value[i]
             
             dBothEnergy = dElectricalEnergy +  dHeatEnergy
-            CarbonThatWouldHaveBeenProduced = dBothEnergy * self.CCUSGridCO2.value
-            self.CCUSRevenue.value[i] = (CarbonThatWouldHaveBeenProduced * self.CCUSPrice.value[i]) / 1000000.0    #CCUS (from both heat and elec) based on total, not net energy; in $M
-            self.CashFlow.value[i] = (self.CCUSRevenue.value[i]) - self.Coam.value
-
+            self.CarbonThatWouldHaveBeenProducedAnnually.value[i] = dBothEnergy * self.CCUSGridCO2.value
+            self.CarbonThatWouldHaveBeenProducedTotal.value = self.CarbonThatWouldHaveBeenProducedTotal.value + self.CarbonThatWouldHaveBeenProducedAnnually.value[i]
+            self.CCUSRevenue.value[i] = (self.CarbonThatWouldHaveBeenProducedAnnually.value[i] * self.CCUSPrice.value[i]) / 1000000.0    #CCUS (from both heat and elec) based on total, not net energy; in $M
+            self.CCUSCashFlow.value[i] = self.CCUSRevenue.value[i]
+            self.ProjectCashFlow.value[i] = self.CCUSRevenue.value[i] + (((ProjectElectricalEnergy * self.CCUSOnElecPrice.value[i]) + (ProjectHeatEnergy * self.CCUSOnHeatPrice.value[i]))  / 1000000.0) - model.economics.Coam.value   #MUSD
+            
+        #Calculate the Carbon credit cummulative cash flows
         i = 0
-        for val in self.CashFlow.value:
-            if i == 0: self.CummCashFlow.value[0] = val
-            else: self.CummCashFlow.value[i] = self.CummCashFlow.value[i - 1] + val
+        for val in self.CCUSCashFlow.value:
+            if i == 0: self.CCUSCummCashFlow.value[0] = val
+            else:
+                self.CCUSCummCashFlow.value[i] = self.CCUSCummCashFlow.value[i - 1] + val
             i = i + 1
 
-        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        # now insert the cost of construction into the front of the array that will be used to calculate NPV = the convention is that the upfront CAPEX is negative
+        self.ProjectCummCashFlow.value = [0.0] * model.surfaceplant.plantlifetime.value
+        for i in range(0,self.ConstructionYears.value,1):
+            self.ProjectCashFlow.value.insert(0, -1.0 * ProjectCapCostPerYear)
+            self.ProjectCummCashFlow.value.insert(0, -1.0 * ProjectCapCostPerYear)
+
+        #Calculate the Project cummulative cash flows and payback period
+        i = 0
+        for val in self.ProjectCashFlow.value:
+            if i == 0: self.ProjectCummCashFlow.value[0] = val
+            else:
+                self.ProjectCummCashFlow.value[i] = self.ProjectCummCashFlow.value[i - 1] + val
+                if self.ProjectCummCashFlow.value[i] > 0 and self.ProjectCummCashFlow.value[i - 1] <= 0:   #we just crossed the threshold into positive project cummcashflow, so we can calculate payback period
+                    dFullDiff = self.ProjectCummCashFlow.value[i] + math.fabs(self.ProjectCummCashFlow.value[(i - 1)])
+                    dPerc = math.fabs(self.ProjectCummCashFlow.value[(i - 1)]) / dFullDiff
+                    self.ProjectPaybackPeriod.value = i + dPerc
+            i = i + 1
+
+        #Calculate more financial values using numpy financials
+        self.ProjectNPV.value = npf.npv(self.FixedInternalRate.value/100, self.ProjectCashFlow.value)
+        self.ProjectIRR.value = npf.irr(self.ProjectCashFlow.value)
+        self.ProjectVIR.value  = 1.0 + (self.ProjectNPV.value/model.economics.CCap.value)
+
+        #Calculate MOIC which depends on CumCashFlow
+        self.ProjectMOIC.value = self.ProjectCummCashFlow.value[len(self.ProjectCummCashFlow.value)-1] / ( model.economics.CCap.value + ( model.economics.Coam.value * model.surfaceplant.plantlifetime.value))
+
+        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
+
+    def __str__(self): return "EconomicsCCUS"

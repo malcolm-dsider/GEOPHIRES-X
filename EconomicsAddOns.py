@@ -1,30 +1,27 @@
 import math
 import sys
 import numpy as np
-from Economics import Economics
 import numpy_financial as npf
-import Model
+import AdvModel
 import Economics
-from GeoPHIRESUtils import DumpObjectAsJson, ReadParameter
 from OptionList import WellDrillingCostCorrelation, EconomicModel, EndUseOptions, PowerPlantType
 from Parameter import boolParameter, intParameter, floatParameter, strParameter, listParameter, OutputParameter
 from Units import *
 
-
-class EconomicsAddOns(Economics):
-    def __init__(self, model:Model):
+class EconomicsAddOns(Economics.Economics):
+    def __init__(self, model:AdvModel):
         """
         The __init__ function is called automatically when a class is instantiated. 
         It initializes the attributes of an object, and sets default values for certain arguments that can be overridden by user input. 
         The __init__ function is used to set up all the parameters in Eocnomics AddOns.
         
         :param self: Store data that will be used by the class
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
         :return: None
         :doc-author: Malcolm Ross
         """
 
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().__init__(model)   # initialize the parent parameters and variables
 
         #Set up all the Parameters that will be predefined by this class using the different types of parameter classes.  Setting up includes giving it a name, a default value, The Unit Type (length, volume, temperature, etc) and Unit Name of that value, sets it as required (or not), sets allowable range, the error message if that range is exceeded, the ToolTip Text, and the name of teh class that created it.
@@ -38,21 +35,21 @@ class EconomicsAddOns(Economics):
         
         self.AddOnNickname = self.ParameterDict[self.AddOnNickname.Name] = listParameter("AddOn Nickname", UnitType = Units.NONE)
         self.AddOnCAPEX = self.ParameterDict[self.AddOnCAPEX.Name] = listParameter("AddOn CAPEX", Min= 0.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
-        self.AddOnOPEXPerYear = self.ParameterDict[self.AddOnOPEXPerYear.Name] = listParameter("AddOn OPEX", Min= 0.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyUnit.MDOLLARSPERYEAR)
-        self.AddOnElecGainedPerYear = self.ParameterDict[self.AddOnElecGainedPerYear.Name] = listParameter("AddOn Electricity Gained", Min= 0.0, Max = 1000.0, UnitType = Units.ELECTRICITY, PreferredUnits=ElectricityUnit.KWPERYEAR, CurrentUnits=ElectricityUnit.KWPERYEAR)
-        self.AddOnHeatGainedPerYear = self.ParameterDict[self.AddOnHeatGainedPerYear.Name] = listParameter("AddOn Heat Gained", Min= 0.0, Max = 1000.0, UnitType = Units.HEAT, PreferredUnits=HeatUnit.KWPERYEAR, CurrentUnits=HeatUnit.KWPERYEAR)
-        self.AddOnProfitGainedPerYear = self.ParameterDict[self.AddOnProfitGainedPerYear.Name] = listParameter("AddOn Profit Gained", Min= 0.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyUnit.MDOLLARSPERYEAR)
+        self.AddOnOPEXPerYear = self.ParameterDict[self.AddOnOPEXPerYear.Name] = listParameter("AddOn OPEX", Min= 0.0, Max = 1000.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.AddOnElecGainedPerYear = self.ParameterDict[self.AddOnElecGainedPerYear.Name] = listParameter("AddOn Electricity Gained", Min= 0.0, Max = 1000.0, UnitType = Units.ENERGYFREQUENCY, PreferredUnits=EnergyFrequencyUnit.KWPERYEAR, CurrentUnits=EnergyFrequencyUnit.KWPERYEAR)
+        self.AddOnHeatGainedPerYear = self.ParameterDict[self.AddOnHeatGainedPerYear.Name] = listParameter("AddOn Heat Gained", Min= 0.0, Max = 1000.0, UnitType = Units.ENERGYFREQUENCY, PreferredUnits=EnergyFrequencyUnit.KWPERYEAR, CurrentUnits=EnergyFrequencyUnit.KWPERYEAR)
+        self.AddOnProfitGainedPerYear = self.ParameterDict[self.AddOnProfitGainedPerYear.Name] = listParameter("AddOn Profit Gained", Min= 0.0, Max = 1000.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
         
         self.FixedInternalRate = self.ParameterDict[self.FixedInternalRate.Name] = floatParameter("Fixed Internal Rate", value = 6.25, Min=0.0, Max = 100.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage="assume default for fixed internal rate (6.25%)", ToolTipText="Fixed Internal Rate (used in NPV calculation)")
         self.ConstructionYears = self.ParameterDict[self.ConstructionYears.Name]  = intParameter("Construction Years", value = 1, AllowableRange=list(range(1,15,1)), UnitType = Units.NONE, ErrMessage="assume default number of years in construction (1)", ToolTipText="Number of years spent in construction (assumes whole years, no fractions)")
-        self.HeatEndPrice = self.ParameterDict[self.HeatEndPrice.Name] = floatParameter("Ending Heat Sale Price", value = 0.025, Min=0, Max=100, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.DOLLARSPERKWH, CurrentUnits = CurrencyUnit.DOLLARSPERKWH)
+        self.HeatStartPrice = self.ParameterDict[self.HeatStartPrice.Name] = floatParameter("Starting Heat Sale Price", value = 0.025, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
+        self.HeatEndPrice = self.ParameterDict[self.HeatEndPrice.Name] = floatParameter("Ending Heat Sale Price", value = 0.025, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
         self.HeatEscalationStart = self.ParameterDict[self.HeatEscalationStart.Name]  = intParameter("Heat Escalation Start Year", value = 5, AllowableRange=list(range(0,101,1)), UnitType = Units.TIME, PreferredUnits = TimeUnit.YEAR, CurrentUnits = TimeUnit.YEAR, ErrMessage="assume default heat escalation delay time (5 years)", ToolTipText="Number of years after start of project before start of escalation")
-        self.HeatEscalationRate = self.ParameterDict[self.HeatEscalationRate.Name] = floatParameter("Heat Escalation Rate Per Year", value = 0.0, Min=0.0, Max = 100.0, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.DOLLARSPERKWH, CurrentUnits = CurrencyUnit.DOLLARSPERKWH, ErrMessage="assume no heat price escalation (0.0)", ToolTipText="additional cost per year of price after escalation starts")
-        self.HeatStartPrice = self.ParameterDict[self.HeatStartPrice.Name] = floatParameter("Starting Heat Sale Price", value = 0.025, Min=0, Max=100, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.DOLLARSPERKWH, CurrentUnits = CurrencyUnit.DOLLARSPERKWH)
-        self.ElecEndPrice = self.ParameterDict[self.ElecEndPrice.Name] = floatParameter("Ending Electricity Sale Price", value = 0.055, Min=0, Max=100, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.DOLLARSPERKWH, CurrentUnits = CurrencyUnit.DOLLARSPERKWH)
+        self.HeatEscalationRate = self.ParameterDict[self.HeatEscalationRate.Name] = floatParameter("Heat Escalation Rate Per Year", value = 0.0, Min=0.0, Max = 100.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH, ErrMessage="assume no heat price escalation (0.0)", ToolTipText="additional cost per year of price after escalation starts")
+        self.ElecStartPrice = self.ParameterDict[self.ElecStartPrice.Name] = floatParameter("Starting Electricity Sale Price", value = 0.055, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
+        self.ElecEndPrice = self.ParameterDict[self.ElecEndPrice.Name] = floatParameter("Ending Electricity Sale Price", value = 0.055, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
         self.ElecEscalationStart = self.ParameterDict[self.ElecEscalationStart.Name]  = intParameter("Electricity Escalation Start Year", value = 5, AllowableRange=list(range(0,101,1)), UnitType = Units.TIME, PreferredUnits = TimeUnit.YEAR, CurrentUnits = TimeUnit.YEAR, ErrMessage="assume default electricty escalation delay time (5 years)", ToolTipText="Number of years after start of project before start of escalation")
-        self.ElecEscalationRate = self.ParameterDict[self.ElecEscalationRate.Name] = floatParameter("Electricity Escalation Rate Per Year", value = 0.0, Min=0.0, Max = 100.0, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.DOLLARSPERKWH, CurrentUnits = CurrencyUnit.DOLLARSPERKWH, ErrMessage="assume no electricty price escalation (0.0)", ToolTipText="additional cost per year of price after escalation starts")
-        self.ElecStartPrice = self.ParameterDict[self.ElecStartPrice.Name] = floatParameter("Starting Electricity Sale Price", value = 0.055, Min=0, Max=100, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.DOLLARSPERKWH, CurrentUnits = CurrencyUnit.DOLLARSPERKWH)
+        self.ElecEscalationRate = self.ParameterDict[self.ElecEscalationRate.Name] = floatParameter("Electricity Escalation Rate Per Year", value = 0.0, Min=0.0, Max = 100.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH, ErrMessage="assume no electricty price escalation (0.0)", ToolTipText="additional cost per year of price after escalation starts")
         self.AnnualLicenseEtc = self.ParameterDict[self.AnnualLicenseEtc.Name] = floatParameter("Annual License Fees Etc", value = 0.0, Min= -1000.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
         self.FlatLicenseEtc = self.ParameterDict[self.FlatLicenseEtc.Name] = floatParameter("One-time Flat License Fees Etc", Min= -1000.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
         self.OtherIncentives = self.ParameterDict[self.OtherIncentives.Name] = floatParameter("Other Incentives", Min= -1000.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
@@ -63,53 +60,41 @@ class EconomicsAddOns(Economics):
 
         #results
         self.AddOnCAPEXTotal = self.OutputParameterDict[self.AddOnCAPEXTotal.Name] = OutputParameter("AddOn CAPEX Total", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
-        self.AddOnOPEXTotalPerYear = self.OutputParameterDict[self.AddOnOPEXTotalPerYear.Name] = OutputParameter("AddOn OPEX Total Per Year", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyUnit.MDOLLARSPERYEAR)
-        self.AddOnElecGainedTotalPerYear = self.OutputParameterDict[self.AddOnElecGainedTotalPerYear.Name] = OutputParameter("AddOn Electricity Gained Total Per Year", value = 0.0, UnitType = Units.ELECTRICITY, PreferredUnits=ElectricityUnit.KWPERYEAR, CurrentUnits=ElectricityUnit.KWPERYEAR)
-        self.AddOnHeatGainedTotalPerYear = self.OutputParameterDict[self.AddOnHeatGainedTotalPerYear.Name] = OutputParameter("AddOn Heat Gained Total Per Year", value = 0.0, UnitType = Units.HEAT, PreferredUnits=HeatUnit.KWPERYEAR, CurrentUnits=HeatUnit.KWPERYEAR)
-        self.AddOnProfitGainedTotalPerYear= self.OutputParameterDict[self.AddOnProfitGainedTotalPerYear.Name] = OutputParameter("AddOn Profit Gained Total Per Year", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyUnit.MDOLLARSPERYEAR)
-        self.AddOnNPV = self.OutputParameterDict[self.AddOnNPV.Name] = OutputParameter("AddOn Net Present Value", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
-        self.AddOnIRR = self.OutputParameterDict[self.AddOnIRR.Name] = OutputParameter("AddOn Internal Rate of Return", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.PERCENT, CurrentUnits=PercentUnit.PERCENT)
-        self.AddOnVIR = self.OutputParameterDict[self.AddOnVIR.Name] = OutputParameter("AddOn Value Investment Ratio", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.TENTH, CurrentUnits=PercentUnit.TENTH)
-        self.AddOnPaybackPeriod = self.OutputParameterDict[self.AddOnPaybackPeriod.Name] = OutputParameter("AddOn Payback Period", value = 0.0, UnitType = Units.TIME, PreferredUnits=TimeUnit.YEAR, CurrentUnits=TimeUnit.YEAR)
-        self.AddOnMOIC = self.OutputParameterDict[self.AddOnMOIC.Name] = OutputParameter("AddOn Multiple of Invested Capital", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.TENTH, CurrentUnits=PercentUnit.TENTH)
-        self.ElecPrice = self.ParameterDict[self.ElecPrice.Name] = OutputParameter("Electricity Sale Price Model", value = 0.055, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.CENTSSPERKWH, CurrentUnits = CurrencyUnit.CENTSSPERKWH)
-        self.HeatPrice = self.ParameterDict[self.HeatPrice.Name] = OutputParameter("Heat Sale Price Model", value = 0.025, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.CENTSSPERKWH, CurrentUnits = CurrencyUnit.CENTSSPERKWH)
-        
-        self.AdjustedCAPEX = self.OutputParameterDict[self.AdjustedCAPEX.Name] = OutputParameter("Adjusted CAPEX", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
-        self.AdjustedOPEX = self.OutputParameterDict[self.AdjustedOPEX.Name] = OutputParameter("Adjusted OPEX", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
-        self.CashFlow =  self.OutputParameterDict[self.CashFlow.Name] = OutputParameter("Annual Cash Flow", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyUnit.MDOLLARSPERYEAR)
-        self.CummCashFlow =  self.OutputParameterDict[self.CummCashFlow.Name] = OutputParameter("Cummulative Cash Flow", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
-        self.ElecRevenue = self.OutputParameterDict[self.ElecRevenue.Name] = OutputParameter("Annual Revenue Generated from Electrcity Sales", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyUnit.MDOLLARSPERYEAR)
-        self.HeatRevenue = self.OutputParameterDict[self.HeatRevenue.Name] = OutputParameter("Annual Revenue Generated from Heat Sales", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyUnit.MDOLLARSPERYEAR)
-        self.AddOnRevenue = self.OutputParameterDict[self.AddOnRevenue.Name] = OutputParameter("Annual Revenue Generated from AddOns", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyUnit.MDOLLARSPERYEAR)
+        self.AddOnOPEXTotalPerYear = self.OutputParameterDict[self.AddOnOPEXTotalPerYear.Name] = OutputParameter("AddOn OPEX Total Per Year", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.AddOnElecGainedTotalPerYear = self.OutputParameterDict[self.AddOnElecGainedTotalPerYear.Name] = OutputParameter("AddOn Electricity Gained Total Per Year", value = 0.0, UnitType = Units.ENERGYFREQUENCY, PreferredUnits=EnergyFrequencyUnit.KWPERYEAR, CurrentUnits=EnergyFrequencyUnit.KWPERYEAR)
+        self.AddOnHeatGainedTotalPerYear = self.OutputParameterDict[self.AddOnHeatGainedTotalPerYear.Name] = OutputParameter("AddOn Heat Gained Total Per Year", value = 0.0, UnitType = Units.ENERGYFREQUENCY, PreferredUnits=EnergyFrequencyUnit.KWPERYEAR, CurrentUnits=EnergyFrequencyUnit.KWPERYEAR)
+        self.AddOnProfitGainedTotalPerYear= self.OutputParameterDict[self.AddOnProfitGainedTotalPerYear.Name] = OutputParameter("AddOn Profit Gained Total Per Year", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.ProjectNPV = self.OutputParameterDict[self.ProjectNPV.Name] = OutputParameter("Project Net Present Value", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.ProjectIRR = self.OutputParameterDict[self.ProjectIRR.Name] = OutputParameter("Project Internal Rate of Return", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.PERCENT, CurrentUnits=PercentUnit.PERCENT)
+        self.ProjectVIR = self.OutputParameterDict[self.ProjectVIR.Name] = OutputParameter("Project Value Investment Ratio", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.TENTH, CurrentUnits=PercentUnit.TENTH)
+        self.ProjectPaybackPeriod = self.OutputParameterDict[self.ProjectPaybackPeriod.Name] = OutputParameter("Project Payback Period", value = -1.0, UnitType = Units.TIME, PreferredUnits=TimeUnit.YEAR, CurrentUnits=TimeUnit.YEAR)
+        self.AddOnPaybackPeriod = self.OutputParameterDict[self.AddOnPaybackPeriod.Name] = OutputParameter("AddOn Payback Period", value = -1.0, UnitType = Units.TIME, PreferredUnits=TimeUnit.YEAR, CurrentUnits=TimeUnit.YEAR)
+        self.ProjectMOIC = self.OutputParameterDict[self.ProjectMOIC.Name] = OutputParameter("Project Multiple of Invested Capital", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.TENTH, CurrentUnits=PercentUnit.TENTH)
+        self.AddOnElecPrice = self.ParameterDict[self.AddOnElecPrice.Name] = OutputParameter("Electricity Sale Price Model", value = 0.055, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
+        self.AddOnHeatPrice = self.ParameterDict[self.AddOnHeatPrice.Name] = OutputParameter("Heat Sale Price Model", value = 0.025, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
+        self.AdjustedProjectCAPEX = self.OutputParameterDict[self.AdjustedProjectCAPEX.Name] = OutputParameter("Adjusted CAPEX", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.AdjustedProjectOPEX = self.OutputParameterDict[self.AdjustedProjectOPEX.Name] = OutputParameter("Adjusted OPEX", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.AddOnCashFlow =  self.OutputParameterDict[self.AddOnCashFlow.Name] = OutputParameter("Annual AddOn Cash Flow", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.AddOnCummCashFlow = self.OutputParameterDict[self.AddOnCummCashFlow.Name] = OutputParameter("Cummulative AddOn Cash Flow", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.ProjectCashFlow = self.OutputParameterDict[self.ProjectCashFlow.Name] = OutputParameter("Annual Project Cash Flow", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.ProjectCummCashFlow = self.OutputParameterDict[self.ProjectCummCashFlow.Name] = OutputParameter("Cummulative Project Cash Flow", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.AddOnElecRevenue = self.OutputParameterDict[self.AddOnElecRevenue.Name] = OutputParameter("Annual Revenue Generated from Electrcity Sales", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.AddOnHeatRevenue = self.OutputParameterDict[self.AddOnHeatRevenue.Name] = OutputParameter("Annual Revenue Generated from Heat Sales", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.AddOnRevenue = self.OutputParameterDict[self.AddOnRevenue.Name] = OutputParameter("Annual Revenue Generated from AddOns", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
 
-        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
-    def __str__(self):
-        return "EconomicsAddOns"
-
-    def dump_self_as_Json(self)->str: return(DumpObjectAsJson(self))
-
-    def read_parameter_from_Json(self, dJson):
-        for item in dJson.items():
-            if item[0] in self.ParameterDict:
-                if isinstance(self.ParameterDict[item[0]], floatParameter): val = float(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], intParameter): val = int(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], boolParameter): val = bool(item[1]['Value'])
-                if isinstance(self.ParameterDict[item[0]], strParameter): val = str(item[1]['Value'])
-                self.ParameterDict[item[0]].value = val
-
-    def read_parameters(self, model:Model) -> None:
+    def read_parameters(self, model:AdvModel) -> None:
         """
         The read_parameters function is called by the model to read in all the parameters that are used for this extension.  The user can create as many or as few paramters
         as needed.  Each parameter is created by a call to the InputParameter class, which is defined below, and then stored in a dictionary with a name assigned to
         
         :param self: Access the class variables
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
         :return: None
-        :doc-author: M alcolm Ross
+        :doc-author: Malcolm Ross
         """
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().read_parameters(model)    #read the paremeters for the parent.
 
         #Deal with all the parameter values that the user has provided that relate to this extension.  super,read_parametesr will have already dealt with all the regular values, but anything unusal may not be dealt with, so check.
@@ -137,19 +122,19 @@ class EconomicsAddOns(Economics):
             if key.startswith("AddOn Profit Gained"):
                 val = float(model.InputParameters[key].sValue)
                 self.AddOnProfitGainedPerYear.value.append(val)                      #this assumes they put the values in the file in consectutive fashion
-        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
-    def Calculate(self, model) -> None:
+    def Calculate(self, model:AdvModel) -> None:
         """
         The Calculate function is where all the calculations are done.
         This function can be called multiple times, and will only recalculate what has changed each time it is called.
         
         :param self: Access variables that belongs to the class
-        :param model: The conatiner class of the application, giving access to everything else, including the logger
+        :param model: The container class of the application, giving access to everything else, including the logger
         :return: Nothing, but it does make calculations and set values in the model
         :doc-author: Malcolm Ross
         """
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #This is where all the calcualtions are made using all the values that have been set.
         #If you sublcass this class, you can choose to run these calculations before (or after) your calculations, but that assumes you have set all the values that are required for these calculations
@@ -161,80 +146,103 @@ class EconomicsAddOns(Economics):
         if len(self.AddOnHeatGainedPerYear.value) > 0: self.AddOnHeatGainedTotalPerYear.value = np.sum(self.AddOnHeatGainedPerYear.value)
         if len(self.AddOnProfitGainedPerYear.value) > 0: self.AddOnProfitGainedTotalPerYear.value = np.sum(self.AddOnProfitGainedPerYear.value)
 
-        #The amount of electricty and/or heat have already been calculated in SurfacePlant, so we need to update them here so when they get used in the final economic calculation (below), they new values reflect the addition of the AddOns
+        #The amount of electricty and/or heat have for the project already been calculated in SurfacePlant, so we need to update them here so when they get used in the final economic calculation (below), they new values reflect the addition of the AddOns model.surfaceplant.NetkWhProduced.value
         for i in range(0,model.surfaceplant.plantlifetime.value):
             if model.surfaceplant.enduseoption.value != EndUseOptions.HEAT: #all these end-use options have an electricity generation component
                 model.surfaceplant.TotalkWhProduced.value[i] = model.surfaceplant.TotalkWhProduced.value[i] + self.AddOnElecGainedTotalPerYear.value
                 model.surfaceplant.NetkWhProduced.value[i] = model.surfaceplant.NetkWhProduced.value[i] + self.AddOnElecGainedTotalPerYear.value
-            if model.surfaceplant.enduseoption.value != EndUseOptions.ELECTRICITY: #all those end-use options have a direct-use component
-                model.surfaceplant.HeatkWhProduced.value[i] = model.surfaceplant.HeatkWhProduced.value[i] + self.AddOnHeatGainedTotalPerYear.value
+                if model.surfaceplant.enduseoption.value != EndUseOptions.ELECTRICITY: model.surfaceplant.HeatkWhProduced.value[i] = model.surfaceplant.HeatkWhProduced.value[i] + self.AddOnHeatGainedTotalPerYear.value
+            else: model.surfaceplant.HeatkWhProduced.value[i] = model.surfaceplant.HeatkWhProduced.value[i] + self.AddOnHeatGainedTotalPerYear.value #all the end-use option of direct-use only component
 
-        #we are going to run the calculations for the parent AFTER we make the calculations, so our calculations can be included in the master calculations. AddOnCAPEXTotal and AddOnOPEXTotalPerYear get used here.
-        super().Calculate(model)    #run calculate for the parent.
-
-        #Now there are some calculations I want to make AFTER the parent class calculations, like  "NPV", "IRR", "VIR", "Payback Period", and "MOIC", which are based on the results of the parent
-        self.AdjustedCAPEX.value = self.CCap.value + self.AddOnCAPEXTotal.value +  self.FlatLicenseEtc.value - self.OtherIncentives.value - self.TotalGrant.value
-        self.AdjustedOPEX.value = self.Coam.value + self.AddOnOPEXTotalPerYear.value + self.AnnualLicenseEtc.value
-        CapCostPerYear = (self.AdjustedCAPEX.value)/self.ConstructionYears.value
+        #Now calculate "NPV", "IRR", "VIR", "Payback Period", and "MOIC", which are based on the results of the parent
+        self.AdjustedProjectCAPEX.value = model.economics.CCap.value + self.AddOnCAPEXTotal.value +  self.FlatLicenseEtc.value - self.OtherIncentives.value - self.TotalGrant.value
+        self.AddOnCAPEXTotal.value = self.AddOnCAPEXTotal.value + self.FlatLicenseEtc.value - self.OtherIncentives.value - self.TotalGrant.value
+        self.AdjustedProjectOPEX.value = model.economics.Coam.value + self.AddOnOPEXTotalPerYear.value + self.AnnualLicenseEtc.value - self.TaxRelief.value
+        self.AddOnOPEXTotalPerYear.value = self.AddOnOPEXTotalPerYear.value + self.AnnualLicenseEtc.value - self.TaxRelief.value
+        AddOnCapCostPerYear = (self.AddOnCAPEXTotal.value)/self.ConstructionYears.value
+        ProjectCapCostPerYear = (self.AdjustedProjectCAPEX.value)/self.ConstructionYears.value
         
-        self.ElecPrice.value = [0.0] * model.surfaceplant.plantlifetime.value
-        self.HeatPrice.value = [0.0] * model.surfaceplant.plantlifetime.value
-        self.ElecRevenue.value = [0.0] * model.surfaceplant.plantlifetime.value
-        self.HeatRevenue.value = [0.0] * model.surfaceplant.plantlifetime.value
-        self.AddOnRevenue.value = [0.0] * model.surfaceplant.plantlifetime.value
-        self.CashFlow.value = [0.0] * model.surfaceplant.plantlifetime.value
-
         #build the price models
+        self.AddOnElecPrice.value = [0.0] * model.surfaceplant.plantlifetime.value
+        self.AddOnHeatPrice.value = [0.0] * model.surfaceplant.plantlifetime.value
         for i in range(0,model.surfaceplant.plantlifetime.value,1):
-            self.ElecPrice.value[i] = self.ElecStartPrice.value
-            self.HeatPrice.value[i] = self.HeatStartPrice.value
-            if i >= self.ElecEscalationStart.value: self.ElecPrice.value[i] = self.ElecPrice.value[i] + ((i - self.ElecEscalationStart.value) * self.ElecEscalationRate.value)
-            if i >= self.HeatEscalationStart.value: self.HeatPrice.value[i] = self.HeatPrice.value[i] + ((i - self.HeatEscalationStart.value) * self.HeatEscalationRate.value)
-            if self.ElecPrice.value[i] > self.ElecEndPrice.value: self.ElecPrice.value[i] = self.ElecEndPrice.value
-            if self.HeatPrice.value[i] > self.HeatEndPrice.value: self.HeatPrice.value[i] = self.HeatEndPrice.value
+            self.AddOnElecPrice.value[i] = self.ElecStartPrice.value
+            self.AddOnHeatPrice.value[i] = self.HeatStartPrice.value
+            if i >= self.ElecEscalationStart.value: self.AddOnElecPrice.value[i] = self.AddOnElecPrice.value[i] + ((i - self.ElecEscalationStart.value) * self.ElecEscalationRate.value)
+            if i >= self.HeatEscalationStart.value: self.AddOnHeatPrice.value[i] = self.AddOnHeatPrice.value[i] + ((i - self.HeatEscalationStart.value) * self.HeatEscalationRate.value)
+            if self.AddOnElecPrice.value[i] > self.ElecEndPrice.value: self.AddOnElecPrice.value[i] = self.ElecEndPrice.value
+            if self.AddOnHeatPrice.value[i] > self.HeatEndPrice.value: self.AddOnHeatPrice.value[i] = self.HeatEndPrice.value
 
+        #Calculate the revenues
+        self.AddOnElecRevenue.value = [0.0] * model.surfaceplant.plantlifetime.value
+        self.AddOnHeatRevenue.value = [0.0] * model.surfaceplant.plantlifetime.value
+        self.AddOnRevenue.value = [0.0] * model.surfaceplant.plantlifetime.value
+        self.AddOnCashFlow.value = [0.0] * model.surfaceplant.plantlifetime.value
+        self.ProjectCashFlow.value = [0.0] * model.surfaceplant.plantlifetime.value
         for i in range(0,model.surfaceplant.plantlifetime.value,1):
-            dElectricalEnergy = 0.0
-            dHeatEnergy = 0.0
-            dBothEnergy = 0.0
+            ProjectElectricalEnergy = 0.0
+            ProjectHeatEnergy = 0.0
+            AddOnElectricalEnergy = 0.0
+            AddOnHeatEnergy = 0.0
             if model.surfaceplant.enduseoption.value == EndUseOptions.ELECTRICITY: #This option has no heat component
-                dElectricalEnergy = model.surfaceplant.NetkWhProduced.value[i]
+                ProjectElectricalEnergy = model.surfaceplant.NetkWhProduced.value[i]
+                AddOnElectricalEnergy = self.AddOnElecGainedTotalPerYear.value
             elif model.surfaceplant.enduseoption.value == EndUseOptions.HEAT: #has heat component but no electricty
-                dHeatEnergy = model.surfaceplant.HeatkWhProduced.value[i]
+                ProjectHeatEnergy = model.surfaceplant.HeatkWhProduced.value[i]
+                AddOnHeatEnergy = self.AddOnHeatGainedTotalPerYear.value
             else: #everything else has a component of both
-                dElectricalEnergy = model.surfaceplant.NetkWhProduced.value[i]
-                dHeatEnergy = model.surfaceplant.HeatkWhProduced.value[i]
+                ProjectElectricalEnergy = model.surfaceplant.NetkWhProduced.value[i]
+                ProjectHeatEnergy = model.surfaceplant.HeatkWhProduced.value[i]
+                AddOnElectricalEnergy = self.AddOnElecGainedTotalPerYear.value
+                AddOnHeatEnergy = self.AddOnHeatGainedTotalPerYear.value
             
-            dBothEnergy = dElectricalEnergy +  dHeatEnergy
-            self.ElecRevenue.value[i] = (dElectricalEnergy * self.ElecPrice.value[i]) / 1000000.0   #MIR ???Electrcity in $M
-            self.HeatRevenue.value[i] = (dHeatEnergy * self.HeatPrice.value[i]) / 1000000.0    #MIR ???Heat in $M
-            self.AddOnRevenue.value[i] = self.AddOnProfitGainedTotalPerYear.value - self.AddOnOPEXTotalPerYear.value
-            self.CashFlow.value[i] = (self.ElecRevenue.value[i] + self.HeatRevenue.value[i] + self.AddOnRevenue.value[i]) - self.Coam.value
+            self.AddOnElecRevenue.value[i] = (AddOnElectricalEnergy * self.AddOnElecPrice.value[i]) / 1000000.0   #Electrcity revenue in MUSD
+            self.AddOnHeatRevenue.value[i] = (AddOnHeatEnergy * self.AddOnHeatPrice.value[i]) / 1000000.0    #Heat revenue in MUSD
+            self.AddOnRevenue.value[i] =  self.AddOnElecRevenue.value[i] + self.AddOnHeatRevenue.value[i] + self.AddOnProfitGainedTotalPerYear.value - self.AddOnOPEXTotalPerYear.value
+            self.AddOnCashFlow.value[i] = self.AddOnRevenue.value[i]
+            self.ProjectCashFlow.value[i] = self.AddOnRevenue.value[i] + (((ProjectElectricalEnergy * self.AddOnElecPrice.value[i]) + (ProjectHeatEnergy * self.AddOnHeatPrice.value[i]))  / 1000000.0) - model.economics.Coam.value   #MUSD
 
         # now insert the cost of construction into the front of the array that will be used to calculate NPV = the convention is that the upfront CAPEX is negative
         for i in range(0,self.ConstructionYears.value,1):
-            self.CashFlow.value.insert(0, -1.0 * CapCostPerYear)
+            self.AddOnCashFlow.value.insert(0, -1.0 * AddOnCapCostPerYear)
+            self.ProjectCashFlow.value.insert(0, -1.0 * ProjectCapCostPerYear)
 
-        #Calculate more financial values using nympy financials
-        self.AddOnNPV.value = npf.npv(self.FixedInternalRate.value, self.CashFlow.value)
-        self.AddOnIRR.value = npf.irr(self.CashFlow.value)
-        self.AddOnVIR.value  = math.fabs(self.AddOnNPV.value/(self.AddOnCAPEXTotal.value + self.CCap.value))
+        #Calculate more financial values using numpy financials
+        self.ProjectNPV.value = npf.npv(self.FixedInternalRate.value/100, self.ProjectCashFlow.value)
+        self.ProjectIRR.value = npf.irr(self.ProjectCashFlow.value)
+        self.ProjectVIR.value  = 1.0 + (self.ProjectNPV.value/self.AdjustedProjectCAPEX.value)
         
-        #calculate Cummcashflow and payback
-        dPaybackYears = -1.0
+        #calculate Cummcashflows and paybacks
+        self.ProjectCummCashFlow.value = [0.0] * len(self.ProjectCashFlow.value)
         i = 0
-        self.CummCashFlow.value = [0.0] * len(self.CashFlow.value)
-        for val in self.CashFlow.value:
-            if i == 0: self.CummCashFlow.value[0] = val
+        for val in self.ProjectCashFlow.value:
+            if i == 0: self.ProjectCummCashFlow.value[i] = val
             else:
-                self.CummCashFlow.value[i] = self.CummCashFlow.value[i - 1] + val
-                if self.CummCashFlow.value[i] > 0 and self.CummCashFlow.value[i - 1] <= 0:   #we just crossed the threshold into positive cummcashflow, so we can calculate payback period
-                    dFullDiff = self.CummCashFlow.value[i] + math.fabs(self.CummCashFlow.value[(i - 1)])
-                    dPerc = math.fabs(self.CummCashFlow.value[(i - 1)]) / dFullDiff
-                    dPaybackYears = i + dPerc
+                self.ProjectCummCashFlow.value[i] = self.ProjectCummCashFlow.value[i - 1] + val
+                if self.ProjectCummCashFlow.value[i] > 0 and self.ProjectCummCashFlow.value[i - 1] <= 0:   #we just crossed the threshold into positive project cummcashflow, so we can calculate payback period
+                    dFullDiff = self.ProjectCummCashFlow.value[i] + math.fabs(self.ProjectCummCashFlow.value[(i - 1)])
+                    dPerc = math.fabs(self.ProjectCummCashFlow.value[(i - 1)]) / dFullDiff
+                    self.ProjectPaybackPeriod.value = i + dPerc
             i = i + 1
 
-        self.AddOnPaybackPeriod.value = dPaybackYears
-        self.AddOnMOIC.value = self.CummCashFlow.value[len(self.CummCashFlow.value)-1] / (self.AddOnCAPEXTotal.value + self.CCap.value) + ((self.Coam.value + self.AddOnOPEXTotalPerYear.value) * model.surfaceplant.plantlifetime.value)
+        i = 0
+        self.AddOnCummCashFlow.value = [0.0] * len(self.AddOnCashFlow.value)
+        for val in self.AddOnCashFlow.value:
+            if i == 0: self.AddOnCummCashFlow.value[0] = val
+            else:
+                self.AddOnCummCashFlow.value[i] = self.AddOnCummCashFlow.value[i - 1] + val
+                if self.AddOnCummCashFlow.value[i] > 0 and self.AddOnCummCashFlow.value[i - 1] <= 0:   #we just crossed the threshold into positive project cummcashflow, so we can calculate payback period
+                    dFullDiff = self.AddOnCummCashFlow.value[i] + math.fabs(self.AddOnCummCashFlow.value[(i - 1)])
+                    dPerc = math.fabs(self.AddOnCummCashFlow.value[(i - 1)]) / dFullDiff
+                    self.AddOnPaybackPeriod.value = i + dPerc
+            i = i + 1
 
-        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe(  ).f_code.co_name)
+        #Calculate MOIC which depends on CumCashFlow
+        self.ProjectMOIC.value = self.ProjectCummCashFlow.value[len(self.ProjectCummCashFlow.value)-1] / (self.AdjustedProjectCAPEX.value + (self.AdjustedProjectOPEX.value * model.surfaceplant.plantlifetime.value))
+
+        #recalculate LCOE/LCOH
+        model.economics.CalculateLCOELCOH(model)
+
+        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
+ 
+    def __str__(self): return "EconomicsAddOns"

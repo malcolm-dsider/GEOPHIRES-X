@@ -1,0 +1,116 @@
+Warning: Provided circulation pump efficiency outside of range 0.1-1. GEOPHIRES will assume default circulation pump efficiency (0.75)
+Warning: No valid reservoir hydrostatic pressure provided. GEOPHIRES will assume built-in reservoir hydrostatic pressure correlation
+Warning: No valid productivity index provided. GEOPHIRES will assume default productivity index (10 kg/s/bar)
+Warning: No valid production wellhead pressure provided. GEOPHIRES will calculate production wellhead pressure using built-in correlation
+Warning: No valid plant outlet pressure provided. GEOPHIRES will calculate plant outlet pressure based on production wellhead pressure and surface equipment pressure drop of 10 psi
+Warning: GEOPHIRES calculates pump depth to be deeper than 600 m. Verify reservoir pressure, production well flow rate and production well dimensions
+Warning: injection temperature lowered
+
+----------------------------
+GEOPHIRES Simulation Results
+----------------------------
+
+1. Simulation Metadata
+----------------------
+ GEOPHIRES Version = 2.0
+ GEOPHIRES Build Date = 2018-01-02
+ Simulation Date = 2019-05-02
+ Simulation Time = 13:58
+ Calculation Time = 0.013 s
+
+2. Summary of Simulation Results
+--------------------------------
+ End-Use Option = Electricity
+ Power Plant Type = Supercritical ORC
+ Average Net Electricity Generation = 11.73 MWe
+ LCOE = 7.5 cents/kWh
+ Economic Model Used = BICYCLE Model
+
+3. Reservoir Simulation Results
+-------------------------------
+ Reservoir Model = Single Fracture m/A Thermal Drawdown Model
+ m/A Drawdown Parameter = 0.00002 kg/s/m^2
+ Number of Production Wells = 1
+ Number of Injection Wells = 1
+ Number of Times Redrilling = 0
+ Well Depth = 5100.0 m
+ Flow Rate per Production Well = 70 kg/s
+ Initial Reservoir Temperature = 377.0°C
+ Maximum Production Temperature = 366.5°C
+ Average Production Temperature = 350.7°C
+ Minimum Production Temperature = 322.3°C
+ Initial Production Temperature = 359.5°C
+ Average Reservoir Heat Extraction = 90.20 MWth
+ Production Wellbore Heat Transmission Model = Ramey Model
+ Average Production Well Temperature Drop = 8.9°C
+ Average Injection Well Pump Pressure Drop = -26048.1 kPa
+ Average Production Well Pump Pressure Drop = 11176.9 kPa
+
+4. Surface Equipment Simulation Results
+---------------------------------------
+ Maximum Total Electricity Generation = 14.02 MWe
+ Average Total Electricity Generation = 13.49 MWe
+ Minimum Total Electricity Generation = 12.84 MWe
+ Initial Total Electricity Generation = 13.31 MWe
+ Maximum Net Electricity Generation = 12.11 MWe
+ Average Net Electricity Generation = 11.73 MWe
+ Minimum Net Electricity Generation = 11.26 MWe
+ Initial Net Electricity Generation = 11.71 MWe
+ Average Annual Total Electricity Generation = 112.22 GWh
+ Average Annual Net Electricity Generation = 97.63 GWh
+ Average Pumping Power = 1.75 MWe
+
+5. Capital and O&M Costs
+------------------------
+ Total Capital Cost = 75.24 M$
+   Wellfield Cost = 24.34 M$
+   Surface Plant Cost = 36.57 M$
+   Exploration Cost = 10.25 M$
+   Field Gathering System Cost = 2.57 M$
+   Stimulation Cost = 1.51 M$
+ Total O&M Cost = 2.19 M$/year
+   Wellfield O&M Cost = 0.61 M$/year
+   Surface Plant O&M Cost = 1.58 M$/year
+   Make-Up Water O&M Cost = 0.00 M$/year
+
+6. Power Generation Profile
+---------------------------
+  YEAR   THERMAL     GEOFLUID       PUMP      NET      FIRST LAW
+         DRAWDOWN    TEMPERATURE    POWER     POWER    EFFICIENCY
+         (-)         (deg C)        (MWe)     (MWe)    (%)
+   0     1.0000       359.51        1.6007   11.7079   12.5881
+   1     1.0139       364.52        1.5862   11.4002   12.0513
+   2     1.0165       365.44        1.5836   11.3360   11.9464
+   3     1.0178       365.92        1.5822   11.3018   11.8913
+   4     1.0187       366.23        1.5813   11.2793   11.8555
+   5     1.0192       366.42        1.5812   11.2652   11.8332
+   6     1.0194       366.47        1.5823   11.2604   11.8262
+   7     1.0190       366.34        1.5852   11.2670   11.8382
+   8     1.0181       366.02        1.5904   11.2865   11.8716
+   9     1.0166       365.48        1.5978   11.3191   11.9271
+  10     1.0145       364.73        1.6076   11.3635   12.0038
+  11     1.0119       363.79        1.6195   11.4178   12.0993
+  12     1.0088       362.67        1.6333   11.4796   12.2107
+  13     1.0053       361.40        1.6486   11.5462   12.3345
+  14     1.0014       359.99        1.6652   11.6152   12.4677
+  15     0.9971       358.47        1.6828   11.6842   12.6071
+  16     0.9926       356.86        1.7010   11.7514   12.7500
+  17     0.9879       355.16        1.7197   11.8150   12.8941
+  18     0.9830       353.41        1.7388   11.8740   13.0375
+  19     0.9780       351.61        1.7579   11.9271   13.1785
+  20     0.9729       349.78        1.7771   11.9739   13.3158
+  21     0.9678       347.92        1.7961   12.0138   13.4484
+  22     0.9625       346.04        1.8149   12.0465   13.5756
+  23     0.9573       344.15        1.8335   12.0720   13.6967
+  24     0.9520       342.26        1.8517   12.0903   13.8114
+  25     0.9468       340.37        1.8696   12.1015   13.9194
+  26     0.9415       338.49        1.8871   12.1058   14.0206
+  27     0.9363       336.62        1.9041   12.1035   14.1149
+  28     0.9312       334.76        1.9208   12.0948   14.2025
+  29     0.9260       332.91        1.9370   12.0801   14.2832
+  30     0.9210       331.09        1.9528   12.0597   14.3574
+  31     0.9159       329.28        1.9681   12.0340   14.4252
+  32     0.9110       327.50        1.9830   12.0034   14.4867
+  33     0.9061       325.73        1.9975   11.9681   14.5422
+  34     0.9012       323.99        2.0115   11.9284   14.5919
+  35     0.8964       322.28        2.0252   11.8849   14.6361

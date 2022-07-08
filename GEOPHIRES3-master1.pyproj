@@ -1,0 +1,187 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{74b471b2-0600-445f-91a7-9eadf48bd9fd}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>GEOPHIRESv3.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
+    <TestFramework>Pytest</TestFramework>
+    <CommandLineArguments>examples\example1.txt</CommandLineArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="Examples\andreas.txt" />
+    <Content Include="Examples\coso.txt" />
+    <Content Include="Examples\coso2.txt" />
+    <Content Include="Examples\coso3.txt" />
+    <Content Include="Examples\coso_highgradient.txt" />
+    <Content Include="Examples\coso_lowgradient.txt" />
+    <Content Include="Examples\datapruebas.txt" />
+    <Content Include="Examples\Demo_Caifornia.txt" />
+    <Content Include="Examples\Demo_TexasGeopressure.txt" />
+    <Content Include="Examples\example 0.txt" />
+    <Content Include="Examples\example1.txt" />
+    <Content Include="Examples\Example1Dsider.txt" />
+    <Content Include="Examples\example1long.txt" />
+    <Content Include="Examples\example1_addons.txt" />
+    <Content Include="Examples\example1_outputunits.txt" />
+    <Content Include="Examples\example1_thick.txt" />
+    <Content Include="Examples\example2.txt" />
+    <Content Include="Examples\example2units.txt" />
+    <Content Include="Examples\example2_basel.txt" />
+    <Content Include="Examples\example3.txt" />
+    <Content Include="Examples\example3Dsider.txt" />
+    <Content Include="Examples\example3long.txt" />
+    <Content Include="Examples\example4.txt" />
+    <Content Include="Examples\example5.txt" />
+    <Content Include="Examples\example6.txt" />
+    <Content Include="Examples\example8.txt" />
+    <Content Include="Examples\example9.txt" />
+    <Content Include="Examples\Greenfire.txt" />
+    <Content Include="Examples\NASCC.txt" />
+    <Content Include="Examples\ReservoirOutput.txt" />
+    <Content Include="GEOPHIRES3_newunits.txt" />
+    <Content Include="LACETable.txt" />
+    <Content Include="license.txt" />
+    <Content Include="requirements.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Economics.py" />
+    <Compile Include="EconomicsAddOns.py" />
+    <Compile Include="EconomicsCCUS.py" />
+    <Compile Include="GeoPHIRESUtils.py" />
+    <Compile Include="GEOPHIRESv3.py" />
+    <Compile Include="ImpermeableReservoir.py" />
+    <Compile Include="Model.py" />
+    <Compile Include="mpmath\calculus\approximation.py" />
+    <Compile Include="mpmath\calculus\calculus.py" />
+    <Compile Include="mpmath\calculus\differentiation.py" />
+    <Compile Include="mpmath\calculus\extrapolation.py" />
+    <Compile Include="mpmath\calculus\inverselaplace.py" />
+    <Compile Include="mpmath\calculus\odes.py" />
+    <Compile Include="mpmath\calculus\optimization.py" />
+    <Compile Include="mpmath\calculus\polynomials.py" />
+    <Compile Include="mpmath\calculus\quadrature.py" />
+    <Compile Include="mpmath\calculus\__init__.py" />
+    <Compile Include="mpmath\ctx_base.py" />
+    <Compile Include="mpmath\ctx_fp.py" />
+    <Compile Include="mpmath\ctx_iv.py" />
+    <Compile Include="mpmath\ctx_mp.py" />
+    <Compile Include="mpmath\ctx_mp_python.py" />
+    <Compile Include="mpmath\functions\bessel.py" />
+    <Compile Include="mpmath\functions\elliptic.py" />
+    <Compile Include="mpmath\functions\expintegrals.py" />
+    <Compile Include="mpmath\functions\factorials.py" />
+    <Compile Include="mpmath\functions\functions.py" />
+    <Compile Include="mpmath\functions\hypergeometric.py" />
+    <Compile Include="mpmath\functions\orthogonal.py" />
+    <Compile Include="mpmath\functions\qfunctions.py" />
+    <Compile Include="mpmath\functions\rszeta.py" />
+    <Compile Include="mpmath\functions\theta.py" />
+    <Compile Include="mpmath\functions\zeta.py" />
+    <Compile Include="mpmath\functions\zetazeros.py" />
+    <Compile Include="mpmath\functions\__init__.py" />
+    <Compile Include="mpmath\function_docs.py" />
+    <Compile Include="mpmath\identification.py" />
+    <Compile Include="mpmath\libmp\backend.py" />
+    <Compile Include="mpmath\libmp\gammazeta.py" />
+    <Compile Include="mpmath\libmp\libelefun.py" />
+    <Compile Include="mpmath\libmp\libhyper.py" />
+    <Compile Include="mpmath\libmp\libintmath.py" />
+    <Compile Include="mpmath\libmp\libmpc.py" />
+    <Compile Include="mpmath\libmp\libmpf.py" />
+    <Compile Include="mpmath\libmp\libmpi.py" />
+    <Compile Include="mpmath\libmp\__init__.py" />
+    <Compile Include="mpmath\math2.py" />
+    <Compile Include="mpmath\matrices\calculus.py" />
+    <Compile Include="mpmath\matrices\eigen.py" />
+    <Compile Include="mpmath\matrices\eigen_symmetric.py" />
+    <Compile Include="mpmath\matrices\linalg.py" />
+    <Compile Include="mpmath\matrices\matrices.py" />
+    <Compile Include="mpmath\matrices\__init__.py" />
+    <Compile Include="mpmath\rational.py" />
+    <Compile Include="mpmath\tests\extratest_gamma.py" />
+    <Compile Include="mpmath\tests\extratest_zeta.py" />
+    <Compile Include="mpmath\tests\runtests.py" />
+    <Compile Include="mpmath\tests\test_basic_ops.py" />
+    <Compile Include="mpmath\tests\test_bitwise.py" />
+    <Compile Include="mpmath\tests\test_calculus.py" />
+    <Compile Include="mpmath\tests\test_compatibility.py" />
+    <Compile Include="mpmath\tests\test_convert.py" />
+    <Compile Include="mpmath\tests\test_diff.py" />
+    <Compile Include="mpmath\tests\test_division.py" />
+    <Compile Include="mpmath\tests\test_eigen.py" />
+    <Compile Include="mpmath\tests\test_eigen_symmetric.py" />
+    <Compile Include="mpmath\tests\test_elliptic.py" />
+    <Compile Include="mpmath\tests\test_fp.py" />
+    <Compile Include="mpmath\tests\test_functions.py" />
+    <Compile Include="mpmath\tests\test_functions2.py" />
+    <Compile Include="mpmath\tests\test_gammazeta.py" />
+    <Compile Include="mpmath\tests\test_hp.py" />
+    <Compile Include="mpmath\tests\test_identify.py" />
+    <Compile Include="mpmath\tests\test_interval.py" />
+    <Compile Include="mpmath\tests\test_levin.py" />
+    <Compile Include="mpmath\tests\test_linalg.py" />
+    <Compile Include="mpmath\tests\test_matrices.py" />
+    <Compile Include="mpmath\tests\test_mpmath.py" />
+    <Compile Include="mpmath\tests\test_ode.py" />
+    <Compile Include="mpmath\tests\test_pickle.py" />
+    <Compile Include="mpmath\tests\test_power.py" />
+    <Compile Include="mpmath\tests\test_quad.py" />
+    <Compile Include="mpmath\tests\test_rootfinding.py" />
+    <Compile Include="mpmath\tests\test_special.py" />
+    <Compile Include="mpmath\tests\test_str.py" />
+    <Compile Include="mpmath\tests\test_summation.py" />
+    <Compile Include="mpmath\tests\test_trig.py" />
+    <Compile Include="mpmath\tests\test_visualization.py" />
+    <Compile Include="mpmath\tests\torture.py" />
+    <Compile Include="mpmath\tests\__init__.py" />
+    <Compile Include="mpmath\usertools.py" />
+    <Compile Include="mpmath\visualization.py" />
+    <Compile Include="mpmath\__init__.py" />
+    <Compile Include="OptionList.py" />
+    <Compile Include="Outputs.py" />
+    <Compile Include="OutputsAddOns.py" />
+    <Compile Include="OutputsCCUS.py" />
+    <Compile Include="Parameter.py" />
+    <Compile Include="Reservoir.py" />
+    <Compile Include="setup.py" />
+    <Compile Include="SurfacePlant.py" />
+    <Compile Include="Units.py" />
+    <Compile Include="WellBores.py" />
+    <Compile Include="__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Examples" />
+    <Folder Include="mpmath" />
+    <Folder Include="mpmath\calculus" />
+    <Folder Include="mpmath\functions" />
+    <Folder Include="mpmath\libmp" />
+    <Folder Include="mpmath\matrices" />
+    <Folder Include="mpmath\tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="env\">
+      <Id>env</Id>
+      <Version>3.9</Version>
+      <Description>env (Python 3.9 (64-bit))</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+      <Architecture>X64</Architecture>
+    </Interpreter>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

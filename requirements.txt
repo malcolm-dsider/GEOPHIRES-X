@@ -1,4 +1,6 @@
 numpy
+numpy-financial
 pint
 forex_python
 jsons
+mpmath
