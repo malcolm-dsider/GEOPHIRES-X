@@ -199,6 +199,7 @@ class CO2ProductionUnit(Enum):
     TONNEPERMWH = "t/MWh"
 
 class MassUnit(Enum):
+    """Mass Units"""
     GRAM = "gram"
     KILOGRAM = "kilogram"
     TONNE = "tonne"

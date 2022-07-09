@@ -1,20 +1,30 @@
 import sys
-#from Parameter import ParameterEntry, floatParameter, intParameter, boolParameter, strParameter
+from Parameter import ParameterEntry, floatParameter, intParameter, boolParameter, strParameter, Parameter
 from os.path import exists
 import json
 import jsons
+import AdvModel
 
 def DumpObjectAsJson(MyObject)->str:
+    """
+    The DumpObjectAsJson function accepts a Python object and returns a JSON string representation of that object.
+    The function is useful for debugging purposes, as it allows you to dump an object's contents to the console in 
+    a human-readable format.
+    
+    :param MyObject: Pass in the object that you want to convert into a json string
+    :return: A string of the object in json format
+    :doc-author: Malcolm Ross
+    """
     jsons.suppress_warnings(True)
     return(jsons.dumps(MyObject, indent=4, sort_keys = True, supress_warnings=True))
 
 def  ReadParameterFromJson(self, dJson:dict):
     """
     The ReadParameterFromJson function reads a JSON string and updates the parameters of this class accordingly.
-        
+            
     Args: 
         dJson (dictionary): dictionary derived from encoding a JSON string. 
-        
+    
     :param self: Reference the class object itself
     :param dJson:dict: Pass the dictionary that is derived from encoding a json string to the function
     :return: The value of the parameter that is passed in
@@ -28,7 +38,17 @@ def  ReadParameterFromJson(self, dJson:dict):
             if isinstance(self.ParameterDict[item[0]], Parameter.strParameter): val = str(item[1]['Value'])
             self.ParameterDict[item[0]].value = val
 
-def read_JSONinput_file(fname:str, model, ReturnDict1):
+def read_JSONinput_file(fname:str, model:AdvModel, ReturnDict1):
+    """
+    The read_JSONinput_file function reads a JSON input file and returns a dictionary of parameters.  The function is called by the run_model function to read in the JSON input file.
+    
+    
+    :param fname:str: Pass the name of the json file that contains the input parameters
+    :param model: The container class of the application, giving access to everything else, including the logger
+    :param ReturnDict1: Return the dictionary of parameters to the main function
+    :return: A dictionary of parameterentry objects
+    :doc-author: Trelent
+    """
     model.logger.info("Init " + str(__name__))
 
     #read input data

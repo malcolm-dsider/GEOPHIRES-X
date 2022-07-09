@@ -3,7 +3,7 @@ import time
 import sys
 import numpy as np
 import Model
-from Parameter import strParameter, CovertUnitsBack, ConvertOutputUnits, LookupUnits
+from Parameter import CovertUnitsBack, ConvertOutputUnits, LookupUnits
 from OptionList import EndUseOptions, EconomicModel, ReservoirModel, FractureShape, ReservoirVolume
 from Units import *
 
@@ -67,6 +67,12 @@ class Outputs:
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
     def PrintOutputs(self, model:Model):
+        """
+        PrintOutputs writes the standard outputs to the HDR.out output file.
+
+        Args:
+            model (Model): The container class of the application, giving access to everything else, including the logger
+        """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
     
         #MIR Deal with converting Units back to PreferredUnits, if required.

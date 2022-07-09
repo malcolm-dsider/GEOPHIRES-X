@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from OptionList import EndUseOptions, PowerPlantType
-from Parameter import floatParameter, intParameter, boolParameter, strParameter, OutputParameter, ReadParameter
+from Parameter import floatParameter, intParameter, OutputParameter, ReadParameter
 from Units import *
 import Model
 

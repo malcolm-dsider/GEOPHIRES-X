@@ -4,8 +4,8 @@ import numpy as np
 import numpy_financial as npf
 import AdvModel
 import Economics
-from OptionList import WellDrillingCostCorrelation, EconomicModel, EndUseOptions, PowerPlantType
-from Parameter import boolParameter, intParameter, floatParameter, strParameter, listParameter, OutputParameter
+from OptionList import EndUseOptions
+from Parameter import intParameter, floatParameter, listParameter, OutputParameter
 from Units import *
 
 class EconomicsAddOns(Economics.Economics):

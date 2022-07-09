@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import Model
 from OptionList import WellDrillingCostCorrelation, EconomicModel, EndUseOptions, PowerPlantType
-from Parameter import boolParameter, intParameter, floatParameter, strParameter, OutputParameter, ReadParameter
+from Parameter import intParameter, floatParameter, OutputParameter, ReadParameter
 from Units import *
 
 class Economics:
@@ -95,6 +95,12 @@ class Economics:
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
     def read_parameters(self, model:Model) -> None:
+        """
+        read_parameters read and update the Economics parmeters and handle the special cases 
+
+        Args:
+            model (Model): The container class of the application, giving access to everything else, including the logger
+        """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #Deal with all the parameter values that the user has provided.  They should really only provide values that they want to change from the default values, but they can provide a value that is already set because it is a defaulr value set in __init__.  It will ignore those.

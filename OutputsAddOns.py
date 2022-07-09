@@ -7,6 +7,15 @@ NL="\n"
 class OutputsAddOns(Outputs.Outputs):
     """description of class"""
     def PrintOutputs(self, model:AdvModel):
+        """
+        The PrintOutputs function prints the results of the AddOns to a text file and to the screen. 
+        The function is called from within GEOPHIRES when runph is set equal to 1. The PrintOutputs function calls on other functions that are used in printing specific outputs.
+        
+        :param self: Access variables that belong to a class
+        :param model:AdvModel: The container class of the application, giving access to everything else, including the logger
+        :return: Nothing
+        :doc-author: Malcolm Ross
+        """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         # Do the original output

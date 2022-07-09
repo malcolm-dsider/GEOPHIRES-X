@@ -1,7 +1,4 @@
 import sys
-import logging
-import time
-import logging
 from AdvGeoPHIRESUtils import DumpObjectAsJson
 import Model
 import Reservoir

@@ -5,7 +5,7 @@ import numpy_financial as npf
 import AdvModel
 import Economics
 from OptionList import EndUseOptions
-from Parameter import boolParameter, intParameter, floatParameter, strParameter, OutputParameter
+from Parameter import intParameter, floatParameter, OutputParameter
 from Units import *
 
 class EconomicsCCUS(Economics.Economics):

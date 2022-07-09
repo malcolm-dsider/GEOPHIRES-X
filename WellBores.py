@@ -1,7 +1,7 @@
 import sys
 import math
 import numpy as np
-from Parameter import floatParameter, intParameter, boolParameter, strParameter, OutputParameter, ReadParameter
+from Parameter import floatParameter, intParameter, boolParameter, OutputParameter, ReadParameter
 from Units import *
 import Model
 from OptionList import ReservoirModel
