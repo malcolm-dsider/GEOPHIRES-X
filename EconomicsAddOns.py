@@ -33,7 +33,7 @@ class EconomicsAddOns(Economics.Economics):
         # Required (is it reuired to run? default value = False), ErrMessage (what GEOPHIRES will report if the value provided is invalid, "assume default value (see manual)"), ToolTipText (when there is a GIU, this is the text that the user will see, "This is ToolTip Text"),
         # UnitType (the type of units associated with this parameter (length, temperature, density, etc), Units.NONE), CurrentUnits (what the units are for this parameter (meters, celcius, gm/cc, etc, Units:NONE), and PreferredUnits (ususally equal to CurrentUnits, but these are the units that the calculations assume when running, Units.NONE
         
-        self.AddOnNickname = self.ParameterDict[self.AddOnNickname.Name] = listParameter("AddOn Nickname", UnitType = Units.NONE)
+        self.AddOnNickname = self.ParameterDict[self.AddOnNickname.Name] = listParameter("AddOn Nickname", UnitType = Units.NONE, Min= 0.0, Max = 1000.0)
         self.AddOnCAPEX = self.ParameterDict[self.AddOnCAPEX.Name] = listParameter("AddOn CAPEX", Min= 0.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
         self.AddOnOPEXPerYear = self.ParameterDict[self.AddOnOPEXPerYear.Name] = listParameter("AddOn OPEX", Min= 0.0, Max = 1000.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
         self.AddOnElecGainedPerYear = self.ParameterDict[self.AddOnElecGainedPerYear.Name] = listParameter("AddOn Electricity Gained", Min= 0.0, Max = 1000.0, UnitType = Units.ENERGYFREQUENCY, PreferredUnits=EnergyFrequencyUnit.KWPERYEAR, CurrentUnits=EnergyFrequencyUnit.KWPERYEAR)

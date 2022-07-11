@@ -4,3 +4,4 @@ pint
 forex_python
 jsons
 mpmath
+deepdiff

@@ -75,7 +75,7 @@ class Outputs:
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
     
-        #MIR Deal with converting Units back to PreferredUnits, if required.
+        #Deal with converting Units back to PreferredUnits, if required.
         #before we write the outputs, we go thru all the parameters for all of the objects and set the values back to the units that the user entered the data in
         #We do this because the value may be displayed in the output, and we want the user to recginze their value, not some converted value
         for obj in [model.reserv, model.wellbores, model.surfaceplant, model.economics]:
@@ -329,10 +329,10 @@ class Outputs:
                     f.write(f"      Average Annual Total Electricity Generation:      {np.average(model.surfaceplant.TotalkWhProduced.value/1E6):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
                     f.write(f"      Average Annual Net Electricity Generation:        {np.average(model.surfaceplant.NetkWhProduced.value/1E6):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
                     f.write(f"      Initial pumping power/net installed power:        {(model.wellbores.PumpingPower.value[0]/model.surfaceplant.NetElectricityProduced.value[0]*100):10.2f} %" + NL)
-    #MIR                if model.surfaceplant.enduseoption.value != EndUseOptions.HEAT: #there is electricity component
-    #MIR                    f.write(f"      Initial direct-use heat production                {model.surfaceplant.HeatProduced.value[0]:10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
-    #MIR                    f.write(f"      Average direct-use heat production                {np.average(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
-    #MIR                    f.write(f"      Average annual heat production                    {np.average(model.surfaceplant.HeatkWhProduced.value/1E6):10.2f} " + model.surfaceplant.HeatkWhProduced.PreferredUnits.value + NL)
+                    if model.surfaceplant.enduseoption.value != EndUseOptions.HEAT: #there is electricity and heat component
+                        f.write(f"      Initial direct-use heat production                {model.surfaceplant.HeatProduced.value[0]:10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
+                        f.write(f"      Average direct-use heat production                {np.average(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
+                        f.write(f"      Average annual heat production                    {np.average(model.surfaceplant.HeatkWhProduced.value/1E6):10.2f} " + model.surfaceplant.HeatkWhProduced.PreferredUnits.value + NL)
                 if model.surfaceplant.enduseoption.value != EndUseOptions.ELECTRICITY:
                     f.write(f"      Maximum Net Heat Production:                      {np.max(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
                     f.write(f"      Average Net Heat Production:                      {np.average(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)

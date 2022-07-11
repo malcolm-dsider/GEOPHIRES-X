@@ -44,7 +44,7 @@ class SurfacePlant:
         self.elecprice = self.ParameterDict[self.elecprice.Name] = floatParameter("Electricity Rate", value = 0.07, Min = 0.0, Max=1.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH, ErrMessage="assume default electricity rate ($0.07/kWh)", ToolTipText="Price of electricity to calculate pumping costs in direct-use heat only mode or revenue from electricity sales in CHP mode.")
         self.heatprice = self.ParameterDict[self.heatprice.Name] = floatParameter("Heat Rate", value = 0.02, Min = 0.0, Max=1.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH, ErrMessage="assume default heat rate ($0.02/kWh)", ToolTipText="Price of heat to calculate revenue from heat sales in CHP mode.")
 
-        #MIR needs initialization
+        #local variable initialization
         self.setinjectionpressurefixed = False
         self.usebuiltinoutletplantcorrelation = False
         self.TenteringPP = 0
@@ -339,7 +339,7 @@ class SurfacePlant:
                     model.wellbores.Tinj.value = np.min(ReinjTemp)
                     print("Warning: injection temperature lowered")
                     model.logger.warning("injection temperature lowered")
-            elif self.enduseoption.value in [EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT]: #enduseoption = 3: cogen topping cycle   #HUH   MIR and following lines
+            elif self.enduseoption.value in [EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT]: #enduseoption = 3: cogen topping cycle
                 if np.min(ReinjTemp) < model.wellbores.Tinj.value:
                     self.Tinj = np.min(ReinjTemp)
                     print("Warning: injection temperature lowered")
@@ -354,8 +354,6 @@ class SurfacePlant:
                     #model.wellbores.Tinj.value = np.min(ReinjTemp)
                     print("Warning: injection temperature incorrect but cannot be lowered")
                     model.logger.warning("injection temperature incorrect but cannot be lowered")
-                    #MIR why commented out?
-                    #self.chpfraction.value*model.wellbores.Tinj.value+(1-self.chpfraction.value)     
     
             #calculate electricity/heat
             if self.enduseoption.value == EndUseOptions.ELECTRICITY: #pure electricity

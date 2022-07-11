@@ -1,9 +1,9 @@
 import sys
-from Parameter import ParameterEntry, floatParameter, intParameter, boolParameter, strParameter, Parameter
+#from Parameter import ParameterEntry, floatParameter, intParameter, boolParameter, strParameter, Parameter
 from os.path import exists
 import json
 import jsons
-import AdvModel
+#import AdvModel
 
 def DumpObjectAsJson(MyObject)->str:
     """
@@ -38,7 +38,7 @@ def  ReadParameterFromJson(self, dJson:dict):
             if isinstance(self.ParameterDict[item[0]], Parameter.strParameter): val = str(item[1]['Value'])
             self.ParameterDict[item[0]].value = val
 
-def read_JSONinput_file(fname:str, model:AdvModel, ReturnDict1):
+def read_JSONinput_file(fname:str, model, ReturnDict1):
     """
     The read_JSONinput_file function reads a JSON input file and returns a dictionary of parameters.  The function is called by the run_model function to read in the JSON input file.
     

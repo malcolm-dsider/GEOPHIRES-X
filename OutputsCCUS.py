@@ -10,7 +10,6 @@ class OutputsCCUS(Outputs.Outputs):
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         # Do the original output
-#        super().PrintOutputs(reserv, wellbores, surfaceplant, economics, model)   # initialize the parent parameters and variables MIR no need to do this, it has already run
         if np.sum(model.ccuseconomics.CCUSRevenue.value) == 0: return   #don't bother if we have nothing to report.
 
         #now do CCUS output, which will append to the original output

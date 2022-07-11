@@ -44,7 +44,7 @@ class WellBores:
         self.PI = self.ParameterDict[self.PI.Name] = floatParameter("Productivity Index", value = 10.0, Min=1E-2, Max=1E4, UnitType = Units.PRODUCTIVITY_INDEX, PreferredUnits = ProductivityIndexUnit.KGPERSECPERBAR, CurrentUnits = ProductivityIndexUnit.KGPERSECPERBAR, ErrMessage = "assume default productivity index (10 kg/s/bar)", ToolTipText="Productivity index defined as ratio of production well flow rate over production well inflow pressure drop (see docs)")
         self.maxdrawdown = self.ParameterDict[self.maxdrawdown.Name] = floatParameter("Maximum Drawdown", value = 1.0, Min=0.0, Max=1.000001, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage = "assume default maximum drawdown (1)", ToolTipText="Maximum allowable thermal drawdown before redrilling of all wells into new reservoir (most applicable to EGS-type reservoirs with heat farming strategies). E.g. a value of 0.2 means that all wells are redrilled after the production temperature (at the wellhead) has dropped by 20% of its initial temperature")
 
-        #MIR
+        #local variable initiation
         self.Pinjwellhead = 0.0
         self.usebuiltinhydrostaticpressurecorrelation = True
         self.redrill = 0
@@ -103,12 +103,9 @@ class WellBores:
                     #handle special cases
                     if ParameterToModify.Name == "Production Well Diameter": ParameterToModify.value = ParameterToModify.value * 0.0254        #prodwelldiam: production well diameter (input as inch and converted to m)
                     elif ParameterToModify.Name == "Injection Well Diameter": ParameterToModify.value = ParameterToModify.value * 0.0254        #pinjwelldiam: injection well diameter (input as inch and converted to m)
-                    elif ParameterToModify.Name == "Reservoir Impedance":  #impedance: impedance per wellpair (input as GPa*s/m^3 and converted to KPa/kg/s (assuming 1000 for density; density will be corrected for later))#MIR  Is impedancemodelallowed, impedancemodelused handled correctly?  should I use -1?
+                    elif ParameterToModify.Name == "Reservoir Impedance":  #impedance: impedance per wellpair (input as GPa*s/m^3 and converted to KPa/kg/s (assuming 1000 for density; density will be corrected for later))
                         self.impedance.value = self.impedance.value * (1E6/1E3)    #shift it by a constant to make the units right, per line 619 of GEOPHIRES 2
- #MIR do we need this conditional?                       if self.impedancemodelallowed:
                         self.impedancemodelused = True
-
-                        #MIR added
                         if self.impedance.Provided == False: self.impedancemodelused = False
                     elif ParameterToModify.Name == "Reservoir Hydrostatic Pressure":
                         if ParameterToModify.value == -1: self.usebuiltinhydrostaticpressurecorrelation = True

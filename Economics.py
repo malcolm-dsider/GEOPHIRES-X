@@ -67,7 +67,7 @@ class Economics:
         self.inflrateconstruction = self.ParameterDict[self.inflrateconstruction.Name] = floatParameter("Inflation Rate During Construction", value = 0.0, Min=0.0, Max = 1.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage="assume default inflation rate during construction (0)")
         self.wellcorrelation = intParameter("Well Drilling Cost Correlation", value = WellDrillingCostCorrelation.VERTICAL_SMALL, AllowableRange=[1,2,3,4], UnitType = Units.NONE, ErrMessage="assume default well drilling cost correlation (1)", ToolTipText="Select the built-in well drilling and completion cost correlation. 1: vertical open-hole, small diameter; 2: deviated liner, small diameter; 3: vertical open-hole, large diameter; 4: deviated liner, large diameter")
 
-        #MIR needs initialization
+        #local variable initialization
         self.Claborcorrelation = 0.0
         self.Cpumps = 0.0
         self.annualelectricityincome = 0.0
@@ -144,7 +144,6 @@ class Economics:
                             model.logger.warning("Provided reservoir stimulation cost adjustment factor outside of range 0-10. GEOPHIRES will assume default reservoir stimulation cost correlation with adjustment factor = 1.")
                             ParameterToModify.value = 1.0
                     elif ParameterToModify.Name == "Exploration Capital Cost Adjustment Factor":
-    #MIR I had this comment out.  then I put it back in - is it valid? Is it in the right place!?!?!
                         if self.totalcapcost.Valid:
                             if self.ccexplfixed.Provided:
                                 print("Warning: Provided exploration cost not considered because valid total capital cost provided.")
@@ -152,7 +151,6 @@ class Economics:
                             if ParameterToModify.Provided:
                                 print("Warning: Provided exploration cost adjustment factor not considered because valid total capital cost provided.")
                                 model.logger.warning("Warning: Provided exploration cost not considered because valid total capital cost provided.")
-                #MIR to here
                         else:
                             if self.ccexplfixed.Valid and ParameterToModify.Valid:
                                 print("Warning: Provided exploration cost adjustment factor not considered because valid total exploration cost provided.")
@@ -520,7 +518,7 @@ class Economics:
                 CCAPPRL = D2*maxProdTemp**2 + D1*maxProdTemp + D0  
                 b = math.log(CCAPPRL/CCAPPLL)/math.log(PRL/PLL)
                 a = CCAPPRL/PRL**b
-                self.Cplantcorrelation = a*math.pow(np.max(model.surfaceplant.ElectricityProduced.value),b)*np.max(model.surfaceplant.ElectricityProduced.value)*1000./1E6   #MIR should this be uppercase Valid?
+                self.Cplantcorrelation = a*math.pow(np.max(model.surfaceplant.ElectricityProduced.value),b)*np.max(model.surfaceplant.ElectricityProduced.value)*1000./1E6
     
             if self.ccplantfixed.Valid: self.Cplant.value = self.ccplantfixed.value
             else: self.Cplant.value = 1.12*1.15*self.ccplantadjfactor.value*self.Cplantcorrelation*1.02 #1.02 to convert cost from 2012 to 2016 #factor 1.15 for 15% contingency and 1.12 for 12% indirect costs.
@@ -537,7 +535,6 @@ class Economics:
         if not self.totalcapcost.Valid:  
             #exploration costs (same as in Geophires v1.2) (M$)
             if self.ccexplfixed.Valid: self.Cexpl.value = self.ccexplfixed.value
-            #MIR Note C1Well here.  Has it been calculated?
             else: self.Cexpl.value = 1.15*self.ccexpladjfactor.value*1.12*(1. + self.C1well*0.6) #1.15 for 15% contingency and 1.12 for 12% indirect costs
  
             #Surface Piping Length Costs (M$) #assumed $750k/km
