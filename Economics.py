@@ -582,6 +582,9 @@ class Economics:
 
         if model.wellbores.redrill > 0: model.Coam.value = model.Coam.value + (self.Cwell.value + model.reserv.Cstim.value)*self.redrill/model.surfaceplant.plantlifetime.value   #account for well redrilling
 
+        #The Reservoir depth measure was arbitarily changed to meters, desipte being defined in the docs as kilometers.  For display consistency sake, we need to convert it back
+        if model.reserv.depth.value > 500: model.reserv.depth.value = model.reserv.depth.value/1000.0
+
         #Calculate LCOE/LCOH
         self.CalculateLCOELCOH(model)
 

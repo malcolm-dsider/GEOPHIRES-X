@@ -151,16 +151,16 @@ class WellBores:
             self.ProdTempDrop.value = self.tempdropprod.value
         else:
             alpharock = model.reserv.krock.value/(model.reserv.rhorock.value*model.reserv.cprock.value)
-            framey = np.zeros(len(model.reserv.timevector))
-            framey[1:] = -np.log(1.1*(self.prodwelldiam.value/2.)/np.sqrt(4.*alpharock*model.reserv.timevector[1:]*365.*24.*3600.*model.surfaceplant.utilfactor.value))-0.29
-            framey[0] = -np.log(1.1*(self.prodwelldiam.value/2.)/np.sqrt(4.*alpharock*model.reserv.timevector[1]*365.*24.*3600.*model.surfaceplant.utilfactor.value))-0.29 #assume outside diameter of casing is 10% larger than inside diameter of production pipe (=prodwelldiam)
+            framey = np.zeros(len(model.reserv.timevector.value))
+            framey[1:] = -np.log(1.1*(self.prodwelldiam.value/2.)/np.sqrt(4.*alpharock*model.reserv.timevector.value[1:]*365.*24.*3600.*model.surfaceplant.utilfactor.value))-0.29
+            framey[0] = -np.log(1.1*(self.prodwelldiam.value/2.)/np.sqrt(4.*alpharock*model.reserv.timevector.value[1]*365.*24.*3600.*model.surfaceplant.utilfactor.value))-0.29 #assume outside diameter of casing is 10% larger than inside diameter of production pipe (=prodwelldiam)
             #assume borehole thermal resistance negligible to rock thermal resistance
             rameyA = self.prodwellflowrate.value*model.reserv.cpwater*framey/2/math.pi/model.reserv.krock.value
             #this code is only valid so far for 1 gradient and deviation = 0 !!!!!!!!   For multiple gradients, use Ramey's model for every layer
         
-            self.ProdTempDrop.value = -((model.reserv.Trock.value - model.reserv.Tresoutput) - model.reserv.averagegradient*(model.reserv.depth.value - rameyA) + (model.reserv.Tresoutput - model.reserv.averagegradient*rameyA - model.reserv.Trock.value)*np.exp(-model.reserv.depth.value/rameyA))
+            self.ProdTempDrop.value = -((model.reserv.Trock.value - model.reserv.Tresoutput.value) - model.reserv.averagegradient*(model.reserv.depth.value - rameyA) + (model.reserv.Tresoutput.value - model.reserv.averagegradient*rameyA - model.reserv.Trock.value)*np.exp(-model.reserv.depth.value/rameyA))
 
-        self.ProducedTemperature.value = model.reserv.Tresoutput-self.ProdTempDrop.value
+        self.ProducedTemperature.value = model.reserv.Tresoutput.value-self.ProdTempDrop.value
 
         #redrilling
         if model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.SINGLE_FRACTURE, ReservoirModel.ANNUAL_PERCENTAGE]: #only applies to the built-in analytical reservoir models
@@ -174,7 +174,7 @@ class WellBores:
         #calculate pressure drops and pumping power
         #------------------------------------------
         #production wellbore fluid conditions [kPa]
-        Tprodaverage = model.reserv.Tresoutput-self.ProdTempDrop.value/4. #most of temperature drop happens in upper section (because surrounding rock temperature is lowest in upper section)
+        Tprodaverage = model.reserv.Tresoutput.value-self.ProdTempDrop.value/4. #most of temperature drop happens in upper section (because surrounding rock temperature is lowest in upper section)
         rhowaterprod = model.reserv.densitywater(Tprodaverage)  #replace with correlation based on Tprodaverage
         muwaterprod = model.reserv.viscositywater(Tprodaverage) #replace with correlation based on Tprodaverage
         vprod = self.prodwellflowrate.value/rhowaterprod/(math.pi/4.*self.prodwelldiam.value**2)
@@ -214,7 +214,7 @@ class WellBores:
             self.DP1.value = f1*(self.rhowaterinj*vinj**2/2)*(model.reserv.depth.value/self.injwelldiam.value)/1E3      #/1E3 to convert from Pa to kPa
     
             #reservoir pressure drop [kPa]
-            rhowaterreservoir = model.reserv.densitywater(0.1*self.Tinj.value+0.9*model.reserv.Tresoutput)    #based on TARB in Geophires v1.2
+            rhowaterreservoir = model.reserv.densitywater(0.1*self.Tinj.value+0.9*model.reserv.Tresoutput.value)    #based on TARB in Geophires v1.2
             self.DP2.value = self.impedance.value*self.nprod.value*self.prodwellflowrate.value*1000./rhowaterreservoir
     
             #production well pressure drop [kPa]
@@ -237,7 +237,7 @@ class WellBores:
             if self.usebuiltinhydrostaticpressurecorrelation:    
                 CP = 4.64E-7
                 CT = 9E-4/(30.796*model.reserv.Trock.value**(-0.552))
-                self.Phydrostatic.value = 0+1./CP*(math.exp(model.reserv.densitywater(model.surfaceplant.Tsurf.value)*9.81*CP/1000*(model.reserv.depth.value-CT/2*model.reserv.averagegradient*model.reserv.depth.value**2))-1)
+                self.Phydrostatic.value = 0+1./CP*(math.exp(model.reserv.densitywater(model.reserv.Tsurf.value)*9.81*CP/1000*(model.reserv.depth.value-CT/2*model.reserv.averagegradient*model.reserv.depth.value**2))-1)
 
             if self.productionwellpumping:
                 Pexcess = 344.7 #[kPa] = 50 psi. Excess pressure covers non-condensable gas pressure and net positive suction head for the pump

@@ -28,7 +28,7 @@ class Model(object):
         #get logging started
         logging.config.fileConfig('logging.conf')
         self.logger = logging.getLogger('root')
-        self.logger.setLevel(logging.CRITICAL)
+        self.logger.setLevel(logging.INFO)
         self.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #keep track of execution time

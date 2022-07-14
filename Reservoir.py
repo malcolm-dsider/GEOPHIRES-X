@@ -55,9 +55,7 @@ class Reservoir:
         self.krock = self.ParameterDict[self.krock.Name] = floatParameter("Reservoir Thermal Conductivity", value = 3.0, Min=0.01, Max = 100, UnitType = Units.THERMAL_CONDUCTIVITY, PreferredUnits = ThermalConductivityUnit.WPERMPERK, CurrentUnits = ThermalConductivityUnit.WPERMPERK, ErrMessage = "assume default reservoir thermal conductivity (3 W/m/K)", ToolTipText="Constant and uniform reservoir rock thermal conductivity")
         self.permrock = self.ParameterDict[self.permrock.Name] = floatParameter("Reservoir Permeability", value = 1E-13, Min=1E-20, Max=1E-5, UnitType = Units.PERMEABILITY, PreferredUnits = AreaUnit.METERS2, CurrentUnits = AreaUnit.METERS2, ErrMessage = "assume default reservoir permeability (1E-13 m^2)", ToolTipText="Constant and uniform reservoir permeability")
         self.porrock = self.ParameterDict[self.porrock.Name] = floatParameter("Reservoir Porosity", value = 0.04, Min=0.001, Max=0.99, UnitType = Units.POROSITY, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage = "assume default reservoir porosity (0.04)", ToolTipText="Constant and uniform reservoir porosity")
-
-        self.timevector = []
-        self.Tresoutput = []
+        self.Tsurf = self.ParameterDict[self.Tsurf.Name] = floatParameter("Surface Temperature", value = 15.0, Min = -50, Max = 50, UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS, Required=True, ErrMessage="assume default surface temperature (15 deg.C)", ToolTipText="Surface temperature used for calculating bottom-hole temperature (with geothermal gradient and reservoir depth)")
 
         self.usebuiltintough2model = False
         self.cpwater = 0.0
@@ -67,6 +65,9 @@ class Reservoir:
         #Results
         self.Trock = self.OutputParameterDict[self.Trock.Name] = OutputParameter(Name = "Bottom-hole temperature", value=-999.9, UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
         self.InitialReservoirHeatContent = self.OutputParameterDict[self.InitialReservoirHeatContent.Name] = OutputParameter(Name = "Initial Reservoir Heat Content", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.timevector = self.OutputParameterDict[self.timevector.Name] = OutputParameter(Name = "Time Vector", value=[], UnitType = Units.NONE)
+        self.Tresoutput = self.OutputParameterDict[self.Tresoutput.Name] = OutputParameter(Name = "Reservoir Temperature History", value=[], UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
+
         model.logger.info("Complete " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
     def __str__(self):
@@ -205,10 +206,10 @@ class Reservoir:
         #calculate maximum well depth (m)
         intersecttemperature = [1000., 1000., 1000., 1000.]
         if self.numseg.value == 1:
-            maxdepth = (self.Tmax.value-model.surfaceplant.Tsurf.value)/self.gradient.value[0]
+            maxdepth = (self.Tmax.value-self.Tsurf.value)/self.gradient.value[0]
         else:
             maxdepth = 0
-            intersecttemperature[0] = model.surfaceplant.Tsurf.value+self.gradient.value[0]*self.layerthickness.value[0]
+            intersecttemperature[0] = self.Tsurf.value+self.gradient.value[0]*self.layerthickness.value[0]
             for i in range(1,self.numseg.value-1):
                 intersecttemperature[i] = intersecttemperature[i-1]+self.gradient.value[i]*self.layerthickness.value[i]
             layerindex = next(loc for loc, val in enumerate(intersecttemperature) if val > self.Tmax.value)
@@ -216,23 +217,23 @@ class Reservoir:
                 for i in range(0,layerindex): maxdepth = maxdepth + self.layerthickness.value[i]
                 maxdepth = maxdepth + (self.Tmax.value-intersecttemperature[layerindex-1])/self.gradient.value[layerindex]
             else:
-                maxdepth = (self.Tmax.value-model.surfaceplant.Tsurf.value)/self.gradient.value[0]
+                maxdepth = (self.Tmax.value-self.Tsurf.value)/self.gradient.value[0]
 
         if self.depth.value>maxdepth: self.depth.value = maxdepth
 
         #calculate initial reservoir temperature
-        intersecttemperature = [model.surfaceplant.Tsurf.value] + intersecttemperature
+        intersecttemperature = [self.Tsurf.value] + intersecttemperature
         totaldepth = np.append(np.array([]), np.cumsum(self.layerthickness.value))
         temperatureindex = max(loc for loc, val in enumerate(self.depth.value > totaldepth) if val == True)
         self.Trock.value = intersecttemperature[temperatureindex] + self.gradient.value[temperatureindex]*(self.depth.value - totaldepth[temperatureindex])
 
         #calculate average geothermal gradient
         if self.numseg.value == 1: self.averagegradient = self.gradient.value[0]
-        else: self.averagegradient = (self.Trock.value-model.surfaceplant.Tsurf.value)/self.depth.value
+        else: self.averagegradient = (self.Trock.value-self.Tsurf.value)/self.depth.value
 
         # specify time-stepping vectors
-        self.timevector = np.linspace(0, model.surfaceplant.plantlifetime.value, model.economics.timestepsperyear.value*model.surfaceplant.plantlifetime.value+1)
-        self.Tresoutput = np.zeros(len(self.timevector))
+        self.timevector.value = np.linspace(0, model.surfaceplant.plantlifetime.value, model.economics.timestepsperyear.value*model.surfaceplant.plantlifetime.value+1)
+        self.Tresoutput.value = np.zeros(len(self.timevector.value))
 
         # calculate reservoir water properties
         self.cpwater = self.heatcapacitywater(model.wellbores.Tinj.value*0.5+(self.Trock.value*0.9+model.wellbores.Tinj.value*0.1)*0.5)
@@ -302,12 +303,12 @@ class MPFReservoir(Reservoir):
         fp = lambda s: (1./s)*exp(-sqrt(s)*tanh((model.reserv.rhowater*model.reserv.cpwater*(q/model.reserv.fracnumb.value/model.reserv.fracwidth.value)*(model.reserv.fracsep.value/2.)/(2.*model.reserv.krock.value*model.reserv.fracheight.value))*sqrt(s)))
 
         #calculate non-dimensional time
-        td = (model.reserv.rhowater*model.reserv.cpwater)**2/(4*model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value)*(q/float(model.reserv.fracnumb.value)/model.reserv.fracwidth.value/model.reserv.fracheight.value)**2*model.reserv.timevector*365.*24.*3600
+        td = (model.reserv.rhowater*model.reserv.cpwater)**2/(4*model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value)*(q/float(model.reserv.fracnumb.value)/model.reserv.fracwidth.value/model.reserv.fracheight.value)**2*model.reserv.timevector.value*365.*24.*3600
 
         # calculate non-dimensional temperature array
         Twnd = []
         try:
-            for t in range(1, len(model.reserv.timevector)):
+            for t in range(1, len(model.reserv.timevector.value)):
                 Twnd = Twnd + [float(invertlaplace(fp, td[t], method='talbot'))]
         except:
             print("Error: GEOPHIRES could not execute numerical inverse laplace calculation for reservoir model 1. Simulation will abort.")
@@ -316,8 +317,8 @@ class MPFReservoir(Reservoir):
         Twnd = np.asarray(Twnd)
 
         # calculate dimensional temperature, add initial rock temperature to beginning of array
-        model.reserv.Tresoutput = model.reserv.Trock.value - (Twnd*(model.reserv.Trock.value-model.wellbores.Tinj.value))
-        model.reserv.Tresoutput = np.append([model.reserv.Trock.value], model.reserv.Tresoutput)
+        model.reserv.Tresoutput.value = model.reserv.Trock.value - (Twnd*(model.reserv.Trock.value-model.wellbores.Tinj.value))
+        model.reserv.Tresoutput.value = np.append([model.reserv.Trock.value], model.reserv.Tresoutput.value)
 
         model.logger.info("Complete " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -398,17 +399,17 @@ class LHSReservoir(Reservoir):
         # calculate non-dimensional temperature array
         Twnd = []
         try:
-            for t in range(1,len(model.reserv.timevector)):
-                Twnd = Twnd + [float(invertlaplace(fp, model.reserv.timevector[t]*365.*24.*3600./tres, method='talbot'))]
+            for t in range(1,len(model.reserv.timevector.value)):
+                Twnd = Twnd + [float(invertlaplace(fp, model.reserv.timevector.value[t]*365.*24.*3600./tres, method='talbot'))]
         except:
             print("Error: GEOPHIRES could not execute numerical inverse laplace calculation for reservoir model 2. Simulation will abort.")
             sys.exit()
         Twnd = np.asarray(Twnd)
 
         # calculate dimensional temperature, add error-handling for non-sensical temperatures
-        model.reserv.Tresoutput = Twnd*(model.reserv.Trock.value-model.wellbores.Tinj.value) + model.wellbores.Tinj.value
-        model.reserv.Tresoutput = np.append([model.reserv.Trock.value], model.reserv.Tresoutput)
-        model.reserv.Tresoutput = np.asarray([model.reserv.Trock.value if x>model.reserv.Trock.value or x<model.wellbores.Tinj.value else x for x in model.reserv.Tresoutput])
+        model.reserv.Tresoutput.value = Twnd*(model.reserv.Trock.value-model.wellbores.Tinj.value) + model.wellbores.Tinj.value
+        model.reserv.Tresoutput.value = np.append([model.reserv.Trock.value], model.reserv.Tresoutput.value)
+        model.reserv.Tresoutput.value = np.asarray([model.reserv.Trock.value if x>model.reserv.Trock.value or x<model.wellbores.Tinj.value else x for x in model.reserv.Tresoutput.value])
 
         model.logger.info("Complete " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -458,8 +459,8 @@ class SFReservoir(Reservoir):
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().Calculate(model)    #run calculate for the parent.
 
-        model.reserv.Tresoutput[0] = model.reserv.Trock.value
-        for i in range(1,len(model.reserv.timevector)): model.reserv.Tresoutput[i] = math.erf(1./model.reserv.drawdp.value/model.reserv.cpwater*math.sqrt(model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value/model.reserv.timevector[i]/(365.*24.*3600.)))*(model.reserv.Trock.value-model.wellbores.Tinj.value)+model.wellbores.Tinj.value
+        model.reserv.Tresoutput.value[0] = model.reserv.Trock.value
+        for i in range(1,len(model.reserv.timevector.value)): model.reserv.Tresoutput.value[i] = math.erf(1./model.reserv.drawdp.value/model.reserv.cpwater*math.sqrt(model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value/model.reserv.timevector[i]/(365.*24.*3600.)))*(model.reserv.Trock.value-model.wellbores.Tinj.value)+model.wellbores.Tinj.value
 
         model.logger.info("Complete " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -509,7 +510,7 @@ class TDPReservoir(Reservoir):
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().Calculate(model)    #run calculate for the parent.
 
-        model.reserv.Tresoutput = (1-model.reserv.drawdp.value*model.reserv.timevector)*(model.reserv.Trock.value-model.wellbores.Tinj.value)+model.wellbores.Tinj.value #this is no longer as in thesis (equation 4.16)
+        model.reserv.Tresoutput.value = (1-model.reserv.drawdp.value*model.reserv.timevector.value)*(model.reserv.Trock.value-model.wellbores.Tinj.value)+model.wellbores.Tinj.value #this is no longer as in thesis (equation 4.16)
 
         model.logger.info("Complete " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -562,7 +563,7 @@ class UPPReservoir(Reservoir):
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().Calculate(model)    #run calculate for the parent.
 
-        model.reserv.Tresoutput[0] = model.reserv.Trock.value
+        model.reserv.Tresoutput.value[0] = model.reserv.Trock.value
         try:
             with open(model.reserv.filenamereservoiroutput.value, encoding='UTF-8') as f:
                 contentprodtemp = f.readlines()    
@@ -576,7 +577,7 @@ class UPPReservoir(Reservoir):
             print('Error: Reservoir output file ('+model.reserv.filenamereservoiroutput.value+') does not have required ' + str(model.surfaceplant.plantlifetime.value*model.economics.timestepsperyear.value+1) + ' lines. GEOPHIRES will abort simulation.')
             sys.exit()
         for i in range(0,numlines):
-            model.reserv.Tresoutput[i] = float(contentprodtemp[i].split(',')[1].strip('\n'))
+            model.reserv.Tresoutput.value[i] = float(contentprodtemp[i].split(',')[1].strip('\n'))
 
         model.logger.info("Complete " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -753,7 +754,7 @@ class TOUGH2Reservoir(Reservoir):
                 ProdTemperature[i] = float(content[i].split(',')[9].strip('\n'))
         
             #print(ProdTemperature)    
-            model.reserv.Tresoutput = np.interp(model.reserv.timevector*365*24*3600,SimTimes,ProdTemperature)
+            model.reserv.Tresoutput.value = np.interp(model.reserv.timevector.value*365*24*3600,SimTimes,ProdTemperature)
         except:
             print("Error: GEOPHIRES could not import production temperature and pressure from TOUGH2 output file ("+infile+") and will abort simulation.")
 

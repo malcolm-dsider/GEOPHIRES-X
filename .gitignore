@@ -113,3 +113,6 @@ Examples\Test2.json
 /.idea/workspace.xml
 /env
 /Examples
+/pretty diff.txt
+/pretty diff.xlsx
+/Sensitivty.txt

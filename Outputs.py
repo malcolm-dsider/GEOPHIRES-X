@@ -83,9 +83,6 @@ class Outputs:
                 param = obj.ParameterDict[key]
                 if not param.UnitsMatch: CovertUnitsBack(param, model)
 
-        #The Reservoir depth measure was arbitarily changed to meters, desipte being defined in the docs as kilometers.  For display consistency sake, we need to convert it back
-        model.reserv.depth.value = model.reserv.depth.value/1000.0
-
         #now we need to loop thru all thw output parameters to update their units to whatever units the user has specified.
         #i.e., they may have specified that all LENGTH results must be in feet, so we need to convert those from whatver LENGTH unit they are to feet.
         #same for all the other classes of units (TEMPERATURE, DENSITY, etc).
@@ -329,10 +326,6 @@ class Outputs:
                     f.write(f"      Average Annual Total Electricity Generation:      {np.average(model.surfaceplant.TotalkWhProduced.value/1E6):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
                     f.write(f"      Average Annual Net Electricity Generation:        {np.average(model.surfaceplant.NetkWhProduced.value/1E6):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
                     f.write(f"      Initial pumping power/net installed power:        {(model.wellbores.PumpingPower.value[0]/model.surfaceplant.NetElectricityProduced.value[0]*100):10.2f} %" + NL)
-                    if model.surfaceplant.enduseoption.value != EndUseOptions.HEAT: #there is electricity and heat component
-                        f.write(f"      Initial direct-use heat production                {model.surfaceplant.HeatProduced.value[0]:10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
-                        f.write(f"      Average direct-use heat production                {np.average(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
-                        f.write(f"      Average annual heat production                    {np.average(model.surfaceplant.HeatkWhProduced.value/1E6):10.2f} " + model.surfaceplant.HeatkWhProduced.PreferredUnits.value + NL)
                 if model.surfaceplant.enduseoption.value != EndUseOptions.ELECTRICITY:
                     f.write(f"      Maximum Net Heat Production:                      {np.max(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
                     f.write(f"      Average Net Heat Production:                      {np.average(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)

@@ -19,6 +19,8 @@ from AdvModel import AdvModel
 import jsons
 from deepdiff import DeepDiff
 from pprint import pprint
+import numpy as np
+import hashlib
 
 def main():
     #set up logging.
@@ -41,42 +43,6 @@ def main():
     #write the outputs, if requested
     model.addoutputs.PrintOutputs(model)
     model.ccusoutputs.PrintOutputs(model)
-    
-    model1 = AdvModel()
-    model1.read_parameters()
-    model1.reserv.gradient.value[0] = 0.08
-    model1.Calculate()
-    dd=DeepDiff(model, model1, significant_digits=0).pretty()
-    pprint(dd)
-    ToDump = {model.reserv, model.wellbores, model.surfaceplant, model.ccuseconomics, model.addeconomics}
-    dJson = {}
-    Json1 = {}
-    for obj in ToDump:
-        dJson1 = jsons.dump(obj, indent=4, sort_keys = True, supress_warnings=True, strip_microseconds = True, strip_nulls = True, strip_privates = True, strip_properties = True, use_enum_name = True)
-        dJson.update(dJson1)
-
-    #convert dict to string
-    strJson = str(dJson)
-    #makesure that string 100% conforms to JSON spec
-    strJson = strJson.replace("\'", "\"")
-    strJson = strJson.replace("True", "\"True\"")
-    strJson = strJson.replace("False", "\"False\"")
-
-    #now wtite it as a date-time stamped file
-    now = datetime.now() # current date and time
-    date_time = now.strftime("%Y%m%d%H%M%S")
-    with open(date_time+'.json','w', encoding='UTF-8') as f:
-        f.write(str(strJson))
-
-    #analysis
-    with open('20220709141207.json','r', encoding='UTF-8') as f:
-            content1 = f.readlines()    #store all output in one long list
-    with open('20220709140954.json','r', encoding='UTF-8') as f:
-            content2 = f.readlines()    #store all output in one long list
-
-    dd=DeepDiff(content1, content2)
-    with open('output.txt', 'wt') as out:
-        pprint(dd, stream=out)
         
     #if the user has asked for it, copy the HDR file to the screen
     if model.outputs.printoutput:
@@ -85,6 +51,50 @@ def main():
 
             #Now write each line to the screen
             for line in content: sys.stdout.write(line)
+    
+    #analysis
+    #start by making a second model and comparing them
+    #model1 = AdvModel()
+    #model1.read_parameters()
+    #model1.reserv.gradient.value[0] = 0.08 #change the gradient between the models
+    #model1.Calculate()
+    #dd=DeepDiff(model, model1, significant_digits=0).pretty()
+    #with open('output.txt', 'wt') as out: pprint(dd, stream=out)
+    KeyAsHash = jsons.dumps(model.reserv.ParameterDict, sort_keys=True).encode()
+    KeyAsHash = hashlib.blake2b(KeyAsHash).hexdigest()
+    ValueToStore = jsons.dump(model.reserv.OutputParameterDict, indent=4, sort_keys = True, supress_warnings=True, strip_microseconds = True, strip_nulls = True, strip_privates = True, strip_properties = True, use_enum_name = True)
+    ValueToStore = str(ValueToStore)
+
+    #Do a sensitvity analysis.  Try ambient temperature from 15-30 in 1 degree steps, monitoring electrcity produced.
+    #TrackingValue1 = {}
+    #model1 = AdvModel()
+    #model1.read_parameters()
+    #for model1.surfaceplant.Tenv.value in range(0,30,1):
+    #    model1.Calculate()
+    #    TrackingValue1[model1.surfaceplant.Tenv.value] = np.average(model1.surfaceplant.NetElectricityProduced.value)
+    #pprint(TrackingValue1)
+    #with open('Sensitivty.txt', 'wt') as out: pprint(TrackingValue1, stream=out)
+
+    #try dumping the whole model to json.  Dumping the whole thing fails, so just dump the important parts.
+    #ToDump = {model.reserv, model.wellbores, model.surfaceplant, model.ccuseconomics, model.addeconomics}
+    #dJson = {}
+    #Json1 = {}
+    #for obj in ToDump:
+    #    dJson1 = jsons.dump(obj, indent=4, sort_keys = True, supress_warnings=True, strip_microseconds = True, strip_nulls = True, strip_privates = True, strip_properties = True, use_enum_name = True)
+    #    dJson.update(dJson1)
+
+    #convert dict to string
+    #strJson = str(dJson)
+    #makesure that string 100% conforms to JSON spec
+#    strJson = strJson.replace("\'", "\"")
+#    strJson = strJson.replace("True", "\"True\"")
+#    strJson = strJson.replace("False", "\"False\"")
+
+    #now wtite it as a date-time stamped file
+#    now = datetime.now() # current date and time
+#    date_time = now.strftime("%Y%m%d%H%M%S")
+#    with open(date_time+'.json','w', encoding='UTF-8') as f:
+#        f.write(str(strJson))
     
     logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
 
