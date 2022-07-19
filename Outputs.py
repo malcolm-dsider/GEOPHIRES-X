@@ -207,15 +207,15 @@ class Outputs:
                 if model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP]:
                     f.write("      Fracture model = " + model.reserv.fracshape.value.value + NL)
                     if model.reserv.fracshape.value == FractureShape.CIRCULAR_AREA:
-                        f.write(f"      Well seperation: fracture diameter                {model.reserv.fracheight.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
+                        f.write(f"      Well seperation: fracture diameter                {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
                     elif model.reserv.fracshape.value == FractureShape.CIRCULAR_DIAMETER:
-                        f.write(f"      Well seperation: fracture diameter                {model.reserv.fracheight.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
+                        f.write(f"      Well seperation: fracture diameter                {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
                     elif model.reserv.fracshape.value == FractureShape.SQUARE:
-                        f.write(f"      Well seperation: fracture height                  {model.reserv.fracheight.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
+                        f.write(f"      Well seperation: fracture height                  {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
                     elif model.reserv.fracshape.value == FractureShape.RECTANGULAR:
-                        f.write(f"      Well seperation: fracture height                  {model.reserv.fracheight.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)        
-                        f.write(f"      Fracture width:                                             {model.reserv.fracwidth.value:10.2f} " + model.reserv.fracwidth.CurrentUnits + NL)
-                    f.write(f"      Fracture area:                                    {model.reserv.fracarea.value:10.2f} " + model.reserv.fracarea.CurrentUnits.value + NL)
+                        f.write(f"      Well seperation: fracture height                  {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)        
+                        f.write(f"      Fracture width:                                             {model.reserv.fracwidthcalc.value:10.2f} " + model.reserv.fracwidth.CurrentUnits + NL)
+                    f.write(f"      Fracture area:                                    {model.reserv.fracareacalc.value:10.2f} " + model.reserv.fracarea.CurrentUnits.value + NL)
                 if model.reserv.resvoloption.value == ReservoirVolume.FRAC_NUM_SEP:
                     f.write('      Reservoir volume calculated with fracture separation and number of fractures as input\n')
                 elif model.reserv.resvoloption.value == ReservoirVolume.RES_VOL_FRAC_SEP:
@@ -225,9 +225,9 @@ class Outputs:
                 elif model.reserv.resvoloption.value == ReservoirVolume.RES_VOL_ONLY:
                     f.write('      Reservoir volume provided as input\n')
                 if model.reserv.resvoloption.value in [ReservoirVolume.FRAC_NUM_SEP, ReservoirVolume.RES_VOL_FRAC_SEP,ReservoirVolume.FRAC_NUM_SEP]:
-                    f.write(f"      Number of fractures:                              {model.reserv.fracnumb.value:10.2f}" + NL)
-                    f.write(f"      Fracture separation                               {model.reserv.fracsep.value:10.2f} " + model.reserv.fracsep.CurrentUnits.value + NL)
-                f.write(f"      Reservoir volume                               {model.reserv.resvol.value:10.0f} " + model.reserv.resvol.CurrentUnits.value + NL)
+                    f.write(f"      Number of fractures:                              {model.reserv.fracnumbcalc.value:10.2f}" + NL)
+                    f.write(f"      Fracture separation                               {model.reserv.fracsepcalc.value:10.2f} " + model.reserv.fracsep.CurrentUnits.value + NL)
+                f.write(f"      Reservoir volume                               {model.reserv.resvolcalc.value:10.0f} " + model.reserv.resvol.CurrentUnits.value + NL)
                 if model.wellbores.impedancemodelused:
                     f.write(f"      Reservoir impedance                               {model.wellbores.impedance.value/1000:10.2f} " + model.wellbores.impedance.CurrentUnits.value + NL)    
                 else:

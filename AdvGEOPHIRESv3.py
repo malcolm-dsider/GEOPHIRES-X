@@ -41,8 +41,8 @@ def main():
     model.Calculate()
 
     #write the outputs, if requested
-    model.addoutputs.PrintOutputs(model)
-    model.ccusoutputs.PrintOutputs(model)
+#    model.addoutputs.PrintOutputs(model)
+#    model.ccusoutputs.PrintOutputs(model)
         
     #if the user has asked for it, copy the HDR file to the screen
     if model.outputs.printoutput:

@@ -62,7 +62,13 @@ class Reservoir:
         self.rhowater = 0.0
         self.averagegradient = 0.0
 
-        #Results
+        #Results - note the first 6 values are copies of the input values.  They are required because it is a bad practice to change input values after the user has assigned them.  Instead, we make new parameters that are copies of the input parameters, but then modify these values - we only use and display the calculated values. This is OK because the calculated value starts a a copy of the input value and only changes if needed.
+        self.fracsepcalc = self.OutputParameterDict[self.fracsepcalc.Name] = OutputParameter("Calculated Fracture Separation", value = self.fracsep.value, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS)
+        self.fracnumbcalc = self.OutputParameterDict[self.fracnumbcalc.Name] = OutputParameter("Calculated Number of Fractures", value = self.fracnumb.value, UnitType = Units.NONE)
+        self.fracwidthcalc = self.OutputParameterDict[self.fracwidthcalc.Name] = OutputParameter("Calculated Fracture Width", value = self.fracwidth.value, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS)
+        self.fracheightcalc = self.OutputParameterDict[self.fracheightcalc.Name] = OutputParameter("Calculated Fracture Height", value = self.fracheight.value, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS)
+        self.fracareacalc = self.OutputParameterDict[self.fracareacalc.Name] = OutputParameter("Calculated Fracture Area", value = self.fracarea.value, UnitType = Units.AREA, PreferredUnits = AreaUnit.METERS2, CurrentUnits = AreaUnit.METERS2)
+        self.resvolcalc = self.ParameterDict[self.resvolcalc.Name] = floatParameter("Calculated Reservoir Volume", value = self.resvol.value, UnitType = Units.VOLUME, PreferredUnits = VolumeUnit.METERS3, CurrentUnits = VolumeUnit.METERS3)
         self.Trock = self.OutputParameterDict[self.Trock.Name] = OutputParameter(Name = "Bottom-hole temperature", value=-999.9, UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
         self.InitialReservoirHeatContent = self.OutputParameterDict[self.InitialReservoirHeatContent.Name] = OutputParameter(Name = "Initial Reservoir Heat Content", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
         self.timevector = self.OutputParameterDict[self.timevector.Name] = OutputParameter(Name = "Time Vector", value=[], UnitType = Units.NONE)
@@ -183,24 +189,24 @@ class Reservoir:
 
         #calculate fracture geometry
         if self.fracshape.value == FractureShape.CIRCULAR_AREA:
-            self.fracheight.value = math.sqrt(4/math.pi*self.fracarea.value)
-            self.fracwidth.value = self.fracheight.value
+            self.fracheightcalc.value = math.sqrt(4/math.pi*self.fracareacalc.value)
+            self.fracwidthcalc.value = self.fracheightcalc.value
         elif self.fracshape.value == FractureShape.CIRCULAR_DIAMETER:
-            self.fracwidth.value = self.fracheight.value
-            self.fracarea.value = math.pi/4*self.fracheight.value*self.fracheight.value
+            self.fracwidthcalc.value = self.fracheightcalc.value
+            self.fracareacalc.value = math.pi/4*self.fracheightcalc.value*self.fracheightcalc.value
         elif self.fracshape.value == FractureShape.SQUARE:
-            self.fracwidth.value = self.fracheight.value
-            self.fracarea.value = self.fracheight.value*self.fracwidth.value
+            self.fracwidthcalc.value = self.fracheightcalc.value
+            self.fracareacalc.value = self.fracheightcalc.value*self.fracwidthcalc.value
         elif self.fracshape.value == FractureShape.RECTANGULAR:
-            self.fracarea.value = self.fracheight.value*self.fracwidth.value
+            self.fracareacalc.value = self.fracheightcalc.value*self.fracwidthcalc.value
 
         #calculate reservoir geometry:
         if self.resvoloption.value == ReservoirVolume.FRAC_NUM_SEP:
-            self.resvol.value = (self.fracnumb.value-1)*self.fracarea.value*self.fracsep.value
+            self.resvolcalc.value = (self.fracnumbcalc.value-1)*self.fracareacalc.value*self.fracsepcalc.value
         elif self.resvoloption.value == ReservoirVolume.RES_VOL_FRAC_SEP:
-            self.fracnumb.value = self.resvol.value/self.fracarea.value/self.fracsep.value+1
+            self.fracnumbcalc.value = self.resvolcalc.value/self.fracareacalc.value/self.fracsepcalc.value+1
         elif self.resvoloption.value == ReservoirVolume.RES_VOL_FRAC_NUM:
-            self.fracsep.value = self.resvol.value/self.fracarea.value/(self.fracnumb.value-1)
+            self.fracsepcalc.value = self.resvol.value/self.fracareacalc.value/(self.fracnumbcalc.value-1)
 
         #some additional preprocessing calculations
         #calculate maximum well depth (m)
@@ -245,7 +251,7 @@ class Reservoir:
         #-------------------------------- 
         #calculate reservoir heat content
         #-------------------------------- 
-        self.InitialReservoirHeatContent.value = self.resvol.value*self.rhorock.value*self.cprock.value*(self.Trock.value-model.wellbores.Tinj.value)/1E15   #10^15 J
+        self.InitialReservoirHeatContent.value = self.resvolcalc.value*self.rhorock.value*self.cprock.value*(self.Trock.value-model.wellbores.Tinj.value)/1E15   #10^15 J
                 
         model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -300,10 +306,10 @@ class MPFReservoir(Reservoir):
         q = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value/model.reserv.rhowater # m^3/s
 
         # specify Laplace-space function
-        fp = lambda s: (1./s)*exp(-sqrt(s)*tanh((model.reserv.rhowater*model.reserv.cpwater*(q/model.reserv.fracnumb.value/model.reserv.fracwidth.value)*(model.reserv.fracsep.value/2.)/(2.*model.reserv.krock.value*model.reserv.fracheight.value))*sqrt(s)))
+        fp = lambda s: (1./s)*exp(-sqrt(s)*tanh((model.reserv.rhowater*model.reserv.cpwater*(q/model.reserv.fracnumbcalc.value/model.reserv.fracwidthcalc.value)*(model.reserv.fracsepcalc.value/2.)/(2.*model.reserv.krock.value*model.reserv.fracheightcalc.value))*sqrt(s)))
 
         #calculate non-dimensional time
-        td = (model.reserv.rhowater*model.reserv.cpwater)**2/(4*model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value)*(q/float(model.reserv.fracnumb.value)/model.reserv.fracwidth.value/model.reserv.fracheight.value)**2*model.reserv.timevector.value*365.*24.*3600
+        td = (model.reserv.rhowater*model.reserv.cpwater)**2/(4*model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value)*(q/float(model.reserv.fracnumbcalc.value)/model.reserv.fracwidthcalc.value/model.reserv.fracheightcalc.value)**2*model.reserv.timevector.value*365.*24.*3600
 
         # calculate non-dimensional temperature array
         Twnd = []
@@ -377,18 +383,18 @@ class LHSReservoir(Reservoir):
         # storage ratio
         gamma = (model.reserv.rhowater*model.reserv.cpwater*phi)/(model.reserv.rhorock.value*model.reserv.cprock.value*(1-phi))
         # effective rock radius
-        r_efr = 0.83*(0.75*(model.reserv.fracsep.value*model.reserv.fracheight.value*model.reserv.fracwidth.value)/math.pi)**(1./3.)
+        r_efr = 0.83*(0.75*(model.reserv.fracsepcalc.value*model.reserv.fracheightcalc.value*model.reserv.fracwidthcalc.value)/math.pi)**(1./3.)
         # Biot number
         Bi = h*r_efr/model.reserv.krock.value
         # effective rock time constant
         tau_efr = r_efr**2.*(shape + 1./Bi)/(3.*alpha)
 
         # reservoir dimensions and flow properties
-        hl = (model.reserv.fracnumb.value-1)*model.reserv.fracsep.value
+        hl = (model.reserv.fracnumbcalc.value-1)*model.reserv.fracsepcalc.value
         wl = model.reserv.fracwidth.value
         aave = hl*wl
         u0 = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value/(model.reserv.rhowater*aave)
-        tres = (model.reserv.fracheight.value*phi)/u0
+        tres = (model.reserv.fracheightcalc.value*phi)/u0
 
         # number of heat transfer units
         ntu = tres/tau_efr

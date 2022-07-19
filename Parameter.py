@@ -115,8 +115,8 @@ class floatParameter(Parameter):
     """
     value: float = 0.0
     DefaultValue: float = 0.0
-    Min: float = -1.8e308
-    Max: float = 1.8e308
+    Min: float = -1.8e30
+    Max: float = 1.8e30
    
 @dataclass
 class strParameter(Parameter):

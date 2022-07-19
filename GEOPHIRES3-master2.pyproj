@@ -377,7 +377,7 @@
     <Compile Include="EconomicsCCUS.py" />
     <Compile Include="GeoPHIRESUtils.py" />
     <Compile Include="GEOPHIRESv3.py" />
-    <Compile Include="ImpermeableReservoir.py" />
+    <Compile Include="AdvReservoir.py" />
     <Compile Include="Model.py" />
     <Compile Include="mpmath\calculus\approximation.py" />
     <Compile Include="mpmath\calculus\calculus.py" />
