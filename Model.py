@@ -37,10 +37,20 @@ class Model(object):
         #declare some dictionaries
         self.InputParameters = {}  #dictionary to hold all the input parameter the user wants to change
 
+        #This should give us a dictionary with all the parameters the user wants to set.  Should be only those value that they want to change from the default.
+        #we do this as soon as possible because what we instantiate may depend on settings in this file
+        read_input_file(self, self.InputParameters)
+
         #Initiate the elements of the Model
         #this is where you can change what class get initiated - the superclass, or one of the subclasses
         self.logger.info("Initiate the elements of the Model")
-        self.reserv = Reservoir(self)   #This is going to get replaced when we have read the user inputs and that has told us which reservoir model they want to instantiate
+        # we need to decide which reservoir to instantiate based on the user input (InputParameters), which we just read above for the first time
+        if self.InputParameters['Reservoir Model'].sValue == '1': self.reserv = MPFReservoir(self)     #Multiple parallel fractures model (LANL)
+        elif self.InputParameters['Reservoir Model'].sValue == '2': self.reserv = LHSReservoir(self)    #Multiple parallel fractures model (LANL)
+        elif self.InputParameters['Reservoir Model'].sValue == '3': self.reserv = SFReservoir(self)    #Drawdown parameter model (Tester)
+        elif self.InputParameters['Reservoir Model'].sValue == '4': self.reserv = TDPReservoir(self)     #Thermal drawdown percentage model (GETEM)
+        elif self.InputParameters['Reservoir Model'].sValue == '5': self.reserv = UPPReservoir(self)    #Generic user-provided temperature profile
+        elif self.InputParameters['Reservoir Model'].sValue == '6': self.reserv = TOUGH2Reservoir(self)    #Tough2 is called
         self.wellbores = WellBores(self)
         self.surfaceplant = SurfacePlant(self)
         self.economics = Economics(self)
@@ -63,19 +73,8 @@ class Model(object):
 
         #Deal with all the parameter values that the user has provided.  This is handled on a class-by-class basis.
 
-        #This should give us a dictionary with all the parameters the user wants to set.  Should be only those value that they want to change from the default
-        read_input_file(self, self.InputParameters)
-
         #Read parameters for the elements of the Model
         self.logger.info("Read parameters for the elements of the Model")
-        # we need to decide which reservoir to instantiate based on the user input (InputParameters), which we just read above for the first time
-        if self.InputParameters['Reservoir Model'].sValue == '1': self.reserv = MPFReservoir(self)     #Multiple parallel fractures model (LANL)
-        elif self.InputParameters['Reservoir Model'].sValue == '2': self.reserv = LHSReservoir(self)    #Multiple parallel fractures model (LANL)
-        elif self.InputParameters['Reservoir Model'].sValue == '3': self.reserv = SFReservoir(self)    #Drawdown parameter model (Tester)
-        elif self.InputParameters['Reservoir Model'].sValue == '4': self.reserv = TDPReservoir(self)     #Thermal drawdown percentage model (GETEM)
-        elif self.InputParameters['Reservoir Model'].sValue == '5': self.reserv = UPPReservoir(self)    #Generic user-provided temperature profile
-        elif self.InputParameters['Reservoir Model'].sValue == '6': self.reserv = TOUGH2Reservoir(self)    #Tough2 is called
-
         self.reserv.read_parameters(self) #read the reservoir parameters
         self.wellbores.read_parameters(self)   #read the wellbore parameters
         self.surfaceplant.read_parameters(self) #read the surfaceplant parameters
