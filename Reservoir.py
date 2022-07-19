@@ -118,9 +118,9 @@ class Reservoir:
                         elif ParameterReadIn.sValue == '5': ParameterToModify.value = ReservoirModel.USER_PROVIDED_PROFILE     #Generic user-provided temperature profile
                         else: ParameterToModify.value = ReservoirModel.TOUGH2_SIMULATOR    #TOUGH2 is called
 
-                    if ParameterToModify.Name == "Reservoir Depth": ParameterToModify.value = ParameterToModify.value*1000
+                    elif ParameterToModify.Name == "Reservoir Depth": ParameterToModify.value = ParameterToModify.value*1000
 
-                    if ParameterToModify.Name == "Reservoir Volume Option":
+                    elif ParameterToModify.Name == "Reservoir Volume Option":
                         if ParameterReadIn.sValue == '1': ParameterToModify.value = ReservoirVolume.FRAC_NUM_SEP
                         elif ParameterReadIn.sValue == '2': ParameterToModify.value = ReservoirVolume.RES_VOL_FRAC_SEP
                         elif ParameterReadIn.sValue == '3': ParameterToModify.value = ReservoirVolume.RES_VOL_FRAC_NUM
@@ -131,23 +131,30 @@ class Reservoir:
                             print("Warning: If user-selected reservoir model is 1 or 2, then user-selected reservoir volume option cannot be 4 but should be 1, 2, or 3. GEOPHIRES will assume reservoir volume option 3.")    
                             model.logger.warning("If user-selected reservoir model is 1 or 2, then user-selected reservoir volume option cannot be 4 but should be 1, 2, or 3. GEOPHIRES will assume reservoir volume option 3.")
  
-                    if ParameterToModify.Name == "Fracture Shape":
+                    elif ParameterToModify.Name == "Fracture Shape":
                         if ParameterReadIn.sValue == '1': ParameterToModify.value = FractureShape.CIRCULAR_AREA     #   fracshape = 1  Circular fracture with known area
                         elif ParameterReadIn.sValue == '2': ParameterToModify.value = FractureShape.CIRCULAR_DIAMETER      #   fracshape = 2  Circular fracture with known diameter
                         elif ParameterReadIn.sValue == '3': ParameterToModify.value = FractureShape.SQUARE #   fracshape = 3  Square fracture
                         else: ParameterToModify.value = FractureShape.RECTANGULAR   #   fracshape = 4  Rectangular fracture
                             
-                    if ParameterToModify.Name.startswith("Gradient"):
+                    elif ParameterToModify.Name.startswith("Gradient"):
                         parts = ParameterReadIn.Name.split(' ')
                         position = int(parts[1]) - 1
                         ParameterToModify.value[position] = ParameterToModify.value[position] / 1000.0
                         if ParameterToModify.value[position] < 1e-6: ParameterToModify.value[position] = 1e-6    #convert 0 C/m gradients to very small number, avoids divide by zero errors later
                             
-                    if ParameterToModify.Name.startswith("Thickness"):
+                    elif ParameterToModify.Name.startswith("Thickness"):
                         parts = ParameterReadIn.Name.split(' ')
                         position = int(parts[1]) - 1
                         ParameterToModify.value[position] = ParameterToModify.value[position] * 1000.0
                         ParameterToModify.value.append(100000)            # set thickness of bottom segment to large number to override lower, unused segments
+
+                    elif ParameterToModify.Name.startswith("Fracture Separation"): self.fracsepcalc.value = self.fracsep.value
+                    elif ParameterToModify.Name.startswith("Number of Fractures"): self.fracnumbcalc.value = self.fracnumb.value
+                    elif ParameterToModify.Name.startswith("Fracture Width"): self.fracwidthcalc.value = self.fracwidth.value
+                    elif ParameterToModify.Name.startswith("Fracture Height"): self.fracheightcalc.value = self.fracheight.value
+                    elif ParameterToModify.Name.startswith("Fracture Area"): self.fracareacalc.value = self.fracarea.value
+                    elif ParameterToModify.Name.startswith("Reservoir Volume"): self.resvolcalc.value = self.resvol.value
         else:
             model.logger.info("No parameters read becuase no content provided")
             model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)

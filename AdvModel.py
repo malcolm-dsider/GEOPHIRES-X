@@ -28,7 +28,6 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         #Initiate the elements of the Model
         #this is where you can change what class get initiated - the superclass, or one of the subclasses.  By calling the __init__ (above), all the standard parenst will be initiated, so just initiate the ones you want that exceed those
         self.logger.info("Initiate the newer elements of the Model")
-#        self.reserv = AdvReservoir.AdvReservoir(self)    #replace the reserv with a new reserv
 #        self.addeconomics = EconomicsAddOns.EconomicsAddOns(self)
 #        self.ccuseconomics = EconomicsCCUS.EconomicsCCUS(self)
 #        self.addoutputs = OutputsAddOns.OutputsAddOns(self)
@@ -52,7 +51,6 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         self.logger.info("Read parameters for the newer elements of the Model")
         
         #The read parameter function may have switched
-#        self.reserv.read_parameters(self)
 #        self.addeconomics.read_parameters(self)
 #        self.ccuseconomics.read_parameters(self)
 #        self.addoutputs.read_parameters(self)
@@ -85,6 +83,7 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
 
         self.wellbores.Calculate(self) #not over ridden, so needs to run
         self.surfaceplant.Calculate(self) #not over ridden, so needs to run
+        self.economics.Calculate(self) #not over ridden, so needs to run
 #        self.addeconomics.Calculate(self)   #will run the parent if needed
 #        self.ccuseconomics.Calculate(self)   #will run the parent if needed
  

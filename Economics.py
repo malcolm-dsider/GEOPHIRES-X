@@ -1,5 +1,6 @@
 import math
 import sys
+import os
 import numpy as np
 import Model
 from OptionList import WellDrillingCostCorrelation, EconomicModel, EndUseOptions, PowerPlantType

@@ -40,6 +40,7 @@ def main():
     model.Calculate()
 
     #write the outputs, if requested
+    model.outputs.PrintOutputs(model)
 #    model.addoutputs.PrintOutputs(model)
 #    model.ccusoutputs.PrintOutputs(model)
         

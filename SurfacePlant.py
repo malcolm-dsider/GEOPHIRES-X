@@ -1,4 +1,5 @@
 import sys
+import os
 import numpy as np
 from OptionList import EndUseOptions, PowerPlantType
 from Parameter import floatParameter, intParameter, OutputParameter, ReadParameter
