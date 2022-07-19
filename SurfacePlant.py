@@ -47,6 +47,9 @@ class SurfacePlant:
         self.setinjectionpressurefixed = False
         self.usebuiltinoutletplantcorrelation = False
         self.TenteringPP = 0
+        sclass = str(__class__).replace("<class \'", "")
+        self.MyClass = sclass.replace("\'>","")
+        self.MyPath = os.path.abspath(__file__)
 
         #Results
         self.HeatkWhExtracted = self.ParameterDict[self.HeatkWhExtracted.Name] = OutputParameter(Name = "annual heat production", value = [], UnitType = Units.ENERGYFREQUENCY, PreferredUnits = EnergyFrequencyUnit.GWPERYEAR, CurrentUnits = EnergyFrequencyUnit.GWPERYEAR)

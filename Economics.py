@@ -75,6 +75,9 @@ class Economics:
         self.InputFile = ""
         self.Cplantcorrelation = 0.0
         self.C1well = 0.0
+        sclass = str(__class__).replace("<class \'", "")
+        self.MyClass = sclass.replace("\'>","")
+        self.MyPath = os.path.abspath(__file__)
 
         #results
         self.LCOE = self.OutputParameterDict[self.LCOE.Name] = OutputParameter(Name = "LCOE", value=-999.9, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)

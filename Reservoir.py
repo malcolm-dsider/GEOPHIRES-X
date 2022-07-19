@@ -61,6 +61,9 @@ class Reservoir:
         self.cpwater = 0.0
         self.rhowater = 0.0
         self.averagegradient = 0.0
+        sclass = str(__class__).replace("<class \'", "")
+        self.MyClass = sclass.replace("\'>","")
+        self.MyPath = os.path.abspath(__file__)
 
         #Results - note the first 6 values are copies of the input values.  They are required because it is a bad practice to change input values after the user has assigned them.  Instead, we make new parameters that are copies of the input parameters, but then modify these values - we only use and display the calculated values. This is OK because the calculated value starts a a copy of the input value and only changes if needed.
         self.fracsepcalc = self.OutputParameterDict[self.fracsepcalc.Name] = OutputParameter("Calculated Fracture Separation", value = self.fracsep.value, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS)
@@ -271,6 +274,8 @@ class MPFReservoir(Reservoir):
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().__init__(model)   # initialize the parent parameters and variables
+        sclass = str(__class__).replace("<class \'", "")
+        self.MyClass = sclass.replace("\'>","")
 
         #Set up all the Parameters that will be predefined by this class using the different types of parameter classes.  Setting up includes giving it a name, a default value, The Unit Type (length, volume, temperature, etc) and Unit Name of that value, sets it as required (or not), sets allowable range, the error message if that range is exceeded, the ToolTip Text, and the name of teh class that created it.
         #This includes setting up temporary variables that will be available to all the class but noy read in by user, or used for Output
@@ -344,6 +349,8 @@ class LHSReservoir(Reservoir):
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().__init__(model)   # initialize the parent parameters and variables
+        sclass = str(__class__).replace("<class \'", "")
+        self.MyClass = sclass.replace("\'>","")
 
         #Set up all the Parameters that will be predefined by this class using the different types of parameter classes.  Setting up includes giving it a name, a default value, The Unit Type (length, volume, temperature, etc) and Unit Name of that value, sets it as required (or not), sets allowable range, the error message if that range is exceeded, the ToolTip Text, and the name of teh class that created it.
         #This includes setting up temporary variables that will be available to all the class but noy read in by user, or used for Output
@@ -435,6 +442,8 @@ class SFReservoir(Reservoir):
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().__init__(model)   # initialize the parent parameters and variables
+        sclass = str(__class__).replace("<class \'", "")
+        self.MyClass = sclass.replace("\'>","")
 
         #Set up all the Parameters that will be predefined by this class using the different types of parameter classes.  Setting up includes giving it a name, a default value, The Unit Type (length, volume, temperature, etc) and Unit Name of that value, sets it as required (or not), sets allowable range, the error message if that range is exceeded, the ToolTip Text, and the name of teh class that created it.
         #This includes setting up temporary variables that will be available to all the class but noy read in by user, or used for Output
@@ -486,6 +495,8 @@ class TDPReservoir(Reservoir):
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().__init__(model)   # initialize the parent parameters and variables
+        sclass = str(__class__).replace("<class \'", "")
+        self.MyClass = sclass.replace("\'>","")
 
         #Set up all the Parameters that will be predefined by this class using the different types of parameter classes.  Setting up includes giving it a name, a default value, The Unit Type (length, volume, temperature, etc) and Unit Name of that value, sets it as required (or not), sets allowable range, the error message if that range is exceeded, the ToolTip Text, and the name of teh class that created it.
         #This includes setting up temporary variables that will be available to all the class but noy read in by user, or used for Output
@@ -536,6 +547,8 @@ class UPPReservoir(Reservoir):
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().__init__(model)   # initialize the parent parameters and variables
+        sclass = str(__class__).replace("<class \'", "")
+        self.MyClass = sclass.replace("\'>","")
 
         #Set up all the Parameters that will be predefined by this class using the different types of parameter classes.  Setting up includes giving it a name, a default value, The Unit Type (length, volume, temperature, etc) and Unit Name of that value, sets it as required (or not), sets allowable range, the error message if that range is exceeded, the ToolTip Text, and the name of teh class that created it.
         #This includes setting up temporary variables that will be available to all the class but noy read in by user, or used for Output
@@ -603,6 +616,8 @@ class TOUGH2Reservoir(Reservoir):
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().__init__(model)   # initialize the parent parameters and variables
+        sclass = str(__class__).replace("<class \'", "")
+        self.MyClass = sclass.replace("\'>","")
         
         #Set up all the Parameters that will be predefined by this class using the different types of parameter classes.  Setting up includes giving it a name, a default value, The Unit Type (length, volume, temperature, etc) and Unit Name of that value, sets it as required (or not), sets allowable range, the error message if that range is exceeded, the ToolTip Text, and the name of teh class that created it.
         #This includes setting up temporary variables that will be available to all the class but noy read in by user, or used for Output

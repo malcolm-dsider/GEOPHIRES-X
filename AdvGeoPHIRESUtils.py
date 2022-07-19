@@ -82,11 +82,10 @@ class AdvGeoPHIRESUtils():
     
         model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
 
-    def CheckForExistingResult(self, model, code_path:str, object)->str:
-    #called like: key = CheckForExistingResult(model, os.path.abspath( __file__ ), objectToCheckFor)
+    def CheckForExistingResult(self, model, object)->str:
         model.logger.info("Init " + str(__name__))
         #convert the input parwmeters abd code to JSON and hash it
-        KeyAsHash = self.CaculateHash(code_path, object)
+        KeyAsHash = self.CaculateHash(object.MyPath, object)
 
         #Now search the database for something that already has that hash.
         try:
@@ -107,12 +106,11 @@ class AdvGeoPHIRESUtils():
         #model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
         return KeyAsHash
 
-    def store_result(self, model, sclass:str, code_path:str, object)->str:
-    #called like: key = store_result(model, __class__, os.path.abspath( __file__ ))
+    def store_result(self, model, object)->str:
         model.logger.info("Init " + str(__name__))
 
         #convert the input parwmeters abd code to JSON and hash it
-        KeyAsHash = self.CaculateHash(code_path, object)
+        KeyAsHash = self.CaculateHash(object.MyPath, object)
 
         #Now we have the unique key based on the inputs and the code.  We now need get the object we want to store in a form we can store it
         OutputAsJSON = self.DumpObjectAsJson(object)
@@ -121,17 +119,15 @@ class AdvGeoPHIRESUtils():
         #set the other svalues we will store
         now = datetime.now() # current date and time
         sdate_time = str(now.strftime("%Y%m%d%H%M%S%f"))
-        sclass = sclass.replace("<class \'", "")
-        sclass = sclass.replace("\'>","")
         suser = str(os.getlogin())
 
         #now try to write those as a record in the database
         try:
             with connect(host="localhost", user="malcolm", password=".Carnot.", database="geophiresx") as connection:
                 SQLCommand = "INSERT INTO geophiresx.objects(uniquekey,class, name, datetime, value) VALUES(%s,%s,%s,%s,%s)"
-                Values = [KeyAsHash, sclass, suser, sdate_time, ValueToStore]
+                Values = [KeyAsHash, object.MyClass, suser, sdate_time, ValueToStore]
                 with connection.cursor() as cursor:
-                    cursor.execute(SQLCommand, (KeyAsHash, sclass, suser, sdate_time, ValueToStore))
+                    cursor.execute(SQLCommand, (KeyAsHash, object.MyClass, suser, sdate_time, ValueToStore))
                     connection.commit()
         except Error as ex:
             print (ex)

@@ -1,4 +1,5 @@
 import sys
+import os
 import math
 import numpy as np
 from Parameter import floatParameter, intParameter, boolParameter, OutputParameter, ReadParameter
@@ -57,6 +58,9 @@ class WellBores:
         self.impedancemodelused = False
         self.usebuiltinppwellheadcorrelation = True
         self.Pminimum = 0.0
+        sclass = str(__class__).replace("<class \'", "")
+        self.MyClass = sclass.replace("\'>","")
+        self.MyPath = os.path.abspath(__file__)
 
         #Results
         self.ProdTempDrop = self.OutputParameterDict[self.ProdTempDrop.Name] = OutputParameter(Name = "Production Well Temperature Drop", value=-999.9, UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)

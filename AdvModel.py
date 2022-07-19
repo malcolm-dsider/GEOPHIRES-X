@@ -28,7 +28,7 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         #Initiate the elements of the Model
         #this is where you can change what class get initiated - the superclass, or one of the subclasses.  By calling the __init__ (above), all the standard parenst will be initiated, so just initiate the ones you want that exceed those
         self.logger.info("Initiate the newer elements of the Model")
-        self.reserv = AdvReservoir.AdvReservoir(self)    #replace the reserv with a new reserv
+#        self.reserv = AdvReservoir.AdvReservoir(self)    #replace the reserv with a new reserv
 #        self.addeconomics = EconomicsAddOns.EconomicsAddOns(self)
 #        self.ccuseconomics = EconomicsCCUS.EconomicsCCUS(self)
 #        self.addoutputs = OutputsAddOns.OutputsAddOns(self)
@@ -72,21 +72,17 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         self.logger.info("Init "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
         
         #This is where all the calcualtions are made using all the values that have been set.  This is handled on a class-by-class basis
-
-        
-
+        #We choose not to call the calculate of the parent, but rather handle the calls here.
         #before we calculate anything, let's see if there is a suitable result already in the database
-        key = self.CheckForExistingResult(self, os.path.abspath(__file__), self.reserv)
+        key = self.CheckForExistingResult(self, self.reserv)
         if key == None: 
             self.reserv.Calculate(self)    #super().Calculate(model)    #run calculation because there was nothing in the database
             
             #store the calculate result and associated object paremeters in the database
-            resultkey = self.store_result(self, str(__class__), os.path.abspath(__file__), self.reserv)
+            resultkey = self.store_result(self, self.reserv)
             if resultkey == None: self.logger.warn("Failed To Store "+ str(__class__) + " " + os.path.abspath(__file__))
             else: self.logger.info("stored " + str(__class__) + " " + os.path.abspath(__file__) + " as: " + resultkey)
 
-
-#        self.reserv.Calculate(self)   #will run the parent if needed
         self.wellbores.Calculate(self) #not over ridden, so needs to run
         self.surfaceplant.Calculate(self) #not over ridden, so needs to run
 #        self.addeconomics.Calculate(self)   #will run the parent if needed

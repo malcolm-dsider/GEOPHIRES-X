@@ -1,5 +1,6 @@
 import math
 import sys
+import os
 import numpy as np
 import numpy_financial as npf
 import AdvModel
@@ -23,6 +24,9 @@ class EconomicsAddOns(Economics.Economics):
 
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().__init__(model)   # initialize the parent parameters and variables
+        sclass = str(__class__).replace("<class \'", "")
+        self.MyClass = sclass.replace("\'>","")
+        self.MyPath = os.path.abspath(__file__)
 
         #Set up all the Parameters that will be predefined by this class using the different types of parameter classes.  Setting up includes giving it a name, a default value, The Unit Type (length, volume, temperature, etc) and Unit Name of that value, sets it as required (or not), sets allowable range, the error message if that range is exceeded, the ToolTip Text, and the name of teh class that created it.
         #This includes setting up temporary variables that will be available to all the class but noy read in by user, or used for Output

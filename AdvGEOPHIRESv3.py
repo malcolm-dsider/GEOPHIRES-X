@@ -20,7 +20,6 @@ import jsons
 from deepdiff import DeepDiff
 from pprint import pprint
 import numpy as np
-import hashlib
 
 def main():
     #set up logging.
@@ -60,10 +59,6 @@ def main():
     #model1.Calculate()
     #dd=DeepDiff(model, model1, significant_digits=0).pretty()
     #with open('output.txt', 'wt') as out: pprint(dd, stream=out)
-    KeyAsHash = jsons.dumps(model.reserv.ParameterDict, sort_keys=True).encode()
-    KeyAsHash = hashlib.blake2b(KeyAsHash).hexdigest()
-    ValueToStore = jsons.dump(model.reserv.OutputParameterDict, indent=4, sort_keys = True, supress_warnings=True, strip_microseconds = True, strip_nulls = True, strip_privates = True, strip_properties = True, use_enum_name = True)
-    ValueToStore = str(ValueToStore)
 
     #Do a sensitvity analysis.  Try ambient temperature from 15-30 in 1 degree steps, monitoring electrcity produced.
     #TrackingValue1 = {}
