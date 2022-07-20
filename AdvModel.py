@@ -5,7 +5,6 @@ import EconomicsAddOns
 import EconomicsCCUS
 import OutputsAddOns
 import OutputsCCUS
-import AdvReservoir
 import AdvGeoPHIRESUtils
 
 class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
@@ -28,8 +27,8 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         #Initiate the elements of the Model
         #this is where you can change what class get initiated - the superclass, or one of the subclasses.  By calling the __init__ (above), all the standard parenst will be initiated, so just initiate the ones you want that exceed those
         self.logger.info("Initiate the newer elements of the Model")
-#        self.addeconomics = EconomicsAddOns.EconomicsAddOns(self)
-#        self.ccuseconomics = EconomicsCCUS.EconomicsCCUS(self)
+        self.addeconomics = EconomicsAddOns.EconomicsAddOns(self)
+        self.ccuseconomics = EconomicsCCUS.EconomicsCCUS(self)
 #        self.addoutputs = OutputsAddOns.OutputsAddOns(self)
 #        self.ccusoutputs = OutputsCCUS.OutputsCCUS(self)
 
@@ -51,8 +50,8 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         self.logger.info("Read parameters for the newer elements of the Model")
         
         #The read parameter function may have switched
-#        self.addeconomics.read_parameters(self)
-#        self.ccuseconomics.read_parameters(self)
+        self.addeconomics.read_parameters(self)
+        self.ccuseconomics.read_parameters(self)
 #        self.addoutputs.read_parameters(self)
 #        self.ccusoutputs.read_parameters(self)
         self.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)

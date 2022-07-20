@@ -175,7 +175,7 @@ class SurfacePlant:
         #calculate produced electricity/direct-use heat
         #----------------------------------------------
         if self.enduseoption.value == EndUseOptions.HEAT: #direct-use
-            self.HeatExtracted.value = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #heat extracted from geofluid [MWth]
+            self.HeatExtracted.value = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater.value*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #heat extracted from geofluid [MWth]
             self.HeatProduced.value = self.HeatExtracted.value*self.enduseefficiencyfactor.value #useful direct-use heat provided to application [MWth]
         else:
             if self.enduseoption.value in [EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT]:
@@ -361,23 +361,23 @@ class SurfacePlant:
             #calculate electricity/heat
             if self.enduseoption.value == EndUseOptions.ELECTRICITY: #pure electricity
                 self.ElectricityProduced.value = self.Availability.value*etau*model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value
-                self.HeatExtracted.value = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #Heat extracted from geofluid [MWth]
+                self.HeatExtracted.value = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater.value*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #Heat extracted from geofluid [MWth]
                 HeatExtractedTowardsElectricity = self.HeatExtracted.value
             elif self.enduseoption.value in [EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT]: #enduseoption = 3: cogen topping cycle
                 self.ElectricityProduced.value = self.Availability.value*etau*model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value
-                self.HeatExtracted.value = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #Heat extracted from geofluid [MWth]        
-                self.HeatProduced.value = self.enduseefficiencyfactor.value*model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater*(ReinjTemp - model.wellbores.Tinj.value)/1E6 #Useful heat for direct-use application [MWth] 
-                HeatExtractedTowardsElectricity = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater*(model.wellbores.ProducedTemperature.value - ReinjTemp)/1E6
+                self.HeatExtracted.value = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater.value*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #Heat extracted from geofluid [MWth]        
+                self.HeatProduced.value = self.enduseefficiencyfactor.value*model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater.value*(ReinjTemp - model.wellbores.Tinj.value)/1E6 #Useful heat for direct-use application [MWth] 
+                HeatExtractedTowardsElectricity = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater.value*(model.wellbores.ProducedTemperature.value - ReinjTemp)/1E6
             elif self.enduseoption.value in [EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY]: #enduseoption = 4: cogen bottoming cycle
                 self.ElectricityProduced.value = self.Availability.value*etau*model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value
-                self.HeatExtracted.value = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #Heat extracted from geofluid [MWth]
-                self.valueHeatProduced.value = self.enduseefficiencyfactor.value*model.wellbores.nprod.value*model.wellbores.prodwellflowrate*model.reserv.cpwater*(model.wellbores.ProducedTemperature.value - self.Tchpbottom.value)/1E6 #Useful heat for direct-use application [MWth]
-                HeatExtractedTowardsElectricity = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater*(self.Tchpbottom.value - model.wellbores.Tinj.value)/1E6        
+                self.HeatExtracted.value = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater.value*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #Heat extracted from geofluid [MWth]
+                self.valueHeatProduced.value = self.enduseefficiencyfactor.value*model.wellbores.nprod.value*model.wellbores.prodwellflowrate*model.reserv.cpwater.value*(model.wellbores.ProducedTemperature.value - self.Tchpbottom.value)/1E6 #Useful heat for direct-use application [MWth]
+                HeatExtractedTowardsElectricity = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater.value*(self.Tchpbottom.value - model.wellbores.Tinj.value)/1E6        
             elif self.enduseoption.value in [EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]: #enduseoption = 5: cogen split of mass flow rate
                 self.ElectricityProduced.value = self.Availability.value*etau*model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*(1.-self.chpfraction.value) #electricity part [MWe]
-                self.HeatExtracted.value = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #Total amount of heat extracted from geofluid [MWth]
-                self.HeatProduced.value = self.enduseefficiencyfactor.value*self.chpfraction.value*model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #useful heat part for direct-use application [MWth]
-                HeatExtractedTowardsElectricity = (1.-self.chpfraction.value)*model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6
+                self.HeatExtracted.value = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater.value*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #Total amount of heat extracted from geofluid [MWth]
+                self.HeatProduced.value = self.enduseefficiencyfactor.value*self.chpfraction.value*model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater.value*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6 #useful heat part for direct-use application [MWth]
+                HeatExtractedTowardsElectricity = (1.-self.chpfraction.value)*model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value*model.reserv.cpwater.value*(model.wellbores.ProducedTemperature.value - model.wellbores.Tinj.value)/1E6
 
             #subtract pumping power for net electricity and  calculate first law efficiency
             if self.enduseoption.value != EndUseOptions.HEAT:

@@ -159,10 +159,10 @@ class WellBores:
             framey[1:] = -np.log(1.1*(self.prodwelldiam.value/2.)/np.sqrt(4.*alpharock*model.reserv.timevector.value[1:]*365.*24.*3600.*model.surfaceplant.utilfactor.value))-0.29
             framey[0] = -np.log(1.1*(self.prodwelldiam.value/2.)/np.sqrt(4.*alpharock*model.reserv.timevector.value[1]*365.*24.*3600.*model.surfaceplant.utilfactor.value))-0.29 #assume outside diameter of casing is 10% larger than inside diameter of production pipe (=prodwelldiam)
             #assume borehole thermal resistance negligible to rock thermal resistance
-            rameyA = self.prodwellflowrate.value*model.reserv.cpwater*framey/2/math.pi/model.reserv.krock.value
+            rameyA = self.prodwellflowrate.value*model.reserv.cpwater.value*framey/2/math.pi/model.reserv.krock.value
             #this code is only valid so far for 1 gradient and deviation = 0 !!!!!!!!   For multiple gradients, use Ramey's model for every layer
         
-            self.ProdTempDrop.value = -((model.reserv.Trock.value - model.reserv.Tresoutput.value) - model.reserv.averagegradient*(model.reserv.depth.value - rameyA) + (model.reserv.Tresoutput.value - model.reserv.averagegradient*rameyA - model.reserv.Trock.value)*np.exp(-model.reserv.depth.value/rameyA))
+            self.ProdTempDrop.value = -((model.reserv.Trock.value - model.reserv.Tresoutput.value) - model.reserv.averagegradient.value*(model.reserv.depth.value - rameyA) + (model.reserv.Tresoutput.value - model.reserv.averagegradient.value*rameyA - model.reserv.Trock.value)*np.exp(-model.reserv.depth.value/rameyA))
 
         self.ProducedTemperature.value = model.reserv.Tresoutput.value-self.ProdTempDrop.value
 
@@ -241,7 +241,7 @@ class WellBores:
             if self.usebuiltinhydrostaticpressurecorrelation:    
                 CP = 4.64E-7
                 CT = 9E-4/(30.796*model.reserv.Trock.value**(-0.552))
-                self.Phydrostatic.value = 0+1./CP*(math.exp(model.reserv.densitywater(model.reserv.Tsurf.value)*9.81*CP/1000*(model.reserv.depth.value-CT/2*model.reserv.averagegradient*model.reserv.depth.value**2))-1)
+                self.Phydrostatic.value = 0+1./CP*(math.exp(model.reserv.densitywater(model.reserv.Tsurf.value)*9.81*CP/1000*(model.reserv.depth.value-CT/2*model.reserv.averagegradient.value*model.reserv.depth.value**2))-1)
 
             if self.productionwellpumping:
                 Pexcess = 344.7 #[kPa] = 50 psi. Excess pressure covers non-condensable gas pressure and net positive suction head for the pump

@@ -58,9 +58,6 @@ class Reservoir:
         self.Tsurf = self.ParameterDict[self.Tsurf.Name] = floatParameter("Surface Temperature", value = 15.0, Min = -50, Max = 50, UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS, Required=True, ErrMessage="assume default surface temperature (15 deg.C)", ToolTipText="Surface temperature used for calculating bottom-hole temperature (with geothermal gradient and reservoir depth)")
 
         self.usebuiltintough2model = False
-        self.cpwater = 0.0
-        self.rhowater = 0.0
-        self.averagegradient = 0.0
         sclass = str(__class__).replace("<class \'", "")
         self.MyClass = sclass.replace("\'>","")
         self.MyPath = os.path.abspath(__file__)
@@ -71,7 +68,10 @@ class Reservoir:
         self.fracwidthcalc = self.OutputParameterDict[self.fracwidthcalc.Name] = OutputParameter("Calculated Fracture Width", value = self.fracwidth.value, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS)
         self.fracheightcalc = self.OutputParameterDict[self.fracheightcalc.Name] = OutputParameter("Calculated Fracture Height", value = self.fracheight.value, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS)
         self.fracareacalc = self.OutputParameterDict[self.fracareacalc.Name] = OutputParameter("Calculated Fracture Area", value = self.fracarea.value, UnitType = Units.AREA, PreferredUnits = AreaUnit.METERS2, CurrentUnits = AreaUnit.METERS2)
-        self.resvolcalc = self.ParameterDict[self.resvolcalc.Name] = floatParameter("Calculated Reservoir Volume", value = self.resvol.value, UnitType = Units.VOLUME, PreferredUnits = VolumeUnit.METERS3, CurrentUnits = VolumeUnit.METERS3)
+        self.resvolcalc = self.OutputParameterDict[self.resvolcalc.Name] = floatParameter("Calculated Reservoir Volume", value = self.resvol.value, UnitType = Units.VOLUME, PreferredUnits = VolumeUnit.METERS3, CurrentUnits = VolumeUnit.METERS3)
+        self.cpwater = self.OutputParameterDict[self.cpwater.Name] = floatParameter("cpwater", value = 0.0, UnitType = Units.NONE)
+        self.rhowater = self.OutputParameterDict[self.rhowater.Name] = floatParameter("rhowater", value = 0.0, UnitType = Units.NONE)
+        self.averagegradient = self.OutputParameterDict[self.averagegradient.Name] = floatParameter("averagegradient", value = 0.0, UnitType = Units.NONE)
         self.Trock = self.OutputParameterDict[self.Trock.Name] = OutputParameter(Name = "Bottom-hole temperature", value=-999.9, UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
         self.InitialReservoirHeatContent = self.OutputParameterDict[self.InitialReservoirHeatContent.Name] = OutputParameter(Name = "Initial Reservoir Heat Content", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
         self.timevector = self.OutputParameterDict[self.timevector.Name] = OutputParameter(Name = "Time Vector", value=[], UnitType = Units.NONE)
@@ -244,16 +244,16 @@ class Reservoir:
         self.Trock.value = intersecttemperature[temperatureindex] + self.gradient.value[temperatureindex]*(self.depth.value - totaldepth[temperatureindex])
 
         #calculate average geothermal gradient
-        if self.numseg.value == 1: self.averagegradient = self.gradient.value[0]
-        else: self.averagegradient = (self.Trock.value-self.Tsurf.value)/self.depth.value
+        if self.numseg.value == 1: self.averagegradient.value = self.gradient.value[0]
+        else: self.averagegradient.value = (self.Trock.value-self.Tsurf.value)/self.depth.value
 
         # specify time-stepping vectors
         self.timevector.value = np.linspace(0, model.surfaceplant.plantlifetime.value, model.economics.timestepsperyear.value*model.surfaceplant.plantlifetime.value+1)
         self.Tresoutput.value = np.zeros(len(self.timevector.value))
 
         # calculate reservoir water properties
-        self.cpwater = self.heatcapacitywater(model.wellbores.Tinj.value*0.5+(self.Trock.value*0.9+model.wellbores.Tinj.value*0.1)*0.5)
-        self.rhowater = self.densitywater(model.wellbores.Tinj.value*0.5+(self.Trock.value*0.9+model.wellbores.Tinj.value*0.1)*0.5)
+        self.cpwater.value = self.heatcapacitywater(model.wellbores.Tinj.value*0.5+(self.Trock.value*0.9+model.wellbores.Tinj.value*0.1)*0.5)
+        self.rhowater.value = self.densitywater(model.wellbores.Tinj.value*0.5+(self.Trock.value*0.9+model.wellbores.Tinj.value*0.1)*0.5)
 
         # temperature gain in injection wells
         model.wellbores.Tinj.value = model.wellbores.Tinj.value + model.wellbores.tempgaininj.value
@@ -315,13 +315,13 @@ class MPFReservoir(Reservoir):
         super().Calculate(model)    #run calculate for the parent.
     
         # convert flowrate to volumetric rate
-        q = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value/model.reserv.rhowater # m^3/s
+        q = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value/model.reserv.rhowater.value # m^3/s
 
         # specify Laplace-space function
-        fp = lambda s: (1./s)*exp(-sqrt(s)*tanh((model.reserv.rhowater*model.reserv.cpwater*(q/model.reserv.fracnumbcalc.value/model.reserv.fracwidthcalc.value)*(model.reserv.fracsepcalc.value/2.)/(2.*model.reserv.krock.value*model.reserv.fracheightcalc.value))*sqrt(s)))
+        fp = lambda s: (1./s)*exp(-sqrt(s)*tanh((model.reserv.rhowater.value*model.reserv.cpwater.value*(q/model.reserv.fracnumbcalc.value/model.reserv.fracwidthcalc.value)*(model.reserv.fracsepcalc.value/2.)/(2.*model.reserv.krock.value*model.reserv.fracheightcalc.value))*sqrt(s)))
 
         #calculate non-dimensional time
-        td = (model.reserv.rhowater*model.reserv.cpwater)**2/(4*model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value)*(q/float(model.reserv.fracnumbcalc.value)/model.reserv.fracwidthcalc.value/model.reserv.fracheightcalc.value)**2*model.reserv.timevector.value*365.*24.*3600
+        td = (model.reserv.rhowater.value*model.reserv.cpwater.value)**2/(4*model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value)*(q/float(model.reserv.fracnumbcalc.value)/model.reserv.fracwidthcalc.value/model.reserv.fracheightcalc.value)**2*model.reserv.timevector.value*365.*24.*3600
 
         # calculate non-dimensional temperature array
         Twnd = []
@@ -395,7 +395,7 @@ class LHSReservoir(Reservoir):
         alpha = model.reserv.krock.value/(model.reserv.rhorock.value*model.reserv.cprock.value)
 
         # storage ratio
-        gamma = (model.reserv.rhowater*model.reserv.cpwater*phi)/(model.reserv.rhorock.value*model.reserv.cprock.value*(1-phi))
+        gamma = (model.reserv.rhowater.value*model.reserv.cpwater.value*phi)/(model.reserv.rhorock.value*model.reserv.cprock.value*(1-phi))
         # effective rock radius
         r_efr = 0.83*(0.75*(model.reserv.fracsepcalc.value*model.reserv.fracheightcalc.value*model.reserv.fracwidthcalc.value)/math.pi)**(1./3.)
         # Biot number
@@ -482,7 +482,7 @@ class SFReservoir(Reservoir):
         super().Calculate(model)    #run calculate for the parent.
 
         model.reserv.Tresoutput.value[0] = model.reserv.Trock.value
-        for i in range(1,len(model.reserv.timevector.value)): model.reserv.Tresoutput.value[i] = math.erf(1./model.reserv.drawdp.value/model.reserv.cpwater*math.sqrt(model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value/model.reserv.timevector[i]/(365.*24.*3600.)))*(model.reserv.Trock.value-model.wellbores.Tinj.value)+model.wellbores.Tinj.value
+        for i in range(1,len(model.reserv.timevector.value)): model.reserv.Tresoutput.value[i] = math.erf(1./model.reserv.drawdp.value/model.reserv.cpwater.value*math.sqrt(model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value/model.reserv.timevector[i]/(365.*24.*3600.)))*(model.reserv.Trock.value-model.wellbores.Tinj.value)+model.wellbores.Tinj.value
 
         model.logger.info("Complete " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
