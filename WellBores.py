@@ -45,33 +45,36 @@ class WellBores:
         self.PI = self.ParameterDict[self.PI.Name] = floatParameter("Productivity Index", value = 10.0, Min=1E-2, Max=1E4, UnitType = Units.PRODUCTIVITY_INDEX, PreferredUnits = ProductivityIndexUnit.KGPERSECPERBAR, CurrentUnits = ProductivityIndexUnit.KGPERSECPERBAR, ErrMessage = "assume default productivity index (10 kg/s/bar)", ToolTipText="Productivity index defined as ratio of production well flow rate over production well inflow pressure drop (see docs)")
         self.maxdrawdown = self.ParameterDict[self.maxdrawdown.Name] = floatParameter("Maximum Drawdown", value = 1.0, Min=0.0, Max=1.000001, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage = "assume default maximum drawdown (1)", ToolTipText="Maximum allowable thermal drawdown before redrilling of all wells into new reservoir (most applicable to EGS-type reservoirs with heat farming strategies). E.g. a value of 0.2 means that all wells are redrilled after the production temperature (at the wellhead) has dropped by 20% of its initial temperature")
 
+#MIR Does Tinj, ninj, nprod, prodwellflowrate change values?
+
         #local variable initiation
         self.Pinjwellhead = 0.0
         self.usebuiltinhydrostaticpressurecorrelation = True
-        self.redrill = 0
         self.rhowaterinj = 0.0
-        self.PumpingPowerProd = 0.0
-        self.PumpingPowerInj = 0.0
-        self.pumpdepth = 0.0
-        self.impedancemodelallowed = True
-        self.productionwellpumping = True
-        self.impedancemodelused = False
         self.usebuiltinppwellheadcorrelation = True
         self.Pminimum = 0.0
         sclass = str(__class__).replace("<class \'", "")
         self.MyClass = sclass.replace("\'>","")
         self.MyPath = os.path.abspath(__file__)
 
-        #Results
-        self.ProdTempDrop = self.OutputParameterDict[self.ProdTempDrop.Name] = OutputParameter(Name = "Production Well Temperature Drop", value=-999.9, UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
-        self.DP = self.OutputParameterDict[self.DP.Name] = OutputParameter(Name = "Total Pressure Drop", value=-999.9, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
-        self.DP1 = self.OutputParameterDict[self.DP1.Name] = OutputParameter(Name = "Injection Well Pressure Drop", value=-999.9, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
-        self.DP2 = self.OutputParameterDict[self.DP2.Name] = OutputParameter(Name = "Reservoir Pressure Drop", value=-999.9, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
-        self.DP3 = self.OutputParameterDict[self.DP3.Name] = OutputParameter(Name = "Production Well Pump Pressure Drop", value=-999.9, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
-        self.DP4 = self.OutputParameterDict[self.DP4.Name] = OutputParameter(Name = "Bouyancy Pressure Drop", value=-999.9, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
-        self.ProducedTemperature = self.OutputParameterDict[self.ProducedTemperature.Name] = OutputParameter(Name = "Produced Temperature", value=-999.9, UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
-        self.PumpingPower = self.OutputParameterDict[self.PumpingPower.Name] = OutputParameter(Name = "Pumping Power", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
-        self.Pprodwellhead = self.OutputParameterDict[self.Pprodwellhead.Name] = OutputParameter(Name = "Production wellhead pressure", value=-999.9, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
+        #Results - used by other objects or printed in output downstream
+        self.Phydrostaticcalc = self.OutputParameterDict[self.Phydrostaticcalc.Name] = floatParameter("Calculated Reservoir Hydrostatic Pressure", value = self.Phydrostatic.value, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
+        self.redrill = self.OutputParameterDict[self.redrill.Name] = OutputParameter(Name = "redrill", value=0, UnitType = Units.NONE)
+        self.PumpingPowerProd = self.OutputParameterDict[self.PumpingPowerProd.Name] = OutputParameter(Name = "PumpingPowerProd", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.PumpingPowerInj = self.OutputParameterDict[self.PumpingPowerInj.Name] = OutputParameter(Name = "PumpingPowerInj", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.pumpdepth = self.OutputParameterDict[self.pumpdepth.Name] = OutputParameter(Name = "pumpdepth", value=[0.0], UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS)
+        self.impedancemodelallowed = self.OutputParameterDict[self.impedancemodelallowed.Name] = OutputParameter(Name = "impedancemodelallowed", value=True, UnitType = Units.NONE)
+        self.productionwellpumping = self.OutputParameterDict[self.productionwellpumping.Name] = OutputParameter(Name = "productionwellpumping", value=True, UnitType = Units.NONE)
+        self.impedancemodelused = self.OutputParameterDict[self.impedancemodelused.Name] = OutputParameter(Name = "impedancemodelused", value=False, UnitType = Units.NONE)
+        self.ProdTempDrop = self.OutputParameterDict[self.ProdTempDrop.Name] = OutputParameter(Name = "Production Well Temperature Drop", value=[0.0], UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
+        self.DP = self.OutputParameterDict[self.DP.Name] = OutputParameter(Name = "Total Pressure Drop", value=[0.0], UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
+        self.DP1 = self.OutputParameterDict[self.DP1.Name] = OutputParameter(Name = "Injection Well Pressure Drop", value=[0.0], UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
+        self.DP2 = self.OutputParameterDict[self.DP2.Name] = OutputParameter(Name = "Reservoir Pressure Drop", value=[0.0], UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
+        self.DP3 = self.OutputParameterDict[self.DP3.Name] = OutputParameter(Name = "Production Well Pump Pressure Drop", value=[0.0], UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
+        self.DP4 = self.OutputParameterDict[self.DP4.Name] = OutputParameter(Name = "Bouyancy Pressure Drop", value=[0.0], UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
+        self.ProducedTemperature = self.OutputParameterDict[self.ProducedTemperature.Name] = OutputParameter(Name = "Produced Temperature", value=[0.0], UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
+        self.PumpingPower = self.OutputParameterDict[self.PumpingPower.Name] = OutputParameter(Name = "Pumping Power", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.Pprodwellhead = self.OutputParameterDict[self.Pprodwellhead.Name] = OutputParameter(Name = "Production wellhead pressure", value=-999.0, UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
 
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -109,8 +112,8 @@ class WellBores:
                     elif ParameterToModify.Name == "Injection Well Diameter": ParameterToModify.value = ParameterToModify.value * 0.0254        #pinjwelldiam: injection well diameter (input as inch and converted to m)
                     elif ParameterToModify.Name == "Reservoir Impedance":  #impedance: impedance per wellpair (input as GPa*s/m^3 and converted to KPa/kg/s (assuming 1000 for density; density will be corrected for later))
                         self.impedance.value = self.impedance.value * (1E6/1E3)    #shift it by a constant to make the units right, per line 619 of GEOPHIRES 2
-                        self.impedancemodelused = True
-                        if self.impedance.Provided == False: self.impedancemodelused = False
+                        self.impedancemodelused.value = True
+                        if self.impedance.Provided == False: self.impedancemodelused.value = False
                     elif ParameterToModify.Name == "Reservoir Hydrostatic Pressure":
                         if ParameterToModify.value == -1: self.usebuiltinhydrostaticpressurecorrelation = True
                         else: self.usebuiltinhydrostaticpressurecorrelation = False
@@ -170,8 +173,8 @@ class WellBores:
         if model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.SINGLE_FRACTURE, ReservoirModel.ANNUAL_PERCENTAGE]: #only applies to the built-in analytical reservoir models
             indexfirstmaxdrawdown = np.argmax(self.ProducedTemperature.value<(1-model.wellbores.maxdrawdown.value)*self.ProducedTemperature.value[0])
             if indexfirstmaxdrawdown > 0:   #redrilling necessary
-                self.redrill = int(np.floor(len(self.ProducedTemperature.value)/indexfirstmaxdrawdown))
-                ProducedTemperatureRepeatead = np.tile(self.ProducedTemperature.value[0:indexfirstmaxdrawdown], self.redrill+1)
+                self.redrill.value = int(np.floor(len(self.ProducedTemperature.value)/indexfirstmaxdrawdown))
+                ProducedTemperatureRepeatead = np.tile(self.ProducedTemperature.value[0:indexfirstmaxdrawdown], self.redrill.value+1)
                 self.ProducedTemperature.value = ProducedTemperatureRepeatead[0:len(self.ProducedTemperature.value)]
 
         #------------------------------------------
@@ -213,7 +216,7 @@ class WellBores:
             f1 = 1./np.power((-2*np.log10(relroughness/3.7+2.51/Rewaterinj/np.sqrt(f1))),2.)
             f1 = 1./np.power((-2*np.log10(relroughness/3.7+2.51/Rewaterinj/np.sqrt(f1))),2.)  #6 iterations to converge
 
-        if self.impedancemodelused: #assumed everything stays liquid throughout
+        if self.impedancemodelused.value: #assumed everything stays liquid throughout
             #injecion well pressure drop [kPa]
             self.DP1.value = f1*(self.rhowaterinj*vinj**2/2)*(model.reserv.depth.value/self.injwelldiam.value)/1E3      #/1E3 to convert from Pa to kPa
     
@@ -241,9 +244,9 @@ class WellBores:
             if self.usebuiltinhydrostaticpressurecorrelation:    
                 CP = 4.64E-7
                 CT = 9E-4/(30.796*model.reserv.Trock.value**(-0.552))
-                self.Phydrostatic.value = 0+1./CP*(math.exp(model.reserv.densitywater(model.reserv.Tsurf.value)*9.81*CP/1000*(model.reserv.depth.value-CT/2*model.reserv.averagegradient.value*model.reserv.depth.value**2))-1)
+                self.Phydrostaticcalc.value = 0+1./CP*(math.exp(model.reserv.densitywater(model.reserv.Tsurf.value)*9.81*CP/1000*(model.reserv.depth.value-CT/2*model.reserv.averagegradient.value*model.reserv.depth.value**2))-1)
 
-            if self.productionwellpumping:
+            if self.productionwellpumping.value:
                 Pexcess = 344.7 #[kPa] = 50 psi. Excess pressure covers non-condensable gas pressure and net positive suction head for the pump
                 self.Pminimum = self.vaporpressurewater(model.reserv.Trock.value) + Pexcess #[kPa] is minimum production pump inlet pressure and minimum wellhead pressure
                 if self.usebuiltinppwellheadcorrelation:
@@ -259,8 +262,8 @@ class WellBores:
                 PIkPa = self.PI.value/100.000 #convert PI from kg/s/bar to kg/s/kPa
 
                 #calculate pumping depth
-                self.pumpdepth = model.reserv.depth.value + (self.Pminimum - self.Phydrostatic.value + self.prodwellflowrate.value/PIkPa)/(f3*(rhowaterprod*vprod**2/2.)*(1/self.prodwelldiam.value)/1E3 + rhowaterprod*9.81/1E3)
-                pumpdepthfinal = np.max(self.pumpdepth)
+                self.pumpdepth.value = model.reserv.depth.value + (self.Pminimum - self.Phydrostaticcalc.value + self.prodwellflowrate.value/PIkPa)/(f3*(rhowaterprod*vprod**2/2.)*(1/self.prodwelldiam.value)/1E3 + rhowaterprod*9.81/1E3)
+                pumpdepthfinal = np.max(self.pumpdepth.value)
                 if pumpdepthfinal < 0:
                     pumpdepthfinal = 0
                     print("Warning: GEOPHIRES calculates negative production well pumping depth. No production well pumps will be assumed")
@@ -269,33 +272,33 @@ class WellBores:
                     print("Warning: GEOPHIRES calculates pump depth to be deeper than 600 m. Verify reservoir pressure, production well flow rate and production well dimensions")  
                     model.logger.warning("GEOPHIRES calculates pump depth to be deeper than 600 m. Verify reservoir pressure, production well flow rate and production well dimensions")  
                 #calculate production well pumping pressure [kPa]
-                self.DP3.value = self.Pprodwellhead.value - (self.Phydrostatic.value - self.prodwellflowrate.value/PIkPa - rhowaterprod*9.81*model.reserv.depth.value/1E3 - f3*(rhowaterprod*vprod**2/2.)*(model.reserv.depth.value/self.prodwelldiam.value)/1E3)
+                self.DP3.value = self.Pprodwellhead.value - (self.Phydrostaticcalc.value - self.prodwellflowrate.value/PIkPa - rhowaterprod*9.81*model.reserv.depth.value/1E3 - f3*(rhowaterprod*vprod**2/2.)*(model.reserv.depth.value/self.prodwelldiam.value)/1E3)
                 #self.DP3.value = [0 if x<0 else x for x in DP3] #set negative values to 0        
-                self.PumpingPowerProd = self.DP3.value*self.nprod.value*self.prodwellflowrate.value/rhowaterprod/model.surfaceplant.pumpeff.value/1E3 #[MWe] total pumping power for production wells
-                self.PumpingPowerProd = np.array([0. if x<0. else x for x in self.PumpingPowerProd])
+                self.PumpingPowerProd.value = self.DP3.value*self.nprod.value*self.prodwellflowrate.value/rhowaterprod/model.surfaceplant.pumpeff.value/1E3 #[MWe] total pumping power for production wells
+                self.PumpingPowerProd.value = np.array([0. if x<0. else x for x in self.PumpingPowerProd.value])
 
        
             IIkPa = self.II.value/100 #convert II from kg/s/bar to kg/s/kPa
 
             #necessary injection wellhead pressure [kPa]
-            self.Pinjwellhead = self.Phydrostatic.value + self.prodwellflowrate.value*(1+model.reserv.waterloss.value)*self.nprod.value/self.ninj.value/IIkPa - self.rhowaterinj*9.81*model.reserv.depth.value/1E3 + f1*(self.rhowaterinj*vinj**2/2)*(model.reserv.depth.value/self.injwelldiam.value)/1E3
+            self.Pinjwellhead = self.Phydrostaticcalc.value + self.prodwellflowrate.value*(1+model.reserv.waterloss.value)*self.nprod.value/self.ninj.value/IIkPa - self.rhowaterinj*9.81*model.reserv.depth.value/1E3 + f1*(self.rhowaterinj*vinj**2/2)*(model.reserv.depth.value/self.injwelldiam.value)/1E3
             
             #plant outlet pressure [kPa]
-            if model.surfaceplant.usebuiltinoutletplantcorrelation:
+            if model.surfaceplant.usebuiltinoutletplantcorrelation.value:
                 DPSurfaceplant = 68.95 #[kPa] assumes 10 psi pressure drop in surface equipment
                 model.surfaceplant.Pplantoutlet.value = self.Pprodwellhead.value - DPSurfaceplant
 
             #injection pump pressure [kPa]
             self.DP1.value = self.Pinjwellhead-model.surfaceplant.Pplantoutlet.value
             #wellbores.DP1.value = [0 if x<0 else x for x in DP1] #set negative values to 0
-            self.PumpingPowerInj = self.DP1.value*self.nprod.value*self.prodwellflowrate.value*(1+model.reserv.waterloss.value)/self.rhowaterinj/model.surfaceplant.pumpeff.value/1E3 #[MWe] total pumping power for injection wells
-            self.PumpingPowerInj = np.array([0. if x<0. else x for x in self.PumpingPowerInj])
+            self.PumpingPowerInj.value = self.DP1.value*self.nprod.value*self.prodwellflowrate.value*(1+model.reserv.waterloss.value)/self.rhowaterinj/model.surfaceplant.pumpeff.value/1E3 #[MWe] total pumping power for injection wells
+            self.PumpingPowerInj.value = np.array([0. if x<0. else x for x in self.PumpingPowerInj.value])
     
             #total pumping power
-            if self.productionwellpumping:
-                self.PumpingPower.value = self.PumpingPowerInj + self.PumpingPowerProd
+            if self.productionwellpumping.value:
+                self.PumpingPower.value = self.PumpingPowerInj.value + self.PumpingPowerProd.value
             else:
-                self.PumpingPower.value = self.PumpingPowerInj 
+                self.PumpingPower.value = self.PumpingPowerInj.value 
 
             #negative pumping power values become zero (b/c we are not generating electricity)
             self.PumpingPower.value = [0. if x<0. else x for x in self.PumpingPower.value]

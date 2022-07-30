@@ -62,7 +62,7 @@ class Reservoir:
         self.MyClass = sclass.replace("\'>","")
         self.MyPath = os.path.abspath(__file__)
 
-        #Results - note the first 6 values are copies of the input values.  They are required because it is a bad practice to change input values after the user has assigned them.  Instead, we make new parameters that are copies of the input parameters, but then modify these values - we only use and display the calculated values. This is OK because the calculated value starts a a copy of the input value and only changes if needed.
+        #Results - used by other objects or printed in output downstream - note the first 6 values are copies of the input values.  They are required because it is a bad practice to change input values after the user has assigned them.  Instead, we make new parameters that are copies of the input parameters, but then modify these values - we only use and display the calculated values. This is OK because the calculated value starts a a copy of the input value and only changes if needed.
         self.fracsepcalc = self.OutputParameterDict[self.fracsepcalc.Name] = OutputParameter("Calculated Fracture Separation", value = self.fracsep.value, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS)
         self.fracnumbcalc = self.OutputParameterDict[self.fracnumbcalc.Name] = OutputParameter("Calculated Number of Fractures", value = self.fracnumb.value, UnitType = Units.NONE)
         self.fracwidthcalc = self.OutputParameterDict[self.fracwidthcalc.Name] = OutputParameter("Calculated Fracture Width", value = self.fracwidth.value, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS)

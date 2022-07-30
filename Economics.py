@@ -359,8 +359,8 @@ class Economics:
         #field gathering system costs (M$)
         if self.ccgathfixed.Valid: self.Cgath.value = self.ccgathfixed.value
         else:
-            #self.Cgath.value = self.ccgathadjfactor.value*50-6*np.max(model.surfaceplant.HeatExtracted)*1000. (GEOPHIRES v1 correlation)
-            if model.wellbores.impedancemodelused:
+            #self.Cgath.value = self.ccgathadjfactor.value*50-6*np.max(model.surfaceplant.HeatExtracted.value)*1000. (GEOPHIRES v1 correlation)
+            if model.wellbores.impedancemodelused.value:
                 pumphp = np.max(model.wellbores.PumpingPower.value)*1341
                 numberofpumps = np.ceil(pumphp/2000) #pump can be maximum 2,000 hp
                 if numberofpumps == 0: self.Cpumps = 0.0
@@ -368,12 +368,12 @@ class Economics:
                     pumphpcorrected = pumphp/numberofpumps
                     self.Cpumps = numberofpumps*1.5*((1750*(pumphpcorrected)**0.7)*3*(pumphpcorrected)**(-0.11)) 
             else:
-                if model.wellbores.productionwellpumping:
-                    prodpumphp = np.max(model.wellbores.PumpingPowerProd)/model.wellbores.nprod.value*1341
-                    Cpumpsprod = model.wellbores.nprod.value*1.5*(1750*(prodpumphp)**0.7 + 5750*(prodpumphp)**0.2  + 10000 + np.max(model.wellbores.pumpdepth)*50*3.281) #see page 46 in user's manual asusming rental of rig for 1 day.
+                if model.wellbores.productionwellpumping.value:
+                    prodpumphp = np.max(model.wellbores.PumpingPowerProd.value)/model.wellbores.nprod.value*1341
+                    Cpumpsprod = model.wellbores.nprod.value*1.5*(1750*(prodpumphp)**0.7 + 5750*(prodpumphp)**0.2  + 10000 + np.max(model.wellbores.pumpdepth.value)*50*3.281) #see page 46 in user's manual asusming rental of rig for 1 day.
                 else: Cpumpsprod = 0
             
-                injpumphp = np.max(model.wellbores.PumpingPowerInj)*1341
+                injpumphp = np.max(model.wellbores.PumpingPowerInj.value)*1341
                 numberofinjpumps = np.ceil(injpumphp/2000) #pump can be maximum 2,000 hp
                 if numberofinjpumps == 0: Cpumpsinj=0
                 else:
@@ -392,7 +392,7 @@ class Economics:
                 self.Cplant.value = 1.12*1.15*self.ccplantadjfactor.value*250E-6*np.max(model.surfaceplant.HeatExtracted.value)*1000. #1.15 for 15% contingency and 1.12 for 12% indirect costs
         else: #all other options have power plant
             if model.surfaceplant.pptype.value == PowerPlantType.SUB_CRITICAL_ORC:
-                MaxProducedTemperature = np.max(model.surfaceplant.TenteringPP)
+                MaxProducedTemperature = np.max(model.surfaceplant.TenteringPP.value)
                 if (MaxProducedTemperature < 150.):
                     C3 = -1.458333E-3
                     C2 = 7.6875E-1 
@@ -407,7 +407,7 @@ class Economics:
                 self.Cplantcorrelation = CCAPP1*z*x*1000./1E6
 
             elif model.surfaceplant.pptype.value == PowerPlantType.SUPER_CRITICAL_ORC:
-                MaxProducedTemperature = np.max(model.surfaceplant.TenteringPP)
+                MaxProducedTemperature = np.max(model.surfaceplant.TenteringPP.value)
                 if (MaxProducedTemperature < 150.):
                     C3 = -1.458333E-3
                     C2 = 7.6875E-1 
@@ -464,7 +464,7 @@ class Economics:
                     D0 = 5.0238E3          
                     PLL = 75.
                     PRL = 100.
-                maxProdTemp = np.max(model.surfaceplant.TenteringPP)
+                maxProdTemp = np.max(model.surfaceplant.TenteringPP.value)
                 CCAPPLL = C2*maxProdTemp**2 + C1*maxProdTemp + C0
                 CCAPPRL = D2*maxProdTemp**2 + D1*maxProdTemp + D0  
                 b = math.log(CCAPPRL/CCAPPLL)/math.log(PRL/PLL)
@@ -517,7 +517,7 @@ class Economics:
                     D0 = 5.0238E3          
                     PLL = 75.
                     PRL = 100.
-                maxProdTemp = np.max(model.surfaceplant.TenteringPP)
+                maxProdTemp = np.max(model.surfaceplant.TenteringPP.value)
                 CCAPPLL = C2*maxProdTemp**2 + C1*maxProdTemp + C0
                 CCAPPRL = D2*maxProdTemp**2 + D1*maxProdTemp + D0  
                 b = math.log(CCAPPRL/CCAPPLL)/math.log(PRL/PLL)
@@ -584,7 +584,7 @@ class Economics:
         #add in the O&M costs of the AddOns
         self.Coam.value = self.Coam.value
 
-        if model.wellbores.redrill > 0: model.Coam.value = model.Coam.value + (self.Cwell.value + model.reserv.Cstim.value)*self.redrill/model.surfaceplant.plantlifetime.value   #account for well redrilling
+        if model.wellbores.redrill.value > 0: model.Coam.value = model.Coam.value + (self.Cwell.value + model.reserv.Cstim.value)*model.wellbores.redrill.value/model.surfaceplant.plantlifetime.value   #account for well redrilling
 
         #The Reservoir depth measure was arbitarily changed to meters, desipte being defined in the docs as kilometers.  For display consistency sake, we need to convert it back
         if model.reserv.depth.value > 500: model.reserv.depth.value = model.reserv.depth.value/1000.0

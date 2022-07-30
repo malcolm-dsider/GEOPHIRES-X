@@ -9,7 +9,6 @@ class OutputsCCUS(Outputs.Outputs):
     def PrintOutputs(self, model:AdvModel):
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
-        # Do the original output
         if np.sum(model.ccuseconomics.CCUSRevenue.value) == 0: return   #don't bother if we have nothing to report.
 
         #now do CCUS output, which will append to the original output

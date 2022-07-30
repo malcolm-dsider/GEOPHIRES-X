@@ -67,8 +67,8 @@ class EconomicsCCUS(Economics.Economics):
         self.CCUSCummCashFlow =  self.OutputParameterDict[self.CCUSCummCashFlow.Name] = OutputParameter("Cummulative Cash Flow", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
         self.CarbonThatWouldHaveBeenProducedAnnually =  self.OutputParameterDict[self.CarbonThatWouldHaveBeenProducedAnnually.Name] = OutputParameter("Annual Saved Carbon Production", value = 0.0, UnitType = Units.MASS, PreferredUnits=MassUnit.LB, CurrentUnits=MassUnit.LB)
         self.CarbonThatWouldHaveBeenProducedTotal =  self.OutputParameterDict[self.CarbonThatWouldHaveBeenProducedTotal.Name] = OutputParameter("Annual Saved Carbon Production", value = 0.0, UnitType = Units.MASS, PreferredUnits=MassUnit.LB, CurrentUnits=MassUnit.LB)
-        self.CCUSOnElecPrice = self.ParameterDict[self.CCUSOnElecPrice.Name] = OutputParameter("Electricity Sale Price Model", value = 0.055, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
-        self.CCUSOnHeatPrice = self.ParameterDict[self.CCUSOnHeatPrice.Name] = OutputParameter("Heat Sale Price Model", value = 0.025, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
+        self.CCUSOnElecPrice = self.OutputParameterDict[self.CCUSOnElecPrice.Name] = OutputParameter("CCUS Electricity Sale Price Model", value = [0.055], UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
+        self.CCUSOnHeatPrice = self.OutputParameterDict[self.CCUSOnHeatPrice.Name] = OutputParameter("CCUS Heat Sale Price Model", value = [0.025], UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
 
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 

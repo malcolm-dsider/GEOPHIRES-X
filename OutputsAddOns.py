@@ -18,9 +18,6 @@ class OutputsAddOns(Outputs.Outputs):
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
-        # Do the original output
-        super().PrintOutputs(model)   # initialize the parent parameters and variables
-
         if model.addeconomics.AddOnCAPEXTotal.value + model.addeconomics.AddOnOPEXTotalPerYear.value == 0: return   #don't bother if we have nothing to report.
 
         #now do AddOn output, which will append to the original output

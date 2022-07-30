@@ -46,25 +46,25 @@ class SurfacePlant:
 
         #local variable initialization
         self.setinjectionpressurefixed = False
-        self.usebuiltinoutletplantcorrelation = False
-        self.TenteringPP = 0
         sclass = str(__class__).replace("<class \'", "")
         self.MyClass = sclass.replace("\'>","")
         self.MyPath = os.path.abspath(__file__)
 
-        #Results
-        self.HeatkWhExtracted = self.ParameterDict[self.HeatkWhExtracted.Name] = OutputParameter(Name = "annual heat production", value = [], UnitType = Units.ENERGYFREQUENCY, PreferredUnits = EnergyFrequencyUnit.GWPERYEAR, CurrentUnits = EnergyFrequencyUnit.GWPERYEAR)
-        self.PumpingkWh = self.ParameterDict[self.PumpingkWh.Name] = OutputParameter(Name = "annual electricity production", value = [], UnitType = Units.ENERGYFREQUENCY, PreferredUnits = EnergyFrequencyUnit.KWPERYEAR, CurrentUnits = EnergyFrequencyUnit.KWPERYEAR)
-        self.ElectricityProduced = self.OutputParameterDict[self.ElectricityProduced.Name] = OutputParameter(Name = "Total Electricity Generation", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
-        self.NetElectricityProduced = self.OutputParameterDict[self.NetElectricityProduced.Name] = OutputParameter(Name = "Net Electricity Production", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
-        self.TotalkWhProduced = self.OutputParameterDict[self.TotalkWhProduced.Name] = OutputParameter(Name = "Total Electricity Generation", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.KWH, CurrentUnits = EnergyUnit.KWH)
-        self.NetkWhProduced = self.OutputParameterDict[self.NetkWhProduced.Name] = OutputParameter(Name = "Net Electricity Generation", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.KWH, CurrentUnits = EnergyUnit.KWH)
-        self.HeatkWhProduced = self.OutputParameterDict[self.HeatkWhProduced.Name] = OutputParameter(Name = "Heat Produced", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.KW, CurrentUnits = EnergyUnit.KW)
-        self.FirstLawEfficiency = self.OutputParameterDict[self.FirstLawEfficiency.Name] = OutputParameter(Name = "First Law Efficiency", value=-999.9, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.PERCENT, CurrentUnits = PercentUnit.PERCENT)
-        self.HeatExtracted = self.OutputParameterDict[self.HeatExtracted.Name] = OutputParameter(Name = "Heat Extracted", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
-        self.HeatProduced = self.OutputParameterDict[self.HeatProduced.Name] = OutputParameter(Name = "Heat Produced2", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
-        self.Availability = self.OutputParameterDict[self.Availability.Name] = OutputParameter(Name = "Geofluid Availability", value=-999.9, UnitType = Units.AVAILABILITY, PreferredUnits = AvailabilityUnit.MWPERKGPERSEC, CurrentUnits = AvailabilityUnit.MWPERKGPERSEC)
-        self.RemainingReservoirHeatContent = self.OutputParameterDict[self.RemainingReservoirHeatContent.Name] = OutputParameter(Name = "Remaining Reservoir Heat Content", value=-999.9, UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        #Results - used by other objects or printed in output downstream
+        self.usebuiltinoutletplantcorrelation = self.OutputParameterDict[self.usebuiltinoutletplantcorrelation.Name] = OutputParameter(Name = "usebuiltinoutletplantcorrelation", value = False, UnitType = Units.NONE)
+        self.TenteringPP = self.OutputParameterDict[self.TenteringPP.Name] = OutputParameter(Name = "TenteringPP", value = [], UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
+        self.HeatkWhExtracted = self.OutputParameterDict[self.HeatkWhExtracted.Name] = OutputParameter(Name = "annual heat production", value = [], UnitType = Units.ENERGYFREQUENCY, PreferredUnits = EnergyFrequencyUnit.GWPERYEAR, CurrentUnits = EnergyFrequencyUnit.GWPERYEAR)
+        self.PumpingkWh = self.OutputParameterDict[self.PumpingkWh.Name] = OutputParameter(Name = "annual electricity production", value = [], UnitType = Units.ENERGYFREQUENCY, PreferredUnits = EnergyFrequencyUnit.KWPERYEAR, CurrentUnits = EnergyFrequencyUnit.KWPERYEAR)
+        self.ElectricityProduced = self.OutputParameterDict[self.ElectricityProduced.Name] = OutputParameter(Name = "Total Electricity Generation", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.NetElectricityProduced = self.OutputParameterDict[self.NetElectricityProduced.Name] = OutputParameter(Name = "Net Electricity Production", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.TotalkWhProduced = self.OutputParameterDict[self.TotalkWhProduced.Name] = OutputParameter(Name = "Total Electricity Generation", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.KWH, CurrentUnits = EnergyUnit.KWH)
+        self.NetkWhProduced = self.OutputParameterDict[self.NetkWhProduced.Name] = OutputParameter(Name = "Net Electricity Generation", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.KWH, CurrentUnits = EnergyUnit.KWH)
+        self.HeatkWhProduced = self.OutputParameterDict[self.HeatkWhProduced.Name] = OutputParameter(Name = "Heat Produced", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.KW, CurrentUnits = EnergyUnit.KW)
+        self.FirstLawEfficiency = self.OutputParameterDict[self.FirstLawEfficiency.Name] = OutputParameter(Name = "First Law Efficiency", value=[0.0], UnitType = Units.PERCENT, PreferredUnits = PercentUnit.PERCENT, CurrentUnits = PercentUnit.PERCENT)
+        self.HeatExtracted = self.OutputParameterDict[self.HeatExtracted.Name] = OutputParameter(Name = "Heat Extracted", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.HeatProduced = self.OutputParameterDict[self.HeatProduced.Name] = OutputParameter(Name = "Heat Produced2", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.Availability = self.OutputParameterDict[self.Availability.Name] = OutputParameter(Name = "Geofluid Availability", value=[0.0], UnitType = Units.AVAILABILITY, PreferredUnits = AvailabilityUnit.MWPERKGPERSEC, CurrentUnits = AvailabilityUnit.MWPERKGPERSEC)
+        self.RemainingReservoirHeatContent = self.OutputParameterDict[self.RemainingReservoirHeatContent.Name] = OutputParameter(Name = "Remaining Reservoir Heat Content", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
 
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -115,21 +115,21 @@ class SurfacePlant:
                         else: ParameterToModify.value = PowerPlantType.DOUBLE_FLASH
                         if self.enduseoption.value == EndUseOptions.ELECTRICITY:
                             if ParameterToModify.value in [PowerPlantType.SINGLE_FLASH, PowerPlantType.DOUBLE_FLASH]: #simple single- or double-flash power plant assumes no production well pumping
-                                model.wellbores.impedancemodelallowed = False
-                                model.wellbores.productionwellpumping = False
+                                model.wellbores.impedancemodelallowed.value = False
+                                model.wellbores.productionwellpumping.value = False
                                 self.setinjectionpressurefixed = True
                         elif self.enduseoption.value in [EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT, EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY]:
                             if ParameterToModify.value in [PowerPlantType.SINGLE_FLASH, PowerPlantType.DOUBLE_FLASH]: #co-generation topping cycle with single- or double-flash power plant assumes no production well pumping
-                                model.wellbores.impedancemodelallowed = False
-                                model.wellbores.productionwellpumping = False
+                                model.wellbores.impedancemodelallowed.value = False
+                                model.wellbores.productionwellpumping.value = False
                                 self.setinjectionpressurefixed = True
                         elif self.enduseoption.value in [EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY]: 
                             if ParameterToModify.value in [PowerPlantType.SINGLE_FLASH, PowerPlantType.DOUBLE_FLASH]: #co-generation bottoming cycle with single- or double-flash power plant assumes production well pumping
-                                model.wellbores.impedancemodelallowed = False
+                                model.wellbores.impedancemodelallowed.value = False
                                 self.setinjectionpressurefixed = True
                         elif self.enduseoption.value in [EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT, EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY]:         
                             if ParameterToModify.value in [PowerPlantType.SINGLE_FLASH, PowerPlantType.DOUBLE_FLASH]: #co-generation parallel cycle with single- or double-flash power plant assumes production well pumping            
-                                model.wellbores.impedancemodelallowed = False
+                                model.wellbores.impedancemodelallowed.value = False
                                 self.setinjectionpressurefixed = True
                     if ParameterToModify.Name == "Plant Outlet Pressure":
                                 if self.setinjectionpressurefixed:
@@ -137,17 +137,17 @@ class SurfacePlant:
                                     print("Warning: Provided plant outlet pressure outside of range 0-10000. GEOPHIRES will assume default plant outlet pressure (100 kPa)")
                                     model.logger.warning("Provided plant outlet pressure outside of range 0-10000. GEOPHIRES will assume default plant outlet pressure (100 kPa)")
                                 else:
-                                    self.usebuiltinoutletplantcorrelation = True
+                                    self.usebuiltinoutletplantcorrelation.value = True
                                     print("Warning: Provided plant outlet pressure outside of range 0-10000 kPa. GEOPHIRES will calculate plant outlet pressure based on production wellhead pressure and surface equipment pressure drop of 10 psi")
                                     model.logger.warning("Provided plant outlet pressure outside of range 0-10000 kPa. GEOPHIRES will calculate plant outlet pressure based on production wellhead pressure and surface equipment pressure drop of 10 psi")
             if "Plant Outlet Pressure" not in model.InputParameters:
                 if self.setinjectionpressurefixed:
-                    self.usebuiltinoutletplantcorrelation = False
+                    self.usebuiltinoutletplantcorrelation.value = False
                     ParameterToModify.value = 100
                     print("Warning: No valid plant outlet pressure provided. GEOPHIRES will assume default plant outlet pressure (100 kPa)")
                     model.logger.warning("No valid plant outlet pressure provided. GEOPHIRES will assume default plant outlet pressure (100 kPa)")
                 else:
-                    self.usebuiltinoutletplantcorrelation = True
+                    self.usebuiltinoutletplantcorrelation.value = True
                     print("Warning: No valid plant outlet pressure provided. GEOPHIRES will calculate plant outlet pressure based on production wellhead pressure and surface equipment pressure drop of 10 psi")
                     model.logger.warning("No valid plant outlet pressure provided. GEOPHIRES will calculate plant outlet pressure based on production wellhead pressure and surface equipment pressure drop of 10 psi")
 
@@ -179,15 +179,15 @@ class SurfacePlant:
             self.HeatProduced.value = self.HeatExtracted.value*self.enduseefficiencyfactor.value #useful direct-use heat provided to application [MWth]
         else:
             if self.enduseoption.value in [EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT]:
-                self.TenteringPP = self.Tchpbottom.value
+                self.TenteringPP.value = self.Tchpbottom.value
             else:
-                self.TenteringPP = model.wellbores.ProducedTemperature.value
+                self.TenteringPP.value = model.wellbores.ProducedTemperature.value
             #Availability water (copied from GEOPHIRES v1.0 Fortran Code)
             A = 4.041650
             B = -1.204E-2
             C = 1.60500E-5
             T0 = self.Tenv.value + 273.15
-            T1 = self.TenteringPP + 273.15
+            T1 = self.TenteringPP.value + 273.15
             T2 = self.Tenv.value + 273.15
             self.Availability.value = ((A-B*T0)*(T1-T2)+(B-C*T0)/2.0*(T1**2-T2**2)+C/3.0*(T1**3-T2**3)-A*T0*np.log(T1/T2))*2.2046/947.83    #MJ/kg
     
@@ -204,8 +204,8 @@ class SurfacePlant:
                     D1 = 2.676E-3
                     D0 = -1.012E-1
                     Tfraction = (self.Tenv.value-15.)/10.
-                etaull = C1*self.TenteringPP + C0
-                etauul = D1*self.TenteringPP + D0
+                etaull = C1*self.TenteringPP.value + C0
+                etauul = D1*self.TenteringPP.value + D0
                 etau = (1-Tfraction)*etaull + Tfraction*etauul
                 if (self.Tenv.value < 15.):
                     C1 = 0.0894
@@ -219,8 +219,8 @@ class SurfacePlant:
                     D1 = 0.0894
                     D0 = 69.6
                     Tfraction = (self.Tenv.value-15.)/10.
-                reinjtll = C1*self.TenteringPP + C0
-                reinjtul = D1*self.TenteringPP + D0
+                reinjtll = C1*self.TenteringPP.value + C0
+                reinjtul = D1*self.TenteringPP.value + D0
                 ReinjTemp = (1.-Tfraction)*reinjtll + Tfraction*reinjtul
             elif self.pptype.value == PowerPlantType.SUPER_CRITICAL_ORC:
                 if (self.Tenv.value < 15.):
@@ -239,8 +239,8 @@ class SurfacePlant:
                     D1 = 7.55136E-3
                     D0 = -4.041E-1
                     Tfraction = (self.Tenv.value-15.)/10.
-                etaull = C2*self.TenteringPP**2 + C1*self.TenteringPP + C0
-                etauul = D2*self.TenteringPP**2 + D1*self.TenteringPP + D0
+                etaull = C2*self.TenteringPP.value**2 + C1*self.TenteringPP.value + C0
+                etauul = D2*self.TenteringPP.value**2 + D1*self.TenteringPP.value + D0
                 etau = (1-Tfraction)*etaull + Tfraction*etauul
                 if (self.Tenv.value < 15.):
                     C1 = 0.02
@@ -254,8 +254,8 @@ class SurfacePlant:
                     D1 = 0.02
                     D0 = 63.26
                     Tfraction = (self.Tenv.value-15.)/10.
-                reinjtll = C1*self.TenteringPP + C0
-                reinjtul = D1*self.TenteringPP + D0
+                reinjtll = C1*self.TenteringPP.value + C0
+                reinjtul = D1*self.TenteringPP.value + D0
                 ReinjTemp = (1.-Tfraction)*reinjtll + Tfraction*reinjtul        
             elif self.pptype.value == PowerPlantType.SINGLE_FLASH:
                 if (self.Tenv.value < 15.):
@@ -274,8 +274,8 @@ class SurfacePlant:
                     D1 = 1.09230E-3
                     D0 = 1.33708E-1
                     Tfraction = (self.Tenv.value-15.)/10.
-                etaull = C2*self.TenteringPP**2 + C1*self.TenteringPP + C0
-                etauul = D2*self.TenteringPP**2 + D1*self.TenteringPP + D0
+                etaull = C2*self.TenteringPP.value**2 + C1*self.TenteringPP.value + C0
+                etauul = D2*self.TenteringPP.value**2 + D1*self.TenteringPP.value + D0
                 etau = (1.-Tfraction)*etaull + Tfraction*etauul
                 if (self.Tenv.value < 15.):
                     C2 = -1.11519E-3
@@ -293,8 +293,8 @@ class SurfacePlant:
                     D1 = 7.88562E-1
                     D0 = -1.89707E-1
                     Tfraction = (self.Tenv.value-15.)/10.
-                reinjtll = C2*self.TenteringPP**2 + C1*self.TenteringPP + C0
-                reinjtul = D2*self.TenteringPP**2 + D1*self.TenteringPP + D0
+                reinjtll = C2*self.TenteringPP.value**2 + C1*self.TenteringPP.value + C0
+                reinjtul = D2*self.TenteringPP.value**2 + D1*self.TenteringPP.value + D0
                 ReinjTemp = (1.-Tfraction)*reinjtll + Tfraction*reinjtul
             elif self.pptype.value == PowerPlantType.DOUBLE_FLASH:
                 if (self.Tenv.value < 15.):
@@ -313,8 +313,8 @@ class SurfacePlant:
                     D1 = 1.53079E-3
                     D0 = 1.69439E-1
                     Tfraction = (self.Tenv.value-15.)/10.
-                etaull = C2*self.TenteringPP**2 + C1*self.TenteringPP + C0
-                etauul = D2*self.TenteringPP**2 + D1*self.TenteringPP + D0
+                etaull = C2*self.TenteringPP.value**2 + C1*self.TenteringPP.value + C0
+                etauul = D2*self.TenteringPP.value**2 + D1*self.TenteringPP.value + D0
                 etau = (1.-Tfraction)*etaull + Tfraction*etauul
                 if (self.Tenv.value < 15.):
                     C2 = -7.70928E-4
@@ -332,8 +332,8 @@ class SurfacePlant:
                     D1 = 5.16356E-1
                     D0 = 18.0798
                     Tfraction = (self.Tenv.value-15.)/10.
-                reinjtll = C2*self.TenteringPP**2 + C1*self.TenteringPP + C0
-                reinjtul = D2*self.TenteringPP**2 + D1*self.TenteringPP + D0
+                reinjtll = C2*self.TenteringPP.value**2 + C1*self.TenteringPP.value + C0
+                reinjtul = D2*self.TenteringPP.value**2 + D1*self.TenteringPP.value + D0
                 ReinjTemp = (1.-Tfraction)*reinjtll + Tfraction*reinjtul
     
             #check if reinjectemp (model calculated) >= Tinj (user provided)

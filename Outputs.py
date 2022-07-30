@@ -171,7 +171,7 @@ class Outputs:
                 f.write(f"      Flowrate per production well                     {model.wellbores.prodwellflowrate.value:10.1f} " + model.wellbores.prodwellflowrate.CurrentUnits.value + NL)
                 f.write(f"      Injection well casing ID                           {model.wellbores.injwelldiam.value/0.0254:10.3f} " + model.wellbores.injwelldiam.CurrentUnits.value + NL)
                 f.write(f"      Produciton well casing ID                          {model.wellbores.prodwelldiam.value/0.0254:10.3f} " + model.wellbores.prodwelldiam.CurrentUnits.value + NL)
-                f.write(f"      Number of times redrilling                     {model.wellbores.redrill:10.0f}"+NL)
+                f.write(f"      Number of times redrilling                     {model.wellbores.redrill.value:10.0f}"+NL)
                 if model.surfaceplant.enduseoption.value != EndUseOptions.HEAT:
                     f.write("      Power plant type                                        " +  str(model.surfaceplant.pptype.value.value) + NL)
                 f.write(NL)
@@ -228,12 +228,12 @@ class Outputs:
                     f.write(f"      Number of fractures:                              {model.reserv.fracnumbcalc.value:10.2f}" + NL)
                     f.write(f"      Fracture separation                               {model.reserv.fracsepcalc.value:10.2f} " + model.reserv.fracsep.CurrentUnits.value + NL)
                 f.write(f"      Reservoir volume                               {model.reserv.resvolcalc.value:10.0f} " + model.reserv.resvol.CurrentUnits.value + NL)
-                if model.wellbores.impedancemodelused:
+                if model.wellbores.impedancemodelused.value:
                     f.write(f"      Reservoir impedance                               {model.wellbores.impedance.value/1000:10.2f} " + model.wellbores.impedance.CurrentUnits.value + NL)    
                 else:
-                    f.write(f"      Reservoir hydrostatic pressure                    {model.wellbores.Phydrostatic.value:10.2f} " + model.wellbores.Phydrostatic.CurrentUnits.value + NL)    
+                    f.write(f"      Reservoir hydrostatic pressure                    {model.wellbores.Phydrostaticcalc.value:10.2f} " + model.wellbores.Phydrostaticcalc.CurrentUnits.value + NL)    
                     f.write(f"      Plant outlet pressure                             {model.surfaceplant.Pplantoutlet.value:10.2f} " + model.surfaceplant.Pplantoutlet.CurrentUnits.value + NL)    
-                    if model.wellbores.productionwellpumping:
+                    if model.wellbores.productionwellpumping.value:
                         f.write(f"      Production wellhead pressure                      {model.wellbores.Pprodwellhead.value:10.2f} " + model.wellbores.Pprodwellhead.CurrentUnits.value + NL)
                         f.write(f"      Productivity Index                                {model.wellbores.PI.value:10.2f} " + model.wellbores.PI.CurrentUnits.value + NL)
                     f.write(f"      Injectivity Index                                 {model.wellbores.II.value:10.2f} " + model.wellbores.II.CurrentUnits.value + NL)
@@ -264,7 +264,7 @@ class Outputs:
                     f.write(f"      Average Production Well Temperature Drop:        {np.average(model.wellbores.ProdTempDrop.value):10.1f} " + model.wellbores.ProdTempDrop.PreferredUnits.value + NL)
                 else:
                     f.write(f" Wellbore Heat Transmission Model = Constant Temperature Drop:{model.wellbores.tempdropprod.value:10.1f} " + model.wellbores.tempdropprod.PreferredUnits.value + NL)
-                if model.wellbores.impedancemodelused:
+                if model.wellbores.impedancemodelused.value:
                     f.write(f"      Total Average Pressure Drop:                     {np.average(model.wellbores.DP.value):10.1f} " + model.wellbores.DP.PreferredUnits.value + NL)
                     f.write(f"      Average Injection Well Pressure Drop:            {np.average(model.wellbores.DP1.value):10.1f} " + model.wellbores.DP1.PreferredUnits.value + NL)
                     f.write(f"      Average Reservoir Pressure Drop:                 {np.average(model.wellbores.DP2.value):10.1f} " + model.wellbores.DP2.PreferredUnits.value + NL)
@@ -272,7 +272,7 @@ class Outputs:
                     f.write(f"      Average Buoyancy Pressure Drop:                  {np.average(model.wellbores.DP4.value):10.1f} " + model.wellbores.DP4.PreferredUnits.value + NL)
                 else:
                     f.write(f"      Average Injection Well Pump Pressure Drop:       {np.average(model.wellbores.DP1.value):10.1f} " + model.wellbores.DP1.PreferredUnits.value + NL)
-                    if model.wellbores.productionwellpumping:
+                    if model.wellbores.productionwellpumping.value:
                         f.write(f"      Average Production Well Pump Pressure Drop:      {np.average(model.wellbores.DP3.value):10.1f} " + model.wellbores.DP3.PreferredUnits.value + NL)
             
                 f.write(NL)
@@ -288,7 +288,7 @@ class Outputs:
                     if model.surfaceplant.pipinglength.value > 0: f.write(f"         Transmission pipeline cost                     {model.economics.Cpiping.value:10.2f} " + model.economics.Cpiping.CurrentUnits.value + NL)
                     f.write(f"         Total surface equipment costs                  {(model.economics.Cplant.value+model.economics.Cgath.value):10.2f} " + model.economics.Cplant.CurrentUnits.value + NL)
                     f.write(f"         Exploration costs                              {model.economics.Cexpl.value:10.2f} " + model.economics.Cexpl.CurrentUnits.value + NL)
-                if model.economics.totalcapcost.Valid and model.wellbores.redrill > 0:
+                if model.economics.totalcapcost.Valid and model.wellbores.redrill.value > 0:
                     f.write(f"         Drilling and completion costs (for redrilling) {model.economics.Cwell.value:10.2f} " + model.economics.Cwell.CurrentUnits.value + NL)
                     f.write(f"      Drilling and completion costs per redrilled well  {(model.economics.Cwell.value/(model.wellbores.nprod.value+model.wellbores.ninj.value)):10.2f} " + model.economics.Cwell.CurrentUnits.value + NL)
                     f.write(f"         Stimulation costs (for redrilling)             {model.economics.Cstim.value:10.2f} " + model.economics.Cstim.CurrentUnits.value + NL)
