@@ -78,13 +78,13 @@ class EconomicsAddOns(Economics.Economics):
         self.AddOnHeatPrice = self.OutputParameterDict[self.AddOnHeatPrice.Name] = OutputParameter("AddOn Heat Sale Price Model", value = [0.025], UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
         self.AdjustedProjectCAPEX = self.OutputParameterDict[self.AdjustedProjectCAPEX.Name] = OutputParameter("Adjusted CAPEX", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
         self.AdjustedProjectOPEX = self.OutputParameterDict[self.AdjustedProjectOPEX.Name] = OutputParameter("Adjusted OPEX", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
-        self.AddOnCashFlow =  self.OutputParameterDict[self.AddOnCashFlow.Name] = OutputParameter("Annual AddOn Cash Flow", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
-        self.AddOnCummCashFlow = self.OutputParameterDict[self.AddOnCummCashFlow.Name] = OutputParameter("Cummulative AddOn Cash Flow", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
-        self.ProjectCashFlow = self.OutputParameterDict[self.ProjectCashFlow.Name] = OutputParameter("Annual Project Cash Flow", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
-        self.ProjectCummCashFlow = self.OutputParameterDict[self.ProjectCummCashFlow.Name] = OutputParameter("Cummulative Project Cash Flow", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
-        self.AddOnElecRevenue = self.OutputParameterDict[self.AddOnElecRevenue.Name] = OutputParameter("Annual Revenue Generated from Electrcity Sales", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
-        self.AddOnHeatRevenue = self.OutputParameterDict[self.AddOnHeatRevenue.Name] = OutputParameter("Annual Revenue Generated from Heat Sales", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
-        self.AddOnRevenue = self.OutputParameterDict[self.AddOnRevenue.Name] = OutputParameter("Annual Revenue Generated from AddOns", value = 0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.AddOnCashFlow =  self.OutputParameterDict[self.AddOnCashFlow.Name] = OutputParameter("Annual AddOn Cash Flow", value = [0.0], UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.AddOnCummCashFlow = self.OutputParameterDict[self.AddOnCummCashFlow.Name] = OutputParameter("Cummulative AddOn Cash Flow", value = [0.0], UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.ProjectCashFlow = self.OutputParameterDict[self.ProjectCashFlow.Name] = OutputParameter("Annual Project Cash Flow", value = [0.0], UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.ProjectCummCashFlow = self.OutputParameterDict[self.ProjectCummCashFlow.Name] = OutputParameter("Cummulative Project Cash Flow", value = [0.0], UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.AddOnElecRevenue = self.OutputParameterDict[self.AddOnElecRevenue.Name] = OutputParameter("Annual Revenue Generated from Electrcity Sales", value = [0.0], UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.AddOnHeatRevenue = self.OutputParameterDict[self.AddOnHeatRevenue.Name] = OutputParameter("Annual Revenue Generated from Heat Sales", value = [0.0], UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.AddOnRevenue = self.OutputParameterDict[self.AddOnRevenue.Name] = OutputParameter("Annual Revenue Generated from AddOns", value = [0.0], UnitType = Units.CURRENCYFREQUENCY, PreferredUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits=CurrencyFrequencyUnit.MDOLLARSPERYEAR)
 
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -214,6 +214,7 @@ class EconomicsAddOns(Economics.Economics):
         #Calculate more financial values using numpy financials
         self.ProjectNPV.value = npf.npv(self.FixedInternalRate.value/100, self.ProjectCashFlow.value)
         self.ProjectIRR.value = npf.irr(self.ProjectCashFlow.value)
+        if math.isnan(self.ProjectIRR.value): self.ProjectIRR.value = 0.0
         self.ProjectVIR.value  = 1.0 + (self.ProjectNPV.value/self.AdjustedProjectCAPEX.value)
         
         #calculate Cummcashflows and paybacks
