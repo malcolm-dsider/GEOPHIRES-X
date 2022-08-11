@@ -12,6 +12,23 @@ from Parameter import Parameter, intParameter, boolParameter, floatParameter, st
 from enum import Enum
 from OptionList import ReservoirModel, FractureShape, ReservoirVolume, EndUseOptions, PowerPlantType, EconomicModel, WellDrillingCostCorrelation
 
+from cryptography.fernet import Fernet
+import zlib
+
+def encrypt(message: bytes, key: bytes) -> bytes:
+    return Fernet(key).encrypt(message)
+
+def decrypt(token: bytes, key: bytes) -> bytes:
+    return Fernet(key).decrypt(token)
+
+def write_key():
+    key = Fernet.generate_key() # Generates the key
+    with open("key.key", "wb") as key_file: # Opens the file the key is to be written to
+        key_file.write(key) # Writes the key
+
+def load_key():
+    return open("key.key", "rb").read() #Opens the file, reads and returns the key stored in the file
+
 class AdvGeoPHIRESUtils():
 
     def DumpObjectAsJson(self, MyObject)->str:
@@ -113,12 +130,23 @@ class AdvGeoPHIRESUtils():
     def store_result(self, model, object)->str:
         model.logger.info("Init " + str(__name__))
 
+        #handle encrption stuff
+        key = ""
+        if exists("key.key"): key = load_key() # Loads the key and stores it in a variable
+        else: 
+            write_key() # Writes the key to the key file
+            key = load_key() # Loads the key and stores it in a variable
+        f = Fernet(key)
+
         #convert the input parwmeters abd code to JSON and hash it
         KeyAsHash = self.CaculateHash(object.MyPath, object)
 
         #Now we have the unique key based on the inputs and the code.  We now need get the object we want to store in a form we can store it
         OutputAsJSON = self.DumpObjectAsJson(object)
         ValueToStore = str(OutputAsJSON)
+
+        encrypted_message = f.encrypt(ValueToStore.encode())
+        compressed_message = zlib.compress(encrypted_message, -1)
 
         #set the other svalues we will store
         now = datetime.now() # current date and time
@@ -128,9 +156,9 @@ class AdvGeoPHIRESUtils():
         #now try to write those as a record in the database
         try:
             with connect(host="localhost", user="malcolm", password=".Carnot.", database="geophiresx") as connection:
-                SQLCommand = "INSERT INTO geophiresx.objects(uniquekey,class, name, datetime, value) VALUES(%s,%s,%s,%s,%s)"
+                SQLCommand = "INSERT INTO geophiresx.objects(uniquekey,class, name, datetime, value, ze_value) VALUES(%s,%s,%s,%s,%s, %s)"
                 with connection.cursor() as cursor:
-                    cursor.execute(SQLCommand, (KeyAsHash, object.MyClass, suser, sdate_time, ValueToStore))
+                    cursor.execute(SQLCommand, (KeyAsHash, object.MyClass, suser, sdate_time, ValueToStore, compressed_message))
                     connection.commit()
         except Error as ex:
             print (ex)
