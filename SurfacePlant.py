@@ -143,7 +143,7 @@ class SurfacePlant:
             if "Plant Outlet Pressure" not in model.InputParameters:
                 if self.setinjectionpressurefixed:
                     self.usebuiltinoutletplantcorrelation.value = False
-                    ParameterToModify.value = 100
+                    self.Pplantoutlet.value = 100
                     print("Warning: No valid plant outlet pressure provided. GEOPHIRES will assume default plant outlet pressure (100 kPa)")
                     model.logger.warning("No valid plant outlet pressure provided. GEOPHIRES will assume default plant outlet pressure (100 kPa)")
                 else:

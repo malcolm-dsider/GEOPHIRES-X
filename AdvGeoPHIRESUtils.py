@@ -138,7 +138,7 @@ class AdvGeoPHIRESUtils():
             key = load_key() # Loads the key and stores it in a variable
         f = Fernet(key)
 
-        #convert the input parwmeters abd code to JSON and hash it
+        #convert the input parameters abd code to JSON and hash it
         KeyAsHash = self.CaculateHash(object.MyPath, object)
 
         #Now we have the unique key based on the inputs and the code.  We now need get the object we want to store in a form we can store it
@@ -528,7 +528,7 @@ class AdvGeoPHIRESUtils():
         if key == None:
             object.Calculate(model)    #run calculation because there was nothing in the database
             
-            #store the calculate result and associated object paremeters in the database
+            #store the calculated result and associated object parameters in the database
             resultkey = self.store_result(model, object)
             if resultkey == None:
                 print("Failed To Store "+ str(object.MyClass) + " " + object.MyPath)

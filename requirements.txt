@@ -3,5 +3,10 @@ numpy-financial
 pint
 forex_python
 jsons
+json
+pprint
 mpmath
 deepdiff
+functools
+mysql.connector
+hashlib

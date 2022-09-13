@@ -407,7 +407,7 @@ class LHSReservoir(Reservoir):
         hl = (model.reserv.fracnumbcalc.value-1)*model.reserv.fracsepcalc.value
         wl = model.reserv.fracwidth.value
         aave = hl*wl
-        u0 = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value/(model.reserv.rhowater*aave)
+        u0 = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value/(model.reserv.rhowater.value*aave)
         tres = (model.reserv.fracheightcalc.value*phi)/u0
 
         # number of heat transfer units
@@ -482,7 +482,7 @@ class SFReservoir(Reservoir):
         super().Calculate(model)    #run calculate for the parent.
 
         model.reserv.Tresoutput.value[0] = model.reserv.Trock.value
-        for i in range(1,len(model.reserv.timevector.value)): model.reserv.Tresoutput.value[i] = math.erf(1./model.reserv.drawdp.value/model.reserv.cpwater.value*math.sqrt(model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value/model.reserv.timevector[i]/(365.*24.*3600.)))*(model.reserv.Trock.value-model.wellbores.Tinj.value)+model.wellbores.Tinj.value
+        for i in range(1,len(model.reserv.timevector.value)): model.reserv.Tresoutput.value[i] = math.erf(1./model.reserv.drawdp.value/model.reserv.cpwater.value*math.sqrt(model.reserv.krock.value*model.reserv.rhorock.value*model.reserv.cprock.value/model.reserv.timevector.value[i]/(365.*24.*3600.)))*(model.reserv.Trock.value-model.wellbores.Tinj.value)+model.wellbores.Tinj.value
 
         model.logger.info("Complete " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 

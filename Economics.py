@@ -81,8 +81,8 @@ class Economics:
         self.MyPath = os.path.abspath(__file__)
 
         #results
-        self.LCOE = self.OutputParameterDict[self.LCOE.Name] = OutputParameter(Name = "LCOE", value=-999.9, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
-        self.LCOH = self.OutputParameterDict[self.LCOH.Name] = OutputParameter(Name = "LCOH", value=-999.9, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERMMBTU, CurrentUnits = EnergyCostUnit.DOLLARSPERMMBTU)    #$/MMBTU
+        self.LCOE = self.OutputParameterDict[self.LCOE.Name] = OutputParameter(Name = "LCOE", value=0.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
+        self.LCOH = self.OutputParameterDict[self.LCOH.Name] = OutputParameter(Name = "LCOH", value=0.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERMMBTU, CurrentUnits = EnergyCostUnit.DOLLARSPERMMBTU)    #$/MMBTU
         self.Cstim = self.OutputParameterDict[self.Cstim.Name] = OutputParameter(Name = "O&M Surface Plant costs", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
         self.Cexpl = self.OutputParameterDict[self.Cexpl.Name] = OutputParameter(Name = "Exploration cost", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
         self.Cwell = self.OutputParameterDict[self.Cwell.Name] = OutputParameter(Name = "Wellfield cost", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
