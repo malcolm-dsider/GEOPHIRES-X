@@ -1,9 +1,9 @@
 import sys
 from Parameter import ParameterEntry
 from os.path import exists
-import Model
+#import Model
 
-def read_input_file(model:Model, ReturnDict1):
+def read_input_file(model, ReturnDict1):
     model.logger.info("Init " + str(__name__))
 
     # specify path of input file - it will always be the first command line argument.  If it doesn't exist, simply run the default model without any inputs

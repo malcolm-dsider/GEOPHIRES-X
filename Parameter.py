@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from forex_python.converter import CurrencyRates, CurrencyCodes
 import pint
-import Model
+#import Model
 from Units import *
 
 ureg = pint.UnitRegistry()
@@ -483,6 +483,7 @@ def LookupUnits(sUnitText:str):
         if uType == Units.LENGTH: MyEnum = LengthUnit
         elif uType == Units.AREA: MyEnum = AreaUnit
         elif uType == Units.VOLUME: MyEnum = VolumeUnit
+        elif uType == Units.MASS: MyEnum = MassUnit
         elif uType == Units.DENSITY: MyEnum = DensityUnit
         elif uType == Units.TEMPERATURE: MyEnum = TemperatureUnit
         elif uType == Units.PRESSURE: MyEnum = PressureUnit
@@ -510,12 +511,13 @@ def LookupUnits(sUnitText:str):
                     return item, uType
     return None, None
 
-def ConvertOutputUnits(oparam:OutputParameter, newUnit:Units, model:Model):
+def ConvertOutputUnits(oparam:OutputParameter, newUnit:Units, model):
     """
     ConvertOutputUnits Given an output paremeter, convert the value(s) from what they contain (as calculated by GEOPHIRES) to what the user specified as what they want for outputs.  Conversion happens inline.
 
     Args:
         oparam (OutputParemeter): The parameter you want to be converted (value or list of values).  Because Parameters know the PreferredUnits and CurrentUnits, this routine knows what to do.
+        newUnit (Units): The new units you want to convert value to
         model (Model):  The container class of the application, giving access to everything else, including the logger
 
     Returns:

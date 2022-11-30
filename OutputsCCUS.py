@@ -16,18 +16,20 @@ class OutputsCCUS(Outputs.Outputs):
         #write results to output file and screen
         #---------------------------------------
         try:
-            with open('HDR.out','a', encoding='UTF-8') as f:
+            outputfile = "HDR.out"
+            if len(sys.argv) > 2: outputfile = sys.argv[2]
+            with open(outputfile,'a', encoding='UTF-8') as f:
                 f.write(NL)
                 f.write(NL)
                 f.write("                                ***CCUS ECONOMICS***"+ NL);
                 f.write(NL)
                 f.write(NL)
-                f.write(f"      Total Avoided Carbon Production                        {model.ccuseconomics.CarbonThatWouldHaveBeenProducedTotal.value:10.2f} " + model.ccuseconomics.CarbonThatWouldHaveBeenProducedTotal.PreferredUnits.value + NL)
-                f.write(f"      Project NPV            (including carbon credit)       {model.ccuseconomics.ProjectNPV.value:10.2f} " + model.ccuseconomics.ProjectNPV.PreferredUnits.value + NL)
-                f.write(f"      Project IRR            (including carbon credit)       {model.ccuseconomics.ProjectIRR.value:10.2f} " + model.ccuseconomics.ProjectIRR.PreferredUnits.value + NL)
-                f.write(f"      Project VIR=IR=PIR     (including carbon credit)       {model.ccuseconomics.ProjectVIR.value:10.2f}" + NL)
-                f.write(f"      Project MOIC           (including carbon credit)       {model.ccuseconomics.ProjectMOIC.value:10.2f}" + NL)
-                f.write(f"      Project Payback Period (including carbon credit)       {model.ccuseconomics.ProjectPaybackPeriod.value:10.2f} " + model.ccuseconomics.ProjectPaybackPeriod.PreferredUnits.value + NL)
+                f.write(f"      Total Avoided Carbon Production:                       {model.ccuseconomics.CarbonThatWouldHaveBeenProducedTotal.value:10.2f} " + model.ccuseconomics.CarbonThatWouldHaveBeenProducedTotal.PreferredUnits.value + NL)
+                f.write(f"      Project NPV            (including carbon credit):      {model.ccuseconomics.ProjectNPV.value:10.2f} " + model.ccuseconomics.ProjectNPV.PreferredUnits.value + NL)
+                f.write(f"      Project IRR            (including carbon credit):      {model.ccuseconomics.ProjectIRR.value:10.2f} " + model.ccuseconomics.ProjectIRR.PreferredUnits.value + NL)
+                f.write(f"      Project VIR=IR=PIR     (including carbon credit):      {model.ccuseconomics.ProjectVIR.value:10.2f}" + NL)
+                f.write(f"      Project MOIC           (including carbon credit):      {model.ccuseconomics.ProjectMOIC.value:10.2f}" + NL)
+                f.write(f"      Project Payback Period (including carbon credit):      {model.ccuseconomics.ProjectPaybackPeriod.value:10.2f} " + model.ccuseconomics.ProjectPaybackPeriod.PreferredUnits.value + NL)
                 f.write(NL)
                 f.write(NL)
                 f.write("                    ******************" + NL)

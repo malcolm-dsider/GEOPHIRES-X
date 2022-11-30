@@ -17,7 +17,10 @@ class Units(IntEnum):
     IMPEDANCE = auto()
     PRODUCTIVITY_INDEX = auto()
     INJECTIVITY_INDEX = auto()
+    HEAT = auto()
     HEAT_CAPACITY = auto()
+    ENTROPY = auto()
+    ENTHALPY = auto()
     THERMAL_CONDUCTIVITY = auto()
     POROSITY = auto()
     PERMEABILITY = auto()
@@ -35,6 +38,7 @@ class  TemperatureUnit(Enum):
     """Temperature Units"""
     CELCIUS = "degC"
     FARENHEIT = "degF"
+    KELVIN = "degK"
 
 class TemperatureGradientUnit(Enum):
     """Temperature Gradient Units"""
@@ -150,9 +154,24 @@ class DrawdownUnit(Enum):
     KGPERSECPERSQMETER = "kg/s/m**2"
     PERYEAR = "1/year"
 
+class HeatUnit(Enum):
+    """Heat Units"""
+    J = "J"
+    KJ = "kJ"
+
 class HeatCapacityUnit(Enum):
     """Heat Capacity Units"""
     JPERKGPERK = "J/kg/kelvin"
+    KJPERKM3C = "kJ/km**3C"
+    kJPERKGC = "kJ/kgC"
+
+class EntropyUnit(Enum):
+    """Entropy Units"""
+    KJPERKGK = "kJ/kgK"
+
+class EnthalpyUnit(Enum):
+    """Enthalpy Units"""
+    KJPERKG = "kJ/kg"
     
 class ThermalConductivityUnit(Enum):
     """Thermal Conductivity Units"""

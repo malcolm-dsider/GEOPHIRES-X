@@ -37,9 +37,11 @@ def main():
     #write the outputs, if requested
     model.outputs.PrintOutputs(model)
         
-    #if the user has asked for it, copy the HDR file to the screen
+    #if the user has asked for it, copy the output file to the screen
     if model.outputs.printoutput:
-        with open('HDR.out','r', encoding='UTF-8') as f:
+        outputfile = "HDR.out"
+        if len(sys.argv) > 2: outputfile = sys.argv[2]
+        with open(outputfile,'r', encoding='UTF-8') as f:
             content = f.readlines()    #store all output in one long list
 
             #Now write each line to the screen

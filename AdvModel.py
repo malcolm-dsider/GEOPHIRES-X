@@ -23,6 +23,12 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         :doc-author: Malcolm Ross
         """
         super().__init__()   # initialize the parent parameters and variables
+        
+
+        model_elements = self.RunStoredProcedure("model_elements", [1])
+        model_connections = self.RunStoredProcedure("model_connections", [1])
+        self.RunStoredProcedure("delete_model", [14])
+        self.RunStoredProcedure("add_new_model", ["dummy", "new", 999])
 
         #Initiate the elements of the Model
         #this is where you can change what class get initiated - the superclass, or one of the subclasses.  By calling the __init__ (above), all the standard parenst will be initiated, so just initiate the ones you want that exceed those

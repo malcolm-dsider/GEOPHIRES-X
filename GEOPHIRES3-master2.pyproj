@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{a83eb736-df6d-47f6-b75d-1fb69c228472}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>GEOPHIRESv3.py</StartupFile>
+    <StartupFile>HIP-RA.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -13,9 +13,12 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
     <TestFramework>Pytest</TestFramework>
-    <CommandLineArguments>examples\example3.txt</CommandLineArguments>
+    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\example1_GCGP.txt</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
+    <Environment>MC_GEOPHIRES: AdvGeoPHIRESv3.py examples\example1_mc.txt D:\Work\GEOPHIRES3-master\MC_Settings_file.txt
+MC_HIP: HIP-RA.py examples\example1_GCGP.txt MC_HIP_Settings_file.txt
+HIP: D:\Work\GEOPHIRES3-master\Examples\example1_GCGP.txt</Environment>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -278,6 +281,7 @@
     <Content Include="HDR.out" />
     <Content Include="LACETable.txt" />
     <Content Include="license.txt" />
+    <Content Include="MC_Settings_file.txt" />
     <Content Include="README.md" />
     <Content Include="requirements.txt" />
     <Content Include="Results\20190829NASCC.txt" />
@@ -379,6 +383,12 @@
     <Compile Include="GeoPHIRESUtils.py" />
     <Compile Include="GEOPHIRESv3.py" />
     <Compile Include="AdvReservoir.py" />
+    <Compile Include="HIP-RA.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MC_GeoPHIRES3.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Model.py" />
     <Compile Include="mpmath\calculus\approximation.py" />
     <Compile Include="mpmath\calculus\calculus.py" />

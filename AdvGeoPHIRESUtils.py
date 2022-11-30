@@ -30,6 +30,22 @@ def load_key():
     return open("key.key", "rb").read() #Opens the file, reads and returns the key stored in the file
 
 class AdvGeoPHIRESUtils():
+    def RunStoredProcedure(self, store_procedure_name:str, parameters:list)->list:
+        res = details = warnings = obj = None
+        with connect(host="localhost", user="malcolm", password=".Carnot.", database="geophiresx") as connection:
+            try:
+                obj = connection.cursor()
+                res = obj.callproc(store_procedure_name, parameters)
+                connection.commit()
+                for result in obj.stored_results():
+                    details = result.fetchall()
+                    warnings = result.fetchwarnings() 
+                obj.close()
+                connection.close()
+            except connection.Error as err:
+                print("Something went wrong: {}".format(err))
+
+        return (details)
 
     def DumpObjectAsJson(self, MyObject)->str:
         """
@@ -116,7 +132,7 @@ class AdvGeoPHIRESUtils():
                         model.logger.info("Restored " + object.MyClass + " using hash =" + KeyAsHash)
                         print("Restored " + object.MyClass + " using hash =" + KeyAsHash)
                     else:
-                        model.logger.info("Could not restored " + object.MyClass + " using hash =" + KeyAsHash)
+                        model.logger.info("Could not restore " + object.MyClass + " using hash =" + KeyAsHash)
                         print("Could not restored " + object.MyClass + " using hash =" + KeyAsHash)
                         KeyAsHash = None    #if it is not found, return none
         except Error as ex:
