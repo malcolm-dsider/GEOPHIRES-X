@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{a83eb736-df6d-47f6-b75d-1fb69c228472}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>HIP-RA.py</StartupFile>
+    <StartupFile>AdvGEOPHIRESv3.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -13,7 +13,7 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
     <TestFramework>Pytest</TestFramework>
-    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\example1_GCGP.txt</CommandLineArguments>
+    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\example1.txt</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
     <Environment>MC_GEOPHIRES: AdvGeoPHIRESv3.py examples\example1_mc.txt D:\Work\GEOPHIRES3-master\MC_Settings_file.txt

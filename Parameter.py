@@ -1,3 +1,4 @@
+# copyright, 2023, Malcolm I Ross
 import sys
 from array import array
 from typing import List

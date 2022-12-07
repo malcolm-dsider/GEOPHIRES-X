@@ -1,3 +1,4 @@
+# copyright, 2023, Malcolm I Ross
 from enum import IntEnum, Enum, auto
 class Units(IntEnum):
     """All possible systems of measure"""

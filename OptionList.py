@@ -1,3 +1,4 @@
+# copyright, 2023, Malcolm I Ross
 from enum import Enum
 class EndUseOptions(Enum):
     ELECTRICITY = "Electricity"   #1

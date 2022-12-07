@@ -4,6 +4,7 @@
 Created on Wed Dec  6 10:34:04 2017
 
 @author: kbeckers V1 and V2; Malcolm Ross V3
+# copyright, 2023, Malcolm I Ross
 """
 
 #GEOPHIRES v3.0 Advanced for GUI interfacing
