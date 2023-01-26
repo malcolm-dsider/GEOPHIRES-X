@@ -22,7 +22,7 @@ import subprocess
 import multiprocessing
 
 #set up logging.
-logging.config.fileConfig('D:\\Work\\GEOPHIRES3-master\\logging.conf')
+logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('root')
 logger.info("Init " + str(__name__))
 
@@ -110,7 +110,7 @@ def WorkPackage(Job_ID, Inputs, Outputs, args, Outputfile):
 
 def main():
     #set up logging.
-    logging.config.fileConfig('D:\\Work\\GEOPHIRES3-master\\logging.conf')
+    logging.config.fileConfig('logging.conf')
     logger = logging.getLogger('root')
     logger.info("Init " + str(__name__))
 
