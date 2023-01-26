@@ -181,6 +181,13 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
 
     if isinstance(ParamToModify, intParameter):
         New_val = int(ParameterReadIn.sValue)
+        if New_val == ParamToModify.DefaultValue: #Warning - the value read in is the same as the default value, making it superfluous - add a warning and suggestion
+            if len(ParamToModify.ErrMessage) > 0:
+                print("Warning: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " is being set by the input file to a value that is the same as the default. No change was made to that value. Recommendation: remove the " + ParamToModify.Name + " from the input file unless you wish to change it from the default value of (" + str(ParamToModify.DefaultValue) + ")" )
+                model.logger.warning("Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " is being set by the input file to a value that is the same as the default. No change was made to that value. Recommendation: remove the " + ParamToModify.Name + " from the input file unless you wish to change it from the default value of (" + str(ParamToModify.DefaultValue) + ")" )
+            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
+            return
+
         if New_val == ParamToModify.value: return   #We have nothing to change - user provide value that was the same as the existing value (likely, the default value)
         if not (New_val in ParamToModify.AllowableRange):   #user provided value is out of range, so announce it, leave set to whatever it was set to (default value)
             if len(ParamToModify.ErrMessage) > 0: print("Warning: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
@@ -193,6 +200,11 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
             ParamToModify.Valid = True      #set Valid to true because it passed the validation tests
     elif isinstance(ParamToModify, floatParameter):
         New_val = float(ParameterReadIn.sValue)
+        if New_val == ParamToModify.DefaultValue: #Warning - the value read in is the same as the default value, making it superfluous - add a warning and suggestion
+            if len(ParamToModify.ErrMessage) > 0:
+                print("Warning: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " is being set by the input file to a value that is the same as the default. No change was made to that value. Recommendation: remove the " + ParamToModify.Name + " from the input file unless you wish to change it from the default value of (" + str(ParamToModify.DefaultValue) + ")" )
+                model.logger.warning("Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " is being set by the input file to a value that is the same as the default. No change was made to that value. Recommendation: remove the " + ParamToModify.Name + " from the input file unless you wish to change it from the default value of (" + str(ParamToModify.DefaultValue) + ")" )
+            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
         if New_val == ParamToModify.value:
             model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
             return #We have nothing to change - user provide value that was the same as the existing value (likely, the default value)
