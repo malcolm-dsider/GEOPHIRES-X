@@ -405,7 +405,7 @@ class LHSReservoir(Reservoir):
 
         # reservoir dimensions and flow properties
         hl = (model.reserv.fracnumbcalc.value-1)*model.reserv.fracsepcalc.value
-        wl = model.reserv.fracwidth.value
+        wl = model.reserv.fracwidthcalc.value
         aave = hl*wl
         u0 = model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value/(model.reserv.rhowater.value*aave)
         tres = (model.reserv.fracheightcalc.value*phi)/u0

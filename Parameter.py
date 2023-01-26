@@ -10,7 +10,7 @@ import pint
 from Units import *
 
 ureg = pint.UnitRegistry()
-ureg.load_definitions('GEOPHIRES3_newunits.txt') 
+ureg.load_definitions('D:\\Work\\GEOPHIRES3-master\\GEOPHIRES3_newunits.txt') 
 
 @dataclass
 class ParameterEntry():

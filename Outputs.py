@@ -216,7 +216,7 @@ class Outputs:
                         f.write(f"      Well seperation: fracture height:                 {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
                     elif model.reserv.fracshape.value == FractureShape.RECTANGULAR:
                         f.write(f"      Well seperation: fracture height:                 {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)        
-                        f.write(f"      Fracture width:                                             {model.reserv.fracwidthcalc.value:10.2f} " + model.reserv.fracwidth.CurrentUnits + NL)
+                        f.write(f"      Fracture width:                                             {model.reserv.fracwidthcalc.value:10.2f} " + model.reserv.fracwidth.CurrentUnits.value + NL)
                     f.write(f"      Fracture area:                                    {model.reserv.fracareacalc.value:10.2f} " + model.reserv.fracarea.CurrentUnits.value + NL)
                 if model.reserv.resvoloption.value == ReservoirVolume.FRAC_NUM_SEP:
                     f.write('      Reservoir volume calculated with fracture separation and number of fractures as input\n')

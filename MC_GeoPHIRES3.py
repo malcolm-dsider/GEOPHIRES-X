@@ -21,6 +21,11 @@ import shutil
 import subprocess
 import multiprocessing
 
+#set up logging.
+logging.config.fileConfig('D:\\Work\\GEOPHIRES3-master\\logging.conf')
+logger = logging.getLogger('root')
+logger.info("Init " + str(__name__))
+
 def CheckAndReplaceMean(input_value, args) -> list:
     i = 0
     for inputx in input_value:
@@ -105,7 +110,7 @@ def WorkPackage(Job_ID, Inputs, Outputs, args, Outputfile):
 
 def main():
     #set up logging.
-    logging.config.fileConfig('logging.conf')
+    logging.config.fileConfig('D:\\Work\\GEOPHIRES3-master\\logging.conf')
     logger = logging.getLogger('root')
     logger.info("Init " + str(__name__))
 
@@ -113,13 +118,12 @@ def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     #from the command line, read what we need to know:
-    #    0) Code_File: Pythin code to run
+    #    0) Code_File: Python code to run
     #    1) Input_file: The base model for the calculations
     #    2) MC_Settings_file: The settings file for the MC run: 
     #         a) the input variables to change (spelling and case are IMPORTANT), their distribition functions 
     #         (choices = normal, uniform, triangular, lognormal, binomial - see numpy.random for documenation), 
-    #         and the inputs for that distribution function (Comma seperated). 
-    #         If the mean is set to "#", then value from the Input_file as the mode/mean. in the form: 
+    #         and the inputs for that distribution function (Comma seperated; If the mean is set to "#", then value from the Input_file as the mode/mean). In the form: 
     #                INPUT, Maximum Temperature, normal, mean, std_dev
     #                INPUT, Utilization Factor,uniform, min, max
     #                INPUT, Ambient Temperature,triangular, left, mode, right
@@ -180,8 +184,7 @@ def main():
         proc.start()
 
     # complete the processes
-    for proc in procs:
-        proc.join()
+    for proc in procs: proc.join()
     
 #read the resuts into an array
     with open(Outputfile, "r") as f:
@@ -194,9 +197,10 @@ def main():
     for line in all_results:
         s2 = line.split(",")
         output_count = 0
-        for s in s2:
-            Results[result_count, output_count] = float(s)
-            output_count = output_count + 1
+        if len(s) > 1:
+            for s in s2:
+                Results[result_count, output_count] = float(s)
+                output_count = output_count + 1
         result_count = result_count + 1
 
 #Compute the stats along the specified axes.

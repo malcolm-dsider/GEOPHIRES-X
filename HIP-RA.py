@@ -26,7 +26,7 @@ NL="\n"
 
 class HIP_RA():
     #set up logging.
-    logging.config.fileConfig('logging.conf')
+    logging.config.fileConfig('D:\\Work\\GEOPHIRES3-master\\logging.conf')
     logger = logging.getLogger('root')
     logger.info("Init " + str(__name__))
     
@@ -52,6 +52,41 @@ class HIP_RA():
     def UtilEff_func (self, x:float)->float:
         y = np.interp(x, self.T, self.UtilEff)
         return y
+
+    #user-defined functions
+    def densitywater(self, Twater):   
+        T = Twater+273.15
+        rhowater = ( .7983223 + (1.50896E-3 - 2.9104E-6*T) * T) * 1E3 #water density correlation as used in Geophires v1.2 [kg/m3]
+        return  rhowater;
+   
+    def viscositywater(self, Twater):
+        muwater = 2.414E-5*np.power(10,247.8/(Twater+273.15-140))     #accurate to within 2.5% from 0 to 370 degrees C [Ns/m2]
+        #xp = np.linspace(5,150,30)
+        #fp = np.array([1519.3, 1307.0, 1138.3, 1002.0, 890.2, 797.3, 719.1, 652.7, 596.1, 547.1, 504.4, 467.0, 433.9, 404.6, 378.5, 355.1, 334.1, 315.0, 297.8, 282.1, 267.8, 254.4, 242.3, 231.3, 221.3, 212.0, 203.4, 195.5, 188.2, 181.4])
+        #muwater = np.interp(Twater,xp,fp)
+        return muwater;
+
+    def heatcapacitywater(self, Twater): 
+        Twater = (Twater + 273.15)/1000
+        A = -203.6060
+        B = 1523.290
+        C = -3196.413
+        D = 2474.455
+        E = 3.855326
+        cpwater = (A + B*Twater + C*Twater**2 + D*Twater**3 + E/(Twater**2))/18.02*1000 #water specific heat capacity in J/kg-K
+        return cpwater;
+    
+    def vaporpressurewater(self, Twater): 
+        if Twater < 100:
+            A = 8.07131
+            B = 1730.63
+            C = 233.426
+        else:
+            A = 8.14019
+            B = 1810.94
+            C = 244.485 
+        vaporpressurewater = 133.322*(10**(A-B/(C+Twater)))/1000 #water vapor pressure in kPa using Antione Equation
+        return vaporpressurewater;
 
     def __init__(self):
         """
@@ -151,6 +186,18 @@ class HIP_RA():
                         self.RejectionTemperatureK.value = 273.15 + ParameterToModify.value
                         self.RejectionEntropy.value = self.EntropyH20_func(ParameterToModify.value)
                         self.RejectionEnthalpy.value = self.EnthalpyH20_func(ParameterToModify.value)
+
+                    elif ParameterToModify.Name == "Density Of Water":
+                        value = float(ParameterReadIn.sValue)
+                        if value < 0:     #if the user supplied -1 as the density, they want us to calculate it.
+                            ParameterToModify.value = self.densitywater(self.ReservoirTemperature.value) * 1000000000.0
+                            self.DensityOfWater.value = ParameterToModify.value
+
+                    elif ParameterToModify.Name == "Heat Capacity Of Water":
+                        value = float(ParameterReadIn.sValue)
+                        if value < 0:     #if the user supplied -1 as the capacity, they want us to calculate it.
+                            ParameterToModify.value = self.heatcapacitywater(self.ReservoirTemperature.value)/1000.0
+                            self.HeatCapacityOfWater.value = ParameterToModify.value
         else:
             self.logger.info("No parameters read becuase no content provided")
 
@@ -230,7 +277,7 @@ class HIP_RA():
                 f.write(NL)
                 f.write('                           ***SUMMARY OF RESULTS***\n')
                 f.write(NL)
-#                f.write(f"      Reservoir Temperature:   {self.TRC.value:10.2f} " + self.TRC.CurrentUnits.value + NL)
+#               f.write(f"      Reservoir Temperature:   {self.TRC.value:10.2f} " + self.TRC.CurrentUnits.value + NL)
                 f.write(f"      Reservoir Temperature:   {self.ReservoirTemperature.value:10.2f} " + self.ReservoirTemperature.CurrentUnits.value + NL)
                 f.write(f"      Reservoir Volume:        {self.V.value:10.2f} " + self.V.CurrentUnits.value + NL)
                 f.write(f"      Stored Heat:             {self.qR.value:10.2e} " + self.qR.CurrentUnits.value + NL)
@@ -262,7 +309,7 @@ class HIP_RA():
 
 def main():
     #set up logging.
-    logging.config.fileConfig('logging.conf')
+    logging.config.fileConfig('D:\\Work\\GEOPHIRES3-master\\logging.conf')
     logger = logging.getLogger('root')
     logger.info("Init " + str(__name__))
 
