@@ -1,0 +1,4 @@
+Reservoir Temperature, 338 degF
+Rejection Temperature, 100 degF
+Units:Reservoir Volume, mi**3,  ---[This is what I want the units to be for this output parameter
+Units:Fluid Produced, pound,  ---[This is what I want the units to be for this output parameter
