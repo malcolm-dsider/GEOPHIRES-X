@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{a83eb736-df6d-47f6-b75d-1fb69c228472}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>GEOPHIRESv3.py</StartupFile>
+    <StartupFile>HIP-RA.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -13,12 +13,12 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>Global|VisualStudio|arcgispro-py3</InterpreterId>
     <TestFramework>Pytest</TestFramework>
-    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\ESHTest1.txt</CommandLineArguments>
+    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\HIPexample1.txt</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
     <Environment>MC_GEOPHIRES: AdvGeoPHIRESv3.py examples\example1_mc.txt D:\Work\GEOPHIRES3-master\MC_Settings_file.txt
 MC_HIP: HIP-RA.py examples\example1_GCGP.txt MC_HIP_Settings_file.txt
-HIP: D:\Work\GEOPHIRES3-master\Examples\example1_GCGP.txt
+HIP: D:\Work\GEOPHIRES3-master\Examples\HIPexample1.txt
 GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt</Environment>
     <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>
@@ -283,6 +283,7 @@ GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt</Environment>
     <Content Include="HDR.out" />
     <Content Include="LACETable.txt" />
     <Content Include="license.txt" />
+    <Content Include="MC_HIP_Settings_file.txt" />
     <Content Include="MC_Settings_file.txt" />
     <Content Include="README.md" />
     <Content Include="requirements.txt" />
