@@ -117,9 +117,9 @@ class HIP_RA():
 
         #user-changeable semi-constants
         self.ReservoirHeatCapacity = self.ParameterDict[self.ReservoirHeatCapacity.Name] = floatParameter("Reservoir Heat Capacity", value = 2.84E+12, Min = 0.0, Max = 1E+14, UnitType=Units.HEAT_CAPACITY, PreferredUnits = HeatCapacityUnit.KJPERKM3C, CurrentUnits = HeatCapacityUnit.KJPERKM3C, Required=True, ErrMessage = "assume default Reservoir Heat Capacity (2.84E+12 kJ/km3C)", ToolTipText="Reservoir Heat Capacity [2.84E+12 kJ/km3C]")
-        self.HeatCapacityOfWater = self.ParameterDict[self.HeatCapacityOfWater.Name] = floatParameter("Heat Capacity Of Water", value = 4.18, Min = 3.0, Max = 10.0, UnitType=Units.HEAT_CAPACITY, PreferredUnits = HeatCapacityUnit.kJPERKGC, CurrentUnits = HeatCapacityUnit.kJPERKGC, Required=True, ErrMessage = "calculate a value based on the water temperature", ToolTipText="Heat Capacity Of Water [4.18 kJ/kgC]")
+        self.HeatCapacityOfWater = self.ParameterDict[self.HeatCapacityOfWater.Name] = floatParameter("Heat Capacity Of Water", value = -1.0, Min = 3.0, Max = 10.0, UnitType=Units.HEAT_CAPACITY, PreferredUnits = HeatCapacityUnit.kJPERKGC, CurrentUnits = HeatCapacityUnit.kJPERKGC, Required=True, ErrMessage = "calculate a value based on the water temperature", ToolTipText="Heat Capacity Of Water [4.18 kJ/kgC]")
         self.HeatCapacityOfRock = self.ParameterDict[self.HeatCapacityOfRock.Name] = floatParameter("Heat Capacity Of Rock", value = 1.000, Min = 0.0, Max = 10.0, UnitType=Units.HEAT_CAPACITY, PreferredUnits = HeatCapacityUnit.kJPERKGC, CurrentUnits = HeatCapacityUnit.kJPERKGC, Required=True, ErrMessage = "assume default Heat Capacity Of Rock (1.0 kJ/kgC)", ToolTipText="Heat Capacity Of Rock [1.0 kJ/kgC]")
-        self.DensityOfWater = self.ParameterDict[self.DensityOfWater.Name] = floatParameter("Density Of Water", value = 1.000E+12, Min = 1.000E+11, Max = 1.000E+13, UnitType=Units.DENSITY, PreferredUnits = DensityUnit.KGPERKILOMETERS3, CurrentUnits = DensityUnit.KGPERKILOMETERS3, Required=True, ErrMessage = "calculate a value based on the water temperature", ToolTipText="Heat Density Of Water [1.0E+12 kg/km3]")
+        self.DensityOfWater = self.ParameterDict[self.DensityOfWater.Name] = floatParameter("Density Of Water", value = -1.0, Min = 1.000E+11, Max = 1.000E+13, UnitType=Units.DENSITY, PreferredUnits = DensityUnit.KGPERKILOMETERS3, CurrentUnits = DensityUnit.KGPERKILOMETERS3, Required=True, ErrMessage = "calculate a value based on the water temperature", ToolTipText="Heat Density Of Water [1.0E+12 kg/km3]")
         self.DensityOfRock = self.ParameterDict[self.DensityOfRock.Name] = floatParameter("Density Of Rock", value = 2.55E+12, Min = 1.000E+11, Max = 1.000E+13, UnitType=Units.DENSITY, PreferredUnits = DensityUnit.KGPERKILOMETERS3, CurrentUnits = DensityUnit.KGPERKILOMETERS3, Required=True, ErrMessage = "assume default Density Of Water (2.55E+12 kg/km3)", ToolTipText="Heat Density Of Water [2.55E+12 kg/km3]")
 
         #internal
@@ -223,18 +223,15 @@ class HIP_RA():
         self.logger.info("Init "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
         
         #This is where all the calcualtions are made using all the values that have been set.
-        #self.TRC.value = self.ReservoirTemperature.value
+        if self.DensityOfWater.value < self.DensityOfWater.Min: self.DensityOfWater.value = self.densitywater(self.ReservoirTemperature.value) * 1000000000.0
+        if self.HeatCapacityOfWater.value < self.HeatCapacityOfWater.Min: self.HeatCapacityOfWater.value = self.heatcapacitywater(self.ReservoirTemperature.value)/1000.0
         self.V.value = self.ReservoirArea.value * self.ReservoirThickness.value
-#        self.qR.value = self.V.value * (self.ReservoirHeatCapacity.value * (self.TRC.value - self.RejectionTemperature.value))
         self.qR.value = self.V.value * (self.ReservoirHeatCapacity.value * (self.ReservoirTemperature.value - self.RejectionTemperature.value))
         self.mWH.value = (self.V.value * (self.FormationPorosity.value/100.0))*self.DensityOfWater.value
- #       self.e.value = (self.EnthalpyH20_func(self.TRC.value) - self.RejectionEnthalpy.value) - (self.RejectionTemperatureK.value*(self.EntropyH20_func(self.TRC.value) - self.RejectionEntropy.value))
         self.e.value = (self.EnthalpyH20_func(self.ReservoirTemperature.value) - self.RejectionEnthalpy.value) - (self.RejectionTemperatureK.value*(self.EntropyH20_func(self.ReservoirTemperature.value) - self.RejectionEntropy.value))
-  #      self.qWH.value = self.mWH.value * (self.EnthalpyH20_func(self.TRC.value)-self.RejectionTemperatureK.value)
         self.qWH.value = self.mWH.value * (self.EnthalpyH20_func(self.ReservoirTemperature.value)-self.RejectionTemperatureK.value)
         self.Rg.value = self.qWH.value / self.qR.value
         self.WA.value = self.mWH.value * self.e.value * self.Rg.value
-   #     self.WE.value = self.WA.value * self.UtilEff_func(self.TRC.value)
         self.WE.value = self.WA.value * self.UtilEff_func(self.ReservoirTemperature.value)
         self.We.value =(((self.WE.value*0.27777778)/(8760*self.ReservoirLifeCycle.value))/1000000)*0.66
  
