@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{a83eb736-df6d-47f6-b75d-1fb69c228472}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>HIP-RA.py</StartupFile>
+    <StartupFile>GEOPHIRESv3.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -337,7 +337,7 @@ GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt</Environment>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CanaryGISPreprocessing.py" />
-    <Compile Include="CLReservoir.py" />
+    <Compile Include="CLWellBores.py" />
     <Compile Include="doc\build.py" />
     <Compile Include="doc\source\conf.py" />
     <Compile Include="doc\source\plots\ai.py" />
