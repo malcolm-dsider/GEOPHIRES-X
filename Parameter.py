@@ -70,7 +70,7 @@ class Parameter:
     Valid: bool = True
     ErrMessage: str = "assume default value (see manual)"
     InputComment: str = ""
-    ToolTipText: str = "This is ToolTip Text"
+    ToolTipText: str = Name
     UnitType:IntEnum = Units.NONE
     PreferredUnits:Enum = Units.NONE
     CurrentUnits:Enum = PreferredUnits    #set to PreferredUnits assuming that the current units are the preferred units - they will only change if the read function reads a different unit associated with a parameter
@@ -163,8 +163,11 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
         None
     """
     model.logger.info("Init " + str(__name__) + ": " + sys._getframe().f_code.co_name + " for " + ParamToModify.Name)
-    if isinstance(ParamToModify, boolParameter) and isinstance(ParamToModify, strParameter):        #these Parameter Types don't have units so don't do anything fancy, and ingore it if the user has supplied units
-        if isinstance(ParamToModify, boolParameter): ParamToModify.value = bool(ParameterReadIn.sValue)
+    if isinstance(ParamToModify, boolParameter) or isinstance(ParamToModify, strParameter):        #these Parameter Types don't have units so don't do anything fancy, and ingore it if the user has supplied units
+        if isinstance(ParamToModify, boolParameter):
+            if 'false' in ParameterReadIn.sValue.lower(): ParamToModify.value = False
+            elif 'true' in ParameterReadIn.sValue.lower(): ParamToModify.value = True
+            else: ParamToModify.value = bool(ParameterReadIn.sValue)
         else: ParamToModify.value = ParameterReadIn.sValue
         ParamToModify.Provided = True      #set provided to true because we are using a user provide value now
         ParamToModify.Valid = True      #set Valid to true because it passed the validation tests
@@ -173,7 +176,7 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
 
     #deal with the case where the value has a unit involved - that will be indicated by a space in it
     if ParameterReadIn.sValue.__contains__(" "):
-        new_str = CovertUnits(ParamToModify, ParameterReadIn.sValue,  model)
+        new_str = ConvertUnits(ParamToModify, ParameterReadIn.sValue,  model)
         if len(new_str) > 0: ParameterReadIn.sValue = new_str
     else:
         ParamToModify.CurrentUnits = ParamToModify.PreferredUnits     #The value came in without any units, so it must be using the default PreferredUnits
@@ -190,10 +193,11 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
 
         if New_val == ParamToModify.value: return   #We have nothing to change - user provide value that was the same as the existing value (likely, the default value)
         if not (New_val in ParamToModify.AllowableRange):   #user provided value is out of range, so announce it, leave set to whatever it was set to (default value)
-            if len(ParamToModify.ErrMessage) > 0: print("Warning: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
-            if len(ParamToModify.ErrMessage) > 0: model.logger.warning("Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
+            if len(ParamToModify.ErrMessage) > 0: print("Error: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
+            if len(ParamToModify.ErrMessage) > 0: model.logger.fatal("Error: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
             model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
-            return
+            sys.exit()
+            #return
         else:   #All is good
             ParamToModify.value = New_val     #set the new value
             ParamToModify.Provided = True      #set provided to true because we are using a user provide value now
@@ -209,10 +213,11 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
             model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
             return #We have nothing to change - user provide value that was the same as the existing value (likely, the default value)
         if (New_val < float(ParamToModify.Min)) or (New_val > float(ParamToModify.Max)):   #user provided value is out of range, so announce it, leave set to whatever it was set to (default value)
-            if len(ParamToModify.ErrMessage) > 0: print("Warning: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
-            if len(ParamToModify.ErrMessage) > 0: model.logger.warning("Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
+            if len(ParamToModify.ErrMessage) > 0: print("Error: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
+            if len(ParamToModify.ErrMessage) > 0: model.logger.fatal("Error: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " outside of valid range. GEOPHIRES will " + ParamToModify.ErrMessage)
             model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
-            return
+            sys.exit()
+            #return
         else:   #All is good
             ParamToModify.value = New_val     #set the new value
             ParamToModify.Provided = True      #set provided to true because we are using a user provide value now
@@ -233,6 +238,7 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
                 ParamToModify.value.insert(position, New_val)
     elif isinstance(ParamToModify, boolParameter):
         if ParameterReadIn.sValue == "0": New_val = False
+        if ParameterReadIn.sValue == "false" or ParameterReadIn.sValue == "False" or ParameterReadIn.sValue == "FALSE": New_val = False
         else: New_val = True
         if New_val == ParamToModify.value:
            model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
@@ -249,9 +255,9 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
 
     model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
     
-def CovertUnits(ParamToModify, strUnit: str,  model) -> str:
+def ConvertUnits(ParamToModify, strUnit: str,  model) -> str:
     """
-    CovertUnits gets called if a unit version is needed: either currency or standard units like F to C or m to ft
+    ConvertUnits gets called if a unit version is needed: either currency or standard units like F to C or m to ft
 
     Args:
         ParamToModify (Parameter): The Parameter that will be modified (assuming it passes validation and conversion)
@@ -300,9 +306,9 @@ def CovertUnits(ParamToModify, strUnit: str,  model) -> str:
         symbol2 = cc.get_symbol(currType[1:])
         if symbol != None: prefPrefix = True
         if symbol2 != None: currPrefix = True
-        if prefPrefix and prefType[0] in ['M', 'm']: prefFactor = prefFactor * 1000000.0
+        if prefPrefix and prefType[0] in ['M', 'm']: prefFactor = prefFactor * 1_000_000.0
         elif prefPrefix and prefType[0] in ['K', 'k']: prefFactor = prefFactor * 1000.0
-        if currPrefix and currType[0] in ['M', 'm']: currFactor = currFactor / 1000000.0
+        if currPrefix and currType[0] in ['M', 'm']: currFactor = currFactor / 1_000_000.0
         elif currPrefix and currType[0] in ['K', 'k']: currFactor = currFactor / 1000.0
         Factor = currFactor * prefFactor
         if prefPrefix: prefShort = prefType[1:]
@@ -374,7 +380,7 @@ def CovertUnits(ParamToModify, strUnit: str,  model) -> str:
     model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
     return strUnit
 
-def CovertUnitsBack(ParamToModify, model):
+def ConvertUnitsBack(ParamToModify, model):
     """
     CovertUnitsBack: Converts units back to what the user specified they as.  It does this so that the user can see them in the report as the ubnits they specified.  We know that because CurrentUnits contains the desired units
 
@@ -414,9 +420,9 @@ def CovertUnitsBack(ParamToModify, model):
         symbol2 = cc.get_symbol(currType[1:])
         if symbol != None: prefPrefix = True
         if symbol2 != None: currPrefix = True
-        if prefPrefix and prefType[0] in ['M', 'm']: prefFactor = prefFactor * 1000000.0
+        if prefPrefix and prefType[0] in ['M', 'm']: prefFactor = prefFactor * 1_000_000.0
         elif prefPrefix and prefType[0] in ['K', 'k']: prefFactor = prefFactor * 1000.0
-        if currPrefix and currType[0] in ['M', 'm']: currFactor = currFactor / 1000000.0
+        if currPrefix and currType[0] in ['M', 'm']: currFactor = currFactor / 1_000_000.0
         elif currPrefix and currType[0] in ['K', 'k']: currFactor = currFactor / 1000.0
         Factor = currFactor * prefFactor
         if prefPrefix: prefShort = prefType[1:]
@@ -491,6 +497,7 @@ def LookupUnits(sUnitText:str):
     Returns:
         Enum: The Enumerated value and the Unit class Enumberation
     """
+    #look thru all unit types and names for a match with my units
     for uType in Units:
         MyEnum = None
         if uType == Units.LENGTH: MyEnum = LengthUnit
@@ -618,9 +625,9 @@ def ConvertOutputUnits(oparam:OutputParameter, newUnit:Units, model):
         symbol2 = cc.get_symbol(currType[1:])
         if symbol != None: prefPrefix = True
         if symbol2 != None: currPrefix = True
-        if prefPrefix and prefType[0] in ['M', 'm']: prefFactor = prefFactor * 1000000.0
+        if prefPrefix and prefType[0] in ['M', 'm']: prefFactor = prefFactor * 1_000_000.0
         elif prefPrefix and prefType[0] in ['K', 'k']: prefFactor = prefFactor * 1000.0
-        if currPrefix and currType[0] in ['M', 'm']: currFactor = currFactor / 1000000.0
+        if currPrefix and currType[0] in ['M', 'm']: currFactor = currFactor / 1_000_000.0
         elif currPrefix and currType[0] in ['K', 'k']: currFactor = currFactor / 1000.0
         Factor = currFactor * prefFactor
         if prefPrefix: prefShort = prefType[1:]

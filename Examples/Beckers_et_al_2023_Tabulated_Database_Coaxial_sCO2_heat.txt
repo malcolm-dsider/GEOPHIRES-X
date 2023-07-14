@@ -9,7 +9,12 @@
 Is CLGS, True
 Closed-loop Configuration, 1
 End-Use Option, 2,        -----direct heat
-Production Flow Rate per Well, 20, ---- kg/s for water / 40 kg/s for sCO2
+Economic Model, 4,        -----CLGS
+Heat Transfer Fluid, 2, ----sCO2
+Production Flow Rate per Well, 40, ---- kg/s for water / 40 kg/s for sCO2
+All-in Vertical Drilling Costs, 1000.0
+All-in Nonvertical Drilling Costs, 1000.0
+Cylindrical Reservoir Input Depth, 3000.0 meter, -----meters
 Reservoir Depth, 3.0, -----kilometers
 Gradient 1, 0.06, ----deg.c/m
 Total Horizontal Length, 9000, ----- m
@@ -27,7 +32,7 @@ Circulation Pump Efficiency, 0.8, -----[-]
 
 *** Economic/Financial Parameters ***
 *************************************
-Economic Model,3,			--- Should be 1 (FCR model) 2 (Standard LCOE/LCOH model) or 3 (Bicycle model).
+Economic Model,4,			--- Should be 1 (FCR model) 2 (Standard LCOE/LCOH model) 3 (Bicycle model) 4 CLGS.
 Fraction of Investment in Bonds,0.65,	--- [-] Required if Bicycle model is selected. See manual for details.
 Inflated Bond Interest Rate,0.07,	--- [-] Required if Bicycle model is selected. See manual for details.
 Inflated Equity Interest Rate,0.12,	--- [-] Required if Bicycle model is selected. See manual for details.

@@ -200,11 +200,11 @@ class EconomicsAddOns(Economics.Economics):
                 AddOnElectricalEnergy = self.AddOnElecGainedTotalPerYear.value
                 AddOnHeatEnergy = self.AddOnHeatGainedTotalPerYear.value
             
-            self.AddOnElecRevenue.value[i] = (AddOnElectricalEnergy * self.AddOnElecPrice.value[i]) / 1000000.0   #Electrcity revenue in MUSD
-            self.AddOnHeatRevenue.value[i] = (AddOnHeatEnergy * self.AddOnHeatPrice.value[i]) / 1000000.0    #Heat revenue in MUSD
+            self.AddOnElecRevenue.value[i] = (AddOnElectricalEnergy * self.AddOnElecPrice.value[i]) / 1_000_000.0   #Electrcity revenue in MUSD
+            self.AddOnHeatRevenue.value[i] = (AddOnHeatEnergy * self.AddOnHeatPrice.value[i]) / 1_000_000.0    #Heat revenue in MUSD
             self.AddOnRevenue.value[i] =  self.AddOnElecRevenue.value[i] + self.AddOnHeatRevenue.value[i] + self.AddOnProfitGainedTotalPerYear.value - self.AddOnOPEXTotalPerYear.value
             self.AddOnCashFlow.value[i] = self.AddOnRevenue.value[i]
-            self.ProjectCashFlow.value[i] = self.AddOnRevenue.value[i] + (((ProjectElectricalEnergy * self.AddOnElecPrice.value[i]) + (ProjectHeatEnergy * self.AddOnHeatPrice.value[i]))  / 1000000.0) - model.economics.Coam.value   #MUSD
+            self.ProjectCashFlow.value[i] = self.AddOnRevenue.value[i] + (((ProjectElectricalEnergy * self.AddOnElecPrice.value[i]) + (ProjectHeatEnergy * self.AddOnHeatPrice.value[i]))  / 1_000_000.0) - model.economics.Coam.value   #MUSD
 
         # now insert the cost of construction into the front of the array that will be used to calculate NPV = the convention is that the upfront CAPEX is negative
         for i in range(0,self.ConstructionYears.value,1):

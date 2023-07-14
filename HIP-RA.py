@@ -19,7 +19,7 @@ import numpy as np
 
 from GeoPHIRESUtils import read_input_file
 #import AdvGeoPHIRESUtils
-from Parameter import intParameter, floatParameter, OutputParameter, ReadParameter, CovertUnitsBack, ConvertOutputUnits, LookupUnits
+from Parameter import intParameter, floatParameter, OutputParameter, ReadParameter, ConvertUnitsBack, ConvertOutputUnits, LookupUnits
 from Units import *
 
 NL="\n"
@@ -54,19 +54,19 @@ class HIP_RA():
         return y
 
     #user-defined functions
-    def densitywater(self, Twater):   
+    def densitywater(self, Twater)->float:   
         T = Twater+273.15
         rhowater = ( .7983223 + (1.50896E-3 - 2.9104E-6*T) * T) * 1E3 #water density correlation as used in Geophires v1.2 [kg/m3]
-        return  rhowater;
+        return rhowater
    
-    def viscositywater(self, Twater):
+    def viscositywater(self, Twater)->float:
         muwater = 2.414E-5*np.power(10,247.8/(Twater+273.15-140))     #accurate to within 2.5% from 0 to 370 degrees C [Ns/m2]
         #xp = np.linspace(5,150,30)
         #fp = np.array([1519.3, 1307.0, 1138.3, 1002.0, 890.2, 797.3, 719.1, 652.7, 596.1, 547.1, 504.4, 467.0, 433.9, 404.6, 378.5, 355.1, 334.1, 315.0, 297.8, 282.1, 267.8, 254.4, 242.3, 231.3, 221.3, 212.0, 203.4, 195.5, 188.2, 181.4])
         #muwater = np.interp(Twater,xp,fp)
-        return muwater;
+        return muwater
 
-    def heatcapacitywater(self, Twater): 
+    def heatcapacitywater(self, Twater)->float: 
         Twater = (Twater + 273.15)/1000
         A = -203.6060
         B = 1523.290
@@ -74,9 +74,16 @@ class HIP_RA():
         D = 2474.455
         E = 3.855326
         cpwater = (A + B*Twater + C*Twater**2 + D*Twater**3 + E/(Twater**2))/18.02*1000 #water specific heat capacity in J/kg-K
-        return cpwater;
+        return cpwater
+
+    def recoverableheat(self, Twater)->float:
+        #assume 0.66 for high-T reservoirs (>150C), 0.43 for low-T reservoirs (>90, Garg and Combs (2011)
+        if Twater < 90.0: return 0.43
+        if Twater > 150.0: return 0.66
+
+        return 0.0038 * Twater + 0.085
     
-    def vaporpressurewater(self, Twater): 
+    def vaporpressurewater(self, Twater)->float: 
         if Twater < 100:
             A = 8.07131
             B = 1730.63
@@ -86,7 +93,7 @@ class HIP_RA():
             B = 1810.94
             C = 244.485 
         vaporpressurewater = 133.322*(10**(A-B/(C+Twater)))/1000 #water vapor pressure in kPa using Antione Equation
-        return vaporpressurewater;
+        return vaporpressurewater
 
     def __init__(self):
         """
@@ -121,6 +128,7 @@ class HIP_RA():
         self.HeatCapacityOfRock = self.ParameterDict[self.HeatCapacityOfRock.Name] = floatParameter("Heat Capacity Of Rock", value = 1.000, Min = 0.0, Max = 10.0, UnitType=Units.HEAT_CAPACITY, PreferredUnits = HeatCapacityUnit.kJPERKGC, CurrentUnits = HeatCapacityUnit.kJPERKGC, Required=True, ErrMessage = "assume default Heat Capacity Of Rock (1.0 kJ/kgC)", ToolTipText="Heat Capacity Of Rock [1.0 kJ/kgC]")
         self.DensityOfWater = self.ParameterDict[self.DensityOfWater.Name] = floatParameter("Density Of Water", value = -1.0, Min = 1.000E+11, Max = 1.000E+13, UnitType=Units.DENSITY, PreferredUnits = DensityUnit.KGPERKILOMETERS3, CurrentUnits = DensityUnit.KGPERKILOMETERS3, Required=True, ErrMessage = "calculate a value based on the water temperature", ToolTipText="Heat Density Of Water [1.0E+12 kg/km3]")
         self.DensityOfRock = self.ParameterDict[self.DensityOfRock.Name] = floatParameter("Density Of Rock", value = 2.55E+12, Min = 1.000E+11, Max = 1.000E+13, UnitType=Units.DENSITY, PreferredUnits = DensityUnit.KGPERKILOMETERS3, CurrentUnits = DensityUnit.KGPERKILOMETERS3, Required=True, ErrMessage = "assume default Density Of Rock (2.55E+12 kg/km3)", ToolTipText="Heat Density Of Rock [2.55E+12 kg/km3]")
+        self.RecoverableHeat = self.ParameterDict[self.RecoverableHeat.Name] = floatParameter("Recoverable Heat", value = -1.0, Min = 0.001, Max = 1.000, UnitType=Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, Required=False, ErrMessage = "assume 0.66 for high-T reservoirs (>150C), 0.43 for low-T reservoirs (>90, Garg and Combs (2011)", ToolTipText="percent of heat that is recoverable from the rock in the reservoir 0.66 for high-T reservoirs, 0.43 for low-T reservoirs (Garg and Combs (2011)")
 
         #internal
         self.WaterContent = self.ParameterDict[self.WaterContent.Name] = floatParameter("Water Content", value = 18.0, Min=0.0, Max = 100.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.PERCENT, CurrentUnits = PercentUnit.PERCENT, Required=True, ErrMessage = "assume default water content (18%)", ToolTipText="Water Content")
@@ -190,12 +198,18 @@ class HIP_RA():
                     elif ParameterToModify.Name == "Density Of Water":
                         value = float(ParameterReadIn.sValue)
                         if value < 0:     #if the user supplied -1 as the density, they want us to calculate it.
-                            ParameterToModify.value = self.densitywater(self.ReservoirTemperature.value) * 1000000000.0
+                            ParameterToModify.value = self.densitywater(self.ReservoirTemperature.value) * 1_000_000_000.0
                             self.DensityOfWater.value = ParameterToModify.value
 
                     elif ParameterToModify.Name == "Heat Capacity Of Water":
                         value = float(ParameterReadIn.sValue)
                         if value < 0:     #if the user supplied -1 as the capacity, they want us to calculate it.
+                            ParameterToModify.value = self.heatcapacitywater(self.ReservoirTemperature.value)/1000.0
+                            self.HeatCapacityOfWater.value = ParameterToModify.value
+
+                    elif ParameterToModify.Name == "Recoverable Heat":
+                        value = float(ParameterReadIn.sValue)
+                        if value < 0:     #if the user supplied -1 as the Recoverable Heat, they want us to calculate it.
                             ParameterToModify.value = self.heatcapacitywater(self.ReservoirTemperature.value)/1000.0
                             self.HeatCapacityOfWater.value = ParameterToModify.value
         else:
@@ -223,7 +237,7 @@ class HIP_RA():
         self.logger.info("Init "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
         
         #This is where all the calcualtions are made using all the values that have been set.
-        if self.DensityOfWater.value < self.DensityOfWater.Min: self.DensityOfWater.value = self.densitywater(self.ReservoirTemperature.value) * 1000000000.0
+        if self.DensityOfWater.value < self.DensityOfWater.Min: self.DensityOfWater.value = self.densitywater(self.ReservoirTemperature.value) * 1_000_000_000.0
         if self.HeatCapacityOfWater.value < self.HeatCapacityOfWater.Min: self.HeatCapacityOfWater.value = self.heatcapacitywater(self.ReservoirTemperature.value)/1000.0
         self.V.value = self.ReservoirArea.value * self.ReservoirThickness.value
         self.qR.value = self.V.value * (self.ReservoirHeatCapacity.value * (self.ReservoirTemperature.value - self.RejectionTemperature.value))
@@ -231,9 +245,9 @@ class HIP_RA():
         self.e.value = (self.EnthalpyH20_func(self.ReservoirTemperature.value) - self.RejectionEnthalpy.value) - (self.RejectionTemperatureK.value*(self.EntropyH20_func(self.ReservoirTemperature.value) - self.RejectionEntropy.value))
         self.qWH.value = self.mWH.value * (self.EnthalpyH20_func(self.ReservoirTemperature.value)-self.RejectionTemperatureK.value)
         self.Rg.value = self.qWH.value / self.qR.value
-        self.WA.value = self.mWH.value * self.e.value * self.Rg.value
+        self.WA.value = self.mWH.value * self.e.value * self.Rg.value * self.recoverableheat(self.ReservoirTemperature.value)
         self.WE.value = self.WA.value * self.UtilEff_func(self.ReservoirTemperature.value)
-        self.We.value =(((self.WE.value*0.27777778)/(8760*self.ReservoirLifeCycle.value))/1000000)*0.66
+        self.We.value =(((self.WE.value*0.27777778)/(8760*self.ReservoirLifeCycle.value))/1_000_000)
  
         self.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -252,7 +266,7 @@ class HIP_RA():
         for key in self.ParameterDict:
             param = self.ParameterDict[key]
             if not param.UnitsMatch:
-                CovertUnitsBack(param, self)
+                ConvertUnitsBack(param, self)
 
         #now we need to loop thru all thw output parameters to update their units to whatever units the user has specified.
         #i.e., they may have specified that all LENGTH results must be in feet, so we need to convert those from whatver LENGTH unit they are to feet.
@@ -289,9 +303,9 @@ class HIP_RA():
         except BaseException as ex:
             tb = sys.exc_info()[2]
             print (str(ex))
-            print("Error: GEOPHIRES failed to Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
+            print("Error: GEOPHIRES Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
             self.logger.critical(str(ex))
-            self.logger.critical("Error: GEOPHIRES failed to Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
+            self.logger.critical("Error: GEOPHIRES Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
             sys.exit()
 
     #copy the output file to the screen

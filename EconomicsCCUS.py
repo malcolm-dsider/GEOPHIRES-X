@@ -84,6 +84,8 @@ class EconomicsCCUS(Economics.Economics):
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().read_parameters(model)    #read the paremeters for the parent.
+        #if we call super, we don't need to deal with setting the parameters here, just deal with the special cases for the variables in this class
+        #because the call to the super.readparameters will set all the variables, including the ones that are specific to this class
 
         #Deal with all the parameter values that the user has provided that relate to this extension.  super,read_parametesr will have already dealt with all the regular values, but anything unusal may not be dealt with, so check.
         # In this case, all the values are array values, and weren't correctly dealt with, so below is where we process them.
@@ -157,9 +159,9 @@ class EconomicsCCUS(Economics.Economics):
             dBothEnergy = dElectricalEnergy +  dHeatEnergy
             self.CarbonThatWouldHaveBeenProducedAnnually.value[i] = dBothEnergy * self.CCUSGridCO2.value
             self.CarbonThatWouldHaveBeenProducedTotal.value = self.CarbonThatWouldHaveBeenProducedTotal.value + self.CarbonThatWouldHaveBeenProducedAnnually.value[i]
-            self.CCUSRevenue.value[i] = (self.CarbonThatWouldHaveBeenProducedAnnually.value[i] * self.CCUSPrice.value[i]) / 1000000.0    #CCUS (from both heat and elec) based on total, not net energy; in $M
+            self.CCUSRevenue.value[i] = (self.CarbonThatWouldHaveBeenProducedAnnually.value[i] * self.CCUSPrice.value[i]) / 1_000_000.0    #CCUS (from both heat and elec) based on total, not net energy; in $M
             self.CCUSCashFlow.value[i] = self.CCUSRevenue.value[i]
-            self.ProjectCashFlow.value[i] = self.CCUSRevenue.value[i] + (((ProjectElectricalEnergy * self.CCUSOnElecPrice.value[i]) + (ProjectHeatEnergy * self.CCUSOnHeatPrice.value[i]))  / 1000000.0) - model.economics.Coam.value   #MUSD
+            self.ProjectCashFlow.value[i] = self.CCUSRevenue.value[i] + (((ProjectElectricalEnergy * self.CCUSOnElecPrice.value[i]) + (ProjectHeatEnergy * self.CCUSOnHeatPrice.value[i]))  / 1_000_000.0) - model.economics.Coam.value   #MUSD
             
         #Calculate the Carbon credit cummulative cash flows
         i = 0

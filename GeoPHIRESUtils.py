@@ -27,6 +27,7 @@ def read_input_file(model, ReturnDict1):
 
         #successful read of data into list.  Now make a dictionary with all the parameter entries.  Index will be the unique name of the parameter.  The value with be a "ParameterEntry" structure, with name, value (optionally with units), optional comment
         for line in content:
+            if line.startswith("#"): continue    #skp any line that strts with "#" - # will be the comment parameter
             Desc = ""
             sVal = ""
             Comm = ""
@@ -49,6 +50,6 @@ def read_input_file(model, ReturnDict1):
             PEntry = ParameterEntry(Desc, sVal, Comm)
             ReturnDict1[Desc] = PEntry     #make the dictionary element
 
-    else: model.logger.warn("No input parameter file specified on the command line. Proceeding with deafult parameter run... ")
+    else: model.logger.warn("No input parameter file specified on the command line. Proceeding with default parameter run... ")
     
     model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)

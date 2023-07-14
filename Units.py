@@ -29,8 +29,10 @@ class Units(IntEnum):
     CURRENCYFREQUENCY = auto()
     ENERGYCOST = auto()
     COSTPERMASS = auto()
+    COSTPERDISTANCE = auto()
     PERCENT = auto()
     ENERGY = auto()
+    POWER = auto()
     ENERGYFREQUENCY = auto()
     AVAILABILITY = auto()
     CO2PRODUCTION = auto()
@@ -45,6 +47,7 @@ class TemperatureGradientUnit(Enum):
     """Temperature Gradient Units"""
     DEGREESCPERKM = "degC/km"
     DEGREESFPERMILE = "degF/mi"
+    DEGREESCPERM = "degC/m"
 
 class PercentUnit(Enum):
     """Percent Units"""
@@ -89,14 +92,17 @@ class DensityUnit(Enum):
 
 class EnergyUnit(Enum):
     """Energy (electrcity or heat) Units"""
-    W = "W"
-    KW = "kW"
-    MW = "MW"
-    GW = "GW"
     WH = "Wh"
     KWH = "kWh"
     MWH = "MWh"
     GWH = "GWh"
+
+class PowerUnit(Enum):
+    """Power (electrcity or heat) Units"""
+    W = "W"
+    KW = "kW"
+    MW = "MW"
+    GW = "GW"
 
 class EnergyFrequencyUnit(Enum):
     """Energy per interval Units"""
@@ -130,7 +136,10 @@ class CurrencyFrequencyUnit(Enum):
     
 class EnergyCostUnit(Enum):
     DOLLARSPERKWH = "USD/kWh"
+    DOLLARSPERMWH = "USD/MWh"
     CENTSSPERKWH = "cents/kWh"
+    DOLLARSPERKW = "USD/kW"
+    CENTSSPERKW = "cents/kW"
     DOLLARSPERMMBTU = "USD/MMBTU"
     
 class CostPerMassUnit(Enum):
@@ -138,6 +147,9 @@ class CostPerMassUnit(Enum):
     DOLLARSPERMT = "USD/mt"
     CENTSSPERLB = "cents/lb"
     DOLLARSPERLB = "USD/lb"
+    
+class CostPerDistanceUnit(Enum):
+    DOLLARSPERM = "USD/m"
 
 class PressureUnit(Enum):
     """Pressure Units"""

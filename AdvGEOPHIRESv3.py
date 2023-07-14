@@ -42,8 +42,6 @@ def main():
 
     #write the outputs, if requested
     model.outputs.PrintOutputs(model)
-    model.addoutputs.PrintOutputs(model)
-    model.ccusoutputs.PrintOutputs(model)
         
     #if the user has asked for it, copy the output file to the screen
     if model.outputs.printoutput:

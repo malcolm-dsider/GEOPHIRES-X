@@ -6,7 +6,6 @@ from Parameter import floatParameter, intParameter, OutputParameter, ReadParamet
 from Units import *
 import Model
 
-
 class SurfacePlant:
     def __init__(self, model:Model):
         """
@@ -40,7 +39,7 @@ class SurfacePlant:
         self.Tenv = self.ParameterDict[self.Tenv.Name] = floatParameter("Ambient Temperature", value = 15.0, DefaultValue=15.0, Min = -50, Max = 50, UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS, ErrMessage="assume default ambient temperature (15 deg.C)", ToolTipText="Ambient (or dead-state) temperature used for calculating power plant utilization efficiency")
         self.plantlifetime = self.ParameterDict[self.plantlifetime.Name] = intParameter("Plant Lifetime", value = 30, DefaultValue=30.0, AllowableRange=list(range(1,101,1)), UnitType = Units.TIME, PreferredUnits = TimeUnit.YEAR, CurrentUnits = TimeUnit.YEAR, Required=True, ErrMessage="assume default plant lifetime (30 years)", ToolTipText="System lifetime")
         self.pipinglength = self.ParameterDict[self.pipinglength.Name] = floatParameter("Surface Piping Length", value = 0.0, DefaultValue=0.0, Min= 0, Max=100, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.KILOMETERS, CurrentUnits = LengthUnit.KILOMETERS, ErrMessage="assume default piping length (5km)")
-        self.Pplantoutlet = self.ParameterDict[self.Pplantoutlet.Name] = floatParameter("Plant Outlet Pressure", value=100.0, DefaultValue=100.0, Min=0.01, Max=10000.0, UnitType=Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL, ErrMessage="assume default plant outlet pressure (100 kPa)", ToolTipText="Constant plant outlet pressure equal to injection well pump(s) suction pressure")
+        self.Pplantoutlet = self.ParameterDict[self.Pplantoutlet.Name] = floatParameter("Plant Outlet Pressure", value = 100.0, DefaultValue=100.0, Min=0.01, Max=10000.0, UnitType=Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL, ErrMessage="assume default plant outlet pressure (100 kPa)", ToolTipText="Constant plant outlet pressure equal to injection well pump(s) suction pressure")
         self.elecprice = self.ParameterDict[self.elecprice.Name] = floatParameter("Electricity Rate", value = 0.07, DefaultValue=0.07, Min = 0.0, Max=1.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH, ErrMessage="assume default electricity rate ($0.07/kWh)", ToolTipText="Price of electricity to calculate pumping costs in direct-use heat only mode or revenue from electricity sales in CHP mode.")
         self.heatprice = self.ParameterDict[self.heatprice.Name] = floatParameter("Heat Rate", value = 0.02, DefaultValue=0.02, Min = 0.0, Max=1.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH, ErrMessage="assume default heat rate ($0.02/kWh)", ToolTipText="Price of heat to calculate revenue from heat sales in CHP mode.")
 
@@ -55,16 +54,16 @@ class SurfacePlant:
         self.TenteringPP = self.OutputParameterDict[self.TenteringPP.Name] = OutputParameter(Name = "TenteringPP", value = [], UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
         self.HeatkWhExtracted = self.OutputParameterDict[self.HeatkWhExtracted.Name] = OutputParameter(Name = "annual heat production", value = [], UnitType = Units.ENERGYFREQUENCY, PreferredUnits = EnergyFrequencyUnit.GWPERYEAR, CurrentUnits = EnergyFrequencyUnit.GWPERYEAR)
         self.PumpingkWh = self.OutputParameterDict[self.PumpingkWh.Name] = OutputParameter(Name = "annual electricity production", value = [], UnitType = Units.ENERGYFREQUENCY, PreferredUnits = EnergyFrequencyUnit.KWPERYEAR, CurrentUnits = EnergyFrequencyUnit.KWPERYEAR)
-        self.ElectricityProduced = self.OutputParameterDict[self.ElectricityProduced.Name] = OutputParameter(Name = "Total Electricity Generation", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
-        self.NetElectricityProduced = self.OutputParameterDict[self.NetElectricityProduced.Name] = OutputParameter(Name = "Net Electricity Production", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.ElectricityProduced = self.OutputParameterDict[self.ElectricityProduced.Name] = OutputParameter(Name = "Total Electricity Generation", value=[0.0], UnitType = Units.POWER, PreferredUnits = PowerUnit.MW, CurrentUnits = PowerUnit.MW)
+        self.NetElectricityProduced = self.OutputParameterDict[self.NetElectricityProduced.Name] = OutputParameter(Name = "Net Electricity Production", value=[0.0], UnitType = Units.POWER, PreferredUnits = PowerUnit.MW, CurrentUnits = PowerUnit.MW)
         self.TotalkWhProduced = self.OutputParameterDict[self.TotalkWhProduced.Name] = OutputParameter(Name = "Total Electricity Generation", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.KWH, CurrentUnits = EnergyUnit.KWH)
         self.NetkWhProduced = self.OutputParameterDict[self.NetkWhProduced.Name] = OutputParameter(Name = "Net Electricity Generation", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.KWH, CurrentUnits = EnergyUnit.KWH)
-        self.HeatkWhProduced = self.OutputParameterDict[self.HeatkWhProduced.Name] = OutputParameter(Name = "Heat Produced", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.KW, CurrentUnits = EnergyUnit.KW)
         self.FirstLawEfficiency = self.OutputParameterDict[self.FirstLawEfficiency.Name] = OutputParameter(Name = "First Law Efficiency", value=[0.0], UnitType = Units.PERCENT, PreferredUnits = PercentUnit.PERCENT, CurrentUnits = PercentUnit.PERCENT)
-        self.HeatExtracted = self.OutputParameterDict[self.HeatExtracted.Name] = OutputParameter(Name = "Heat Extracted", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
-        self.HeatProduced = self.OutputParameterDict[self.HeatProduced.Name] = OutputParameter(Name = "Heat Produced2", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.HeatExtracted = self.OutputParameterDict[self.HeatExtracted.Name] = OutputParameter(Name = "Heat Extracted", value=[0.0], UnitType = Units.POWER, PreferredUnits = PowerUnit.MW, CurrentUnits = PowerUnit.MW)
+        self.HeatProduced = self.OutputParameterDict[self.HeatProduced.Name] = OutputParameter(Name = "Heat Produced in MW", value=[0.0], UnitType = Units.POWER, PreferredUnits = PowerUnit.MW, CurrentUnits = PowerUnit.MW)
+        self.HeatkWhProduced = self.OutputParameterDict[self.HeatkWhProduced.Name] = OutputParameter(Name = "Heat Produced in kWh", value=[0.0], UnitType = Units.POWER, PreferredUnits = PowerUnit.KW, CurrentUnits = PowerUnit.KW)
         self.Availability = self.OutputParameterDict[self.Availability.Name] = OutputParameter(Name = "Geofluid Availability", value=[0.0], UnitType = Units.AVAILABILITY, PreferredUnits = AvailabilityUnit.MWPERKGPERSEC, CurrentUnits = AvailabilityUnit.MWPERKGPERSEC)
-        self.RemainingReservoirHeatContent = self.OutputParameterDict[self.RemainingReservoirHeatContent.Name] = OutputParameter(Name = "Remaining Reservoir Heat Content", value=[0.0], UnitType = Units.ENERGY, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.RemainingReservoirHeatContent = self.OutputParameterDict[self.RemainingReservoirHeatContent.Name] = OutputParameter(Name = "Remaining Reservoir Heat Content", value=[0.0], UnitType = Units.POWER, PreferredUnits = PowerUnit.MW, CurrentUnits = PowerUnit.MW)
 
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -81,7 +80,6 @@ class SurfacePlant:
         :return: None
         :doc-author: Malcolm Ross
         """
-        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #Deal with all the parameter values that the user has provided.  They should really only provide values that they want to change from the default values, but they can provide a value that is already set because it is a defaulr value set in __init__.  It will ignore those.
@@ -132,6 +130,7 @@ class SurfacePlant:
                                 model.wellbores.impedancemodelallowed.value = False
                                 self.setinjectionpressurefixed = True
                     if ParameterToModify.Name == "Plant Outlet Pressure":
+                        if ParameterToModify.value < 0 or ParameterToModify.value > 10000:
                                 if self.setinjectionpressurefixed:
                                     ParameterToModify.value = 100
                                     print("Warning: Provided plant outlet pressure outside of range 0-10000. GEOPHIRES will assume default plant outlet pressure (100 kPa)")
@@ -354,7 +353,7 @@ class SurfacePlant:
                     model.logger.warning("injection temperature lowered")
             elif self.enduseoption.value in [EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]: #cogen split of mass flow rate
                 if np.min(ReinjTemp) < model.wellbores.Tinj.value:
-                    #model.wellbores.Tinj.value = np.min(ReinjTemp)
+                    model.wellbores.Tinj.value = np.min(ReinjTemp)
                     print("Warning: injection temperature incorrect but cannot be lowered")
                     model.logger.warning("injection temperature incorrect but cannot be lowered")
     

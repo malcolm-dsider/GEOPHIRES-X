@@ -3,7 +3,7 @@ import time
 import sys
 import numpy as np
 import Model
-from Parameter import CovertUnitsBack, ConvertOutputUnits, LookupUnits
+from Parameter import ConvertUnitsBack, ConvertOutputUnits, LookupUnits
 from OptionList import EndUseOptions, EconomicModel, ReservoirModel, FractureShape, ReservoirVolume
 from Units import *
 
@@ -51,7 +51,6 @@ class Outputs:
         """
 
         if len(model.InputParameters) > 0:
-             
             #if the user wants it, we need to know if the user wants to copy the contents of the output file to the screen - this serves as the screen report
             if "Print Output to Console" in model.InputParameters:
                 ParameterReadIn = model.InputParameters["Print Output to Console"]
@@ -81,7 +80,7 @@ class Outputs:
         for obj in [model.reserv, model.wellbores, model.surfaceplant, model.economics]:
             for key in obj.ParameterDict:
                 param = obj.ParameterDict[key]
-                if not param.UnitsMatch: CovertUnitsBack(param, model)
+                if not param.UnitsMatch: ConvertUnitsBack(param, model)
 
         #now we need to loop thru all thw output parameters to update their units to whatever units the user has specified.
         #i.e., they may have specified that all LENGTH results must be in feet, so we need to convert those from whatver LENGTH unit they are to feet.
@@ -129,15 +128,15 @@ class Outputs:
                 f.write(f"      Number of production wells:                    {model.wellbores.nprod.value:10.0f}"+NL)  
                 f.write(f"      Number of injection wells:                     {model.wellbores.ninj.value:10.0f}"+NL)
                 f.write(f"      Flowrate per production well:                    {model.wellbores.prodwellflowrate.value:10.1f} "  + model.wellbores.prodwellflowrate.CurrentUnits.value + NL)
-                f.write(f"      Well depth:                                      {model.reserv.depth.value:10.1f} " +model.reserv.depth.CurrentUnits.value + NL)
+                f.write(f"      Well depth (or total length, if not vertical):   {model.reserv.depth.value:10.1f} " +model.reserv.depth.CurrentUnits.value + NL)
  
                 if model.reserv.numseg.value == 1:
-                    f.write(f"      Geothermal gradient:                             {model.reserv.gradient.value[0]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value + NL)
+                    f.write(f"      Geothermal gradient:                                {model.reserv.gradient.value[0]:10.4f} " + model.reserv.gradient.CurrentUnits.value + NL)
                 else:
                     for i in range(1, model.reserv.numseg.value):
-                        f.write(f"      Segment {str(i):s}   geothermal gradient:                   {model.reserv.gradient.value[i-1]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value +NL)
-                        f.write(f"      Segment {str(i):s}   thickness (km):                        {model.reserv.layerthickness.value[i-1]/1E3:10.0f} " + model.reserv.layerthickness.CurrentUnits.value + NL)
-                        f.write(f"      Segment {str(i+1):s} geothermal gradient:                   {model.reserv.gradient.value[i]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value + NL)
+                        f.write(f"      Segment {str(i):s}   Geothermal gradient:                      {model.reserv.gradient.value[i-1]:10.4f} " + model.reserv.gradient.CurrentUnits.value +NL)
+                        f.write(f"      Segment {str(i):s}   Thickness (km):                           {model.reserv.layerthickness.value[i-1]:10.0f} " + model.reserv.layerthickness.CurrentUnits.value + NL)
+                        f.write(f"      Segment {str(i+1):s} Geothermal gradient:                      {model.reserv.gradient.value[i]:10.4f} " + model.reserv.gradient.CurrentUnits.value + NL)
 
                 f.write(NL)
                 f.write(NL)
@@ -160,7 +159,7 @@ class Outputs:
                 f.write(NL)
                 f.write(f"      Number of Production Wells:                    {model.wellbores.nprod.value:10.0f}" + NL)
                 f.write(f"      Number of Injection Wells:                     {model.wellbores.ninj.value:10.0f}" + NL)
-                f.write(f"      Well depth:                                      {model.reserv.depth.value:10.1f} " + model.reserv.depth.CurrentUnits.value + NL)
+                f.write(f"      Well depth (or total length, if not vertical):   {model.reserv.depth.value:10.1f} " + model.reserv.depth.CurrentUnits.value + NL)
                 f.write(f"      Water loss rate:                                 {model.reserv.waterloss.value*100:10.1f} " + model.reserv.waterloss.CurrentUnits.value + NL)
                 f.write(f"      Pump efficiency:                                 {model.surfaceplant.pumpeff.value*100:10.1f} " + model.surfaceplant.pumpeff.CurrentUnits.value + NL)
                 f.write(f"      Injection temperature:                           {model.wellbores.Tinj.value:10.1f} " + model.wellbores.Tinj.CurrentUnits.value + NL)
@@ -171,8 +170,8 @@ class Outputs:
                     f.write("      User-provided production well temperature drop\n")
                     f.write(f"      Constant production well temperature drop:       {model.wellbores.tempdropprod.value:10.1f} " + model.wellbores.tempdropprod.PreferredUnits.value + NL)
                 f.write(f"      Flowrate per production well:                    {model.wellbores.prodwellflowrate.value:10.1f} " + model.wellbores.prodwellflowrate.CurrentUnits.value + NL)
-                f.write(f"      Injection well casing ID:                          {model.wellbores.injwelldiam.value/0.0254:10.3f} " + model.wellbores.injwelldiam.CurrentUnits.value + NL)
-                f.write(f"      Produciton well casing ID:                         {model.wellbores.prodwelldiam.value/0.0254:10.3f} " + model.wellbores.prodwelldiam.CurrentUnits.value + NL)
+                f.write(f"      Injection well casing ID:                          {model.wellbores.injwelldiam.value:10.3f} " + model.wellbores.injwelldiam.CurrentUnits.value + NL)
+                f.write(f"      Production well casing ID:                         {model.wellbores.prodwelldiam.value:10.3f} " + model.wellbores.prodwelldiam.CurrentUnits.value + NL)
                 f.write(f"      Number of times redrilling:                    {model.wellbores.redrill.value:10.0f}"+NL)
                 if model.surfaceplant.enduseoption.value != EndUseOptions.HEAT:
                     f.write("      Power plant type:                                       " +  str(model.surfaceplant.pptype.value.value) + NL)
@@ -183,74 +182,77 @@ class Outputs:
                 f.write(f"      Maximum reservoir temperature:                   {model.reserv.Tmax.value:10.1f} " + model.reserv.Tmax.CurrentUnits.value + NL)
                 f.write(f"      Number of segments:                            {model.reserv.numseg.value:10.0f} " + NL)
                 if model.reserv.numseg.value == 1:
-                    f.write(f"      Geothermal gradient:                             {model.reserv.gradient.value[0]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value + NL)
+                    f.write(f"      Geothermal gradient:                                {model.reserv.gradient.value[0]:10.4f} " + model.reserv.gradient.CurrentUnits.value + NL)
                 else:
                     for i in range(1, model.reserv.numseg.value):
-                        f.write(f"      Segment " + str(i) + " geothermal gradient:                   {model.reserv.gradient.value[i-1]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value + NL)
-                        f.write(f"      Segment " + str(i) + " thickness:                           {model.reserv.layerthickness.value[i-1]/1E3:10.0f} " + model.reserv.layerthickness.CurrentUnits.value + NL)
-                        f.write(f"      Segment " + str(i+1) + " geothermal gradient:                   {model.reserv.gradient.value[i]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value + NL)
+                        f.write(f"      Segment " + str(i) + " geothermal gradient:                   {model.reserv.gradient.value[i-1]:10.4f} " + model.reserv.gradient.CurrentUnits.value + NL)
+                        f.write(f"      Segment " + str(i) + " thickness:                           {model.reserv.layerthickness.value[i-1]:10.0f} " + model.reserv.layerthickness.CurrentUnits.value + NL)
+                        f.write(f"      Segment " + str(i+1) + " geothermal gradient:                   {model.reserv.gradient.value[i]:10.4f} " + model.reserv.gradient.CurrentUnits.value + NL)
     
                 f.write(NL)
                 f.write(NL)
                 f.write('                           ***RESERVOIR PARAMETERS***\n')
                 f.write(NL)
-                f.write("      Reservoir Model = " + str(model.reserv.resoption.value.value) + " Model\n")
-                if model.reserv.resoption.value == ReservoirModel.SINGLE_FRACTURE:
-                    f.write(f"      m/A Drawdown Parameter:                                 {model.reserv.drawdp.value:.5f} " + model.reserv.drawdp.CurrentUnits.value + NL)    
-                elif model.reserv.resoption.value == ReservoirModel.ANNUAL_PERCENTAGE:
-                    f.write(f"      Annual Thermal Drawdown:                                {model.reserv.drawdp.value*100:.3f} " + model.reserv.drawdp.CurrentUnits.value + NL)
-
-                f.write(f"      Bottom-hole temperature:                          {model.reserv.Trock.value:10.2f} " + model.reserv.Trock.CurrentUnits.value +  NL)
-                if model.reserv.resoption.value in [ReservoirModel.ANNUAL_PERCENTAGE, ReservoirModel.USER_PROVIDED_PROFILE, ReservoirModel.TOUGH2_SIMULATOR]:
-                    f.write('      Warning: the reservoir dimensions and thermo-physical properties \n')    
-                    f.write('               listed below are default values if not provided by the user.   \n')    
-                    f.write('               They are only used for calculating remaining heat content.  \n')
-
-                if model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP]:
-                    f.write("      Fracture model = " + model.reserv.fracshape.value.value + NL)
-                    if model.reserv.fracshape.value == FractureShape.CIRCULAR_AREA:
-                        f.write(f"      Well seperation: fracture diameter:               {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
-                    elif model.reserv.fracshape.value == FractureShape.CIRCULAR_DIAMETER:
-                        f.write(f"      Well seperation: fracture diameter:               {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
-                    elif model.reserv.fracshape.value == FractureShape.SQUARE:
-                        f.write(f"      Well seperation: fracture height:                 {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
-                    elif model.reserv.fracshape.value == FractureShape.RECTANGULAR:
-                        f.write(f"      Well seperation: fracture height:                 {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)        
-                        f.write(f"      Fracture width:                                             {model.reserv.fracwidthcalc.value:10.2f} " + model.reserv.fracwidth.CurrentUnits.value + NL)
-                    f.write(f"      Fracture area:                                    {model.reserv.fracareacalc.value:10.2f} " + model.reserv.fracarea.CurrentUnits.value + NL)
-                if model.reserv.resvoloption.value == ReservoirVolume.FRAC_NUM_SEP:
-                    f.write('      Reservoir volume calculated with fracture separation and number of fractures as input\n')
-                elif model.reserv.resvoloption.value == ReservoirVolume.RES_VOL_FRAC_SEP:
-                    f.write('      Number of fractures calculated with reservoir volume and fracture separation as input\n')    
-                elif model.reserv.resvoloption.value == ReservoirVolume.FRAC_NUM_SEP:
-                    f.write('      Fracture separation calculated with reservoir volume and number of fractures as input\n')    
-                elif model.reserv.resvoloption.value == ReservoirVolume.RES_VOL_ONLY:
-                    f.write('      Reservoir volume provided as input\n')
-                if model.reserv.resvoloption.value in [ReservoirVolume.FRAC_NUM_SEP, ReservoirVolume.RES_VOL_FRAC_SEP,ReservoirVolume.FRAC_NUM_SEP]:
-                    f.write(f"      Number of fractures:                              {model.reserv.fracnumbcalc.value:10.2f}" + NL)
-                    f.write(f"      Fracture separation:                              {model.reserv.fracsepcalc.value:10.2f} " + model.reserv.fracsep.CurrentUnits.value + NL)
-                f.write(f"      Reservoir volume:                              {model.reserv.resvolcalc.value:10.0f} " + model.reserv.resvol.CurrentUnits.value + NL)
-                if model.wellbores.impedancemodelused.value:
-                    f.write(f"      Reservoir impedance:                              {model.wellbores.impedance.value/1000:10.2f} " + model.wellbores.impedance.CurrentUnits.value + NL)    
+                if model.wellbores.IsAGS.value:
+                    f.write("The AGS models contain an intrinsic reservoir model that doesn't expose values that can be used in extensive reporting." + NL)
                 else:
-                    f.write(f"      Reservoir hydrostatic pressure:                   {model.wellbores.Phydrostaticcalc.value:10.2f} " + model.wellbores.Phydrostaticcalc.CurrentUnits.value + NL)    
-                    f.write(f"      Plant outlet pressure:                            {model.surfaceplant.Pplantoutlet.value:10.2f} " + model.surfaceplant.Pplantoutlet.CurrentUnits.value + NL)    
-                    if model.wellbores.productionwellpumping.value:
-                        f.write(f"      Production wellhead pressure:                     {model.wellbores.Pprodwellhead.value:10.2f} " + model.wellbores.Pprodwellhead.CurrentUnits.value + NL)
-                        f.write(f"      Productivity Index:                               {model.wellbores.PI.value:10.2f} " + model.wellbores.PI.CurrentUnits.value + NL)
-                    f.write(f"      Injectivity Index:                                {model.wellbores.II.value:10.2f} " + model.wellbores.II.CurrentUnits.value + NL)
+                    f.write("      Reservoir Model = " + str(model.reserv.resoption.value.value) + " Model\n")
+                    if model.reserv.resoption.value == ReservoirModel.SINGLE_FRACTURE:
+                        f.write(f"      m/A Drawdown Parameter:                                 {model.reserv.drawdp.value:.5f} " + model.reserv.drawdp.CurrentUnits.value + NL)    
+                    elif model.reserv.resoption.value == ReservoirModel.ANNUAL_PERCENTAGE:
+                        f.write(f"      Annual Thermal Drawdown:                                {model.reserv.drawdp.value*100:.3f} " + model.reserv.drawdp.CurrentUnits.value + NL)
+
+                    f.write(f"      Bottom-hole temperature:                          {model.reserv.Trock.value:10.2f} " + model.reserv.Trock.CurrentUnits.value +  NL)
+                    if model.reserv.resoption.value in [ReservoirModel.ANNUAL_PERCENTAGE, ReservoirModel.USER_PROVIDED_PROFILE, ReservoirModel.TOUGH2_SIMULATOR]:
+                        f.write('      Warning: the reservoir dimensions and thermo-physical properties \n')    
+                        f.write('               listed below are default values if not provided by the user.   \n')    
+                        f.write('               They are only used for calculating remaining heat content.  \n')
+
+                    if model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP]:
+                        f.write("      Fracture model = " + model.reserv.fracshape.value.value + NL)
+                        if model.reserv.fracshape.value == FractureShape.CIRCULAR_AREA:
+                            f.write(f"      Well seperation: fracture diameter:               {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
+                        elif model.reserv.fracshape.value == FractureShape.CIRCULAR_DIAMETER:
+                            f.write(f"      Well seperation: fracture diameter:               {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
+                        elif model.reserv.fracshape.value == FractureShape.SQUARE:
+                            f.write(f"      Well seperation: fracture height:                 {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
+                        elif model.reserv.fracshape.value == FractureShape.RECTANGULAR:
+                            f.write(f"      Well seperation: fracture height:                 {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)        
+                            f.write(f"      Fracture width:                                             {model.reserv.fracwidthcalc.value:10.2f} " + model.reserv.fracwidth.CurrentUnits.value + NL)
+                        f.write(f"      Fracture area:                                    {model.reserv.fracareacalc.value:10.2f} " + model.reserv.fracarea.CurrentUnits.value + NL)
+                    if model.reserv.resvoloption.value == ReservoirVolume.FRAC_NUM_SEP:
+                        f.write('      Reservoir volume calculated with fracture separation and number of fractures as input\n')
+                    elif model.reserv.resvoloption.value == ReservoirVolume.RES_VOL_FRAC_SEP:
+                        f.write('      Number of fractures calculated with reservoir volume and fracture separation as input\n')    
+                    elif model.reserv.resvoloption.value == ReservoirVolume.FRAC_NUM_SEP:
+                        f.write('      Fracture separation calculated with reservoir volume and number of fractures as input\n')    
+                    elif model.reserv.resvoloption.value == ReservoirVolume.RES_VOL_ONLY:
+                        f.write('      Reservoir volume provided as input\n')
+                    if model.reserv.resvoloption.value in [ReservoirVolume.FRAC_NUM_SEP, ReservoirVolume.RES_VOL_FRAC_SEP,ReservoirVolume.FRAC_NUM_SEP]:
+                        f.write(f"      Number of fractures:                              {model.reserv.fracnumbcalc.value:10.2f}" + NL)
+                        f.write(f"      Fracture separation:                              {model.reserv.fracsepcalc.value:10.2f} " + model.reserv.fracsep.CurrentUnits.value + NL)
+                    f.write(f"      Reservoir volume:                              {model.reserv.resvolcalc.value:10.0f} " + model.reserv.resvol.CurrentUnits.value + NL)
+                    if model.wellbores.impedancemodelused.value:
+                        f.write(f"      Reservoir impedance:                              {model.wellbores.impedance.value/1000:10.2f} " + model.wellbores.impedance.CurrentUnits.value + NL)    
+                    else:
+                        f.write(f"      Reservoir hydrostatic pressure:                   {model.wellbores.Phydrostaticcalc.value:10.2f} " + model.wellbores.Phydrostaticcalc.CurrentUnits.value + NL)    
+                        f.write(f"      Plant outlet pressure:                            {model.surfaceplant.Pplantoutlet.value:10.2f} " + model.surfaceplant.Pplantoutlet.CurrentUnits.value + NL)    
+                        if model.wellbores.productionwellpumping.value:
+                            f.write(f"      Production wellhead pressure:                     {model.wellbores.Pprodwellhead.value:10.2f} " + model.wellbores.Pprodwellhead.CurrentUnits.value + NL)
+                            f.write(f"      Productivity Index:                               {model.wellbores.PI.value:10.2f} " + model.wellbores.PI.CurrentUnits.value + NL)
+                        f.write(f"      Injectivity Index:                                {model.wellbores.II.value:10.2f} " + model.wellbores.II.CurrentUnits.value + NL)
     
-                f.write(f"      Reservoir density:                                {model.reserv.rhorock.value:10.2f} " + model.reserv.rhorock.CurrentUnits.value + NL)
-                if model.wellbores.rameyoptionprod.value or model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.SINGLE_FRACTURE, ReservoirModel.TOUGH2_SIMULATOR]:
-                    f.write(f"      Reservoir thermal conductivity:                   {model.reserv.krock.value:10.2f} " + model.reserv.krock.CurrentUnits.value + NL)
-                f.write(f"      Reservoir heat capacity:                          {model.reserv.cprock.value:10.2f} " + model.reserv.cprock.CurrentUnits.value + NL)
-                if model.reserv.resoption.value == ReservoirModel.LINEAR_HEAT_SWEEP or (model.reserv.resoption.value == ReservoirModel.TOUGH2_SIMULATOR and model.reserv.usebuiltintough2model):
-                    f.write(f"      Reservoir porosity:                               {model.reserv.porrock.value*100:10.2f} " + model.reserv.porrock.CurrentUnits.value + NL)
-                if model.reserv.resoption.value == ReservoirModel.TOUGH2_SIMULATOR and model.reserv.usebuiltintough2model:
-                    f.write(f"      Reservoir permeability:                           {model.reserv.permrock.value:10.2E} " + model.reserv.permrock.CurrentUnits.value + NL)
-                    f.write(f"      Reservoir thickness:                              {model.reserv.resthickness.value:10.2f} " + model.reserv.resthickness.CurrentUnits.value + NL)
-                    f.write(f"      Reservoir width:                                  {model.reserv.reswidth.value:10.2f} " + model.reserv.reswidth.CurrentUnits.value + NL)
-                    f.write(f"      Well separation:                                  {model.wellbores.wellsep.value:10.2f} " + model.wellbores.wellsep.CurrentUnits.value + NL)
+                    f.write(f"      Reservoir density:                                {model.reserv.rhorock.value:10.2f} " + model.reserv.rhorock.CurrentUnits.value + NL)
+                    if model.wellbores.rameyoptionprod.value or model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.SINGLE_FRACTURE, ReservoirModel.TOUGH2_SIMULATOR]:
+                        f.write(f"      Reservoir thermal conductivity:                   {model.reserv.krock.value:10.2f} " + model.reserv.krock.CurrentUnits.value + NL)
+                    f.write(f"      Reservoir heat capacity:                          {model.reserv.cprock.value:10.2f} " + model.reserv.cprock.CurrentUnits.value + NL)
+                    if model.reserv.resoption.value == ReservoirModel.LINEAR_HEAT_SWEEP or (model.reserv.resoption.value == ReservoirModel.TOUGH2_SIMULATOR and model.reserv.usebuiltintough2model):
+                        f.write(f"      Reservoir porosity:                               {model.reserv.porrock.value*100:10.2f} " + model.reserv.porrock.CurrentUnits.value + NL)
+                    if model.reserv.resoption.value == ReservoirModel.TOUGH2_SIMULATOR and model.reserv.usebuiltintough2model:
+                        f.write(f"      Reservoir permeability:                           {model.reserv.permrock.value:10.2E} " + model.reserv.permrock.CurrentUnits.value + NL)
+                        f.write(f"      Reservoir thickness:                              {model.reserv.resthickness.value:10.2f} " + model.reserv.resthickness.CurrentUnits.value + NL)
+                        f.write(f"      Reservoir width:                                  {model.reserv.reswidth.value:10.2f} " + model.reserv.reswidth.CurrentUnits.value + NL)
+                        f.write(f"      Well separation:                                  {model.wellbores.wellsep.value:10.2f} " + model.wellbores.wellsep.CurrentUnits.value + NL)
 
                 f.write(NL)
                 f.write(NL)
@@ -260,22 +262,25 @@ class Outputs:
                 f.write(f"      Average Production Temperature:                  {np.average(model.wellbores.ProducedTemperature.value):10.1f} " + model.wellbores.ProducedTemperature.PreferredUnits.value + NL)
                 f.write(f"      Minimum Production Temperature:                  {np.min(model.wellbores.ProducedTemperature.value):10.1f} " + model.wellbores.ProducedTemperature.PreferredUnits.value + NL)
                 f.write(f"      Initial Production Temperature:                  {model.wellbores.ProducedTemperature.value[0]:10.1f} " + model.wellbores.ProducedTemperature.PreferredUnits.value + NL)
-                f.write(f"      Average Reservoir Heat Extraction:                {np.average(model.surfaceplant.HeatExtracted.value):10.2f} " + model.surfaceplant.HeatExtracted.PreferredUnits.value + NL)
-                if model.wellbores.rameyoptionprod.value:
-                    f.write("      Production Wellbore Heat Transmission Model = Ramey Model" + NL)
-                    f.write(f"      Average Production Well Temperature Drop:        {np.average(model.wellbores.ProdTempDrop.value):10.1f} " + model.wellbores.ProdTempDrop.PreferredUnits.value + NL)
+                if model.wellbores.IsAGS.value:
+                    f.write("The AGS models contain an intrinsic reservoir model that doesn't expose values that can be used in extensive reporting." + NL)
                 else:
-                    f.write(f" Wellbore Heat Transmission Model = Constant Temperature Drop:{model.wellbores.tempdropprod.value:10.1f} " + model.wellbores.tempdropprod.PreferredUnits.value + NL)
-                if model.wellbores.impedancemodelused.value:
-                    f.write(f"      Total Average Pressure Drop:                     {np.average(model.wellbores.DP.value):10.1f} " + model.wellbores.DP.PreferredUnits.value + NL)
-                    f.write(f"      Average Injection Well Pressure Drop:            {np.average(model.wellbores.DP1.value):10.1f} " + model.wellbores.DP1.PreferredUnits.value + NL)
-                    f.write(f"      Average Reservoir Pressure Drop:                 {np.average(model.wellbores.DP2.value):10.1f} " + model.wellbores.DP2.PreferredUnits.value + NL)
-                    f.write(f"      Average Production Well Pressure Drop:           {np.average(model.wellbores.DP3.value):10.1f} " + model.wellbores.DP3.PreferredUnits.value + NL)
-                    f.write(f"      Average Buoyancy Pressure Drop:                  {np.average(model.wellbores.DP4.value):10.1f} " + model.wellbores.DP4.PreferredUnits.value + NL)
-                else:
-                    f.write(f"      Average Injection Well Pump Pressure Drop:       {np.average(model.wellbores.DP1.value):10.1f} " + model.wellbores.DP1.PreferredUnits.value + NL)
-                    if model.wellbores.productionwellpumping.value:
-                        f.write(f"      Average Production Well Pump Pressure Drop:      {np.average(model.wellbores.DP3.value):10.1f} " + model.wellbores.DP3.PreferredUnits.value + NL)
+                    f.write(f"      Average Reservoir Heat Extraction:                {np.average(model.surfaceplant.HeatExtracted.value):10.2f} " + model.surfaceplant.HeatExtracted.PreferredUnits.value + NL)
+                    if model.wellbores.rameyoptionprod.value:
+                        f.write("      Production Wellbore Heat Transmission Model = Ramey Model" + NL)
+                        f.write(f"      Average Production Well Temperature Drop:        {np.average(model.wellbores.ProdTempDrop.value):10.1f} " + model.wellbores.ProdTempDrop.PreferredUnits.value + NL)
+                    else:
+                        f.write(f" Wellbore Heat Transmission Model = Constant Temperature Drop:{model.wellbores.tempdropprod.value:10.1f} " + model.wellbores.tempdropprod.PreferredUnits.value + NL)
+                    if model.wellbores.impedancemodelused.value:
+                        f.write(f"      Total Average Pressure Drop:                     {np.average(model.wellbores.DPOverall.value):10.1f} " + model.wellbores.DPOverall.PreferredUnits.value + NL)
+                        f.write(f"      Average Injection Well Pressure Drop:            {np.average(model.wellbores.DPInjWell.value):10.1f} " + model.wellbores.DPInjWell.PreferredUnits.value + NL)
+                        f.write(f"      Average Reservoir Pressure Drop:                 {np.average(model.wellbores.DPReserv.value):10.1f} " + model.wellbores.DPReserv.PreferredUnits.value + NL)
+                        f.write(f"      Average Production Well Pressure Drop:           {np.average(model.wellbores.DPProdWell.value):10.1f} " + model.wellbores.DPProdWell.PreferredUnits.value + NL)
+                        f.write(f"      Average Buoyancy Pressure Drop:                  {np.average(model.wellbores.DPBouyancy.value):10.1f} " + model.wellbores.DPBouyancy.PreferredUnits.value + NL)
+                    else:
+                        f.write(f"      Average Injection Well Pump Pressure Drop:       {np.average(model.wellbores.DPInjWell.value):10.1f} " + model.wellbores.DPInjWell.PreferredUnits.value + NL)
+                        if model.wellbores.productionwellpumping.value:
+                            f.write(f"      Average Production Well Pump Pressure Drop:      {np.average(model.wellbores.DPProdWell.value):10.1f} " + model.wellbores.DPProdWell.PreferredUnits.value + NL)
             
                 f.write(NL)
                 f.write(NL)
@@ -325,15 +330,15 @@ class Outputs:
                     f.write(f"      Average Net Electricity Generation:               {np.average(model.surfaceplant.NetElectricityProduced.value):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
                     f.write(f"      Minimum Net Electricity Generation:               {np.min(model.surfaceplant.NetElectricityProduced.value):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
                     f.write(f"      Initial Net Electricity Generation:               {model.surfaceplant.NetElectricityProduced.value[0]:10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
-                    f.write(f"      Average Annual Total Electricity Generation:      {np.average(model.surfaceplant.TotalkWhProduced.value/1E6):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
-                    f.write(f"      Average Annual Net Electricity Generation:        {np.average(model.surfaceplant.NetkWhProduced.value/1E6):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
-                    f.write(f"      Initial pumping power/net installed power:        {(model.wellbores.PumpingPower.value[0]/model.surfaceplant.NetElectricityProduced.value[0]*100):10.2f} %" + NL)
+                    f.write(f"      Average Annual Total Electricity Generation:      {np.average(model.surfaceplant.TotalkWhProduced.value/1E6):10.2f} GWh" + NL)
+                    f.write(f"      Average Annual Net Electricity Generation:        {np.average(model.surfaceplant.NetkWhProduced.value/1E6):10.2f} GWh" + NL)
+                    if model.wellbores.PumpingPower.value[0] > 0.0: f.write(f"      Initial pumping power/net installed power:        {(model.wellbores.PumpingPower.value[0]/model.wellbores.PumpingPower.value[0]*100):10.2f} %" + NL)
                 if model.surfaceplant.enduseoption.value != EndUseOptions.ELECTRICITY:
                     f.write(f"      Maximum Net Heat Production:                      {np.max(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
                     f.write(f"      Average Net Heat Production:                      {np.average(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
                     f.write(f"      Minimum Net Heat Production:                      {np.min(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
                     f.write(f"      Initial Net Heat Production:                      {model.surfaceplant.HeatProduced.value[0]:10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
-                    f.write(f"      Average Annual Heat Production:                   {np.average(model.surfaceplant.HeatkWhProduced.value/1E6):10.2f} " + model.surfaceplant.HeatkWhProduced.PreferredUnits.value + NL)
+                    f.write(f"      Average Annual Heat Production:                   {np.average(model.surfaceplant.HeatkWhProduced.value/1E6):10.2f} GWh" + NL)
                 f.write(f"      Average Pumping Power:                            {np.average(model.wellbores.PumpingPower.value):10.2f} " + model.wellbores.PumpingPower.PreferredUnits.value + NL)
 
 
@@ -345,8 +350,8 @@ class Outputs:
                     f.write('  YEAR       THERMAL               GEOFLUID               PUMP               NET               FIRST LAW\n')
                     f.write('             DRAWDOWN             TEMPERATURE             POWER             POWER              EFFICIENCY\n')
                     f.write("                                     (" + model.wellbores.ProducedTemperature.CurrentUnits.value+")               (" + model.wellbores.PumpingPower.CurrentUnits.value + ")              (" + model.surfaceplant.NetElectricityProduced.CurrentUnits.value + ")                  (%)\n")
-                    for i in range(0, model.surfaceplant.plantlifetime.value+1):
-                        f.write('  {0:2.0f}         {1:8.4f}              {2:8.2f}             {3:8.4f}          {4:8.4f}              {5:8.4f}'.format(i, 
+                    for i in range(0, model.surfaceplant.plantlifetime.value):
+                        f.write('  {0:2.0f}         {1:8.4f}              {2:8.2f}             {3:8.4f}          {4:8.4f}              {5:8.4f}'.format(i+1, 
                                                 model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value]/model.wellbores.ProducedTemperature.value[0], 
                                                                         model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value],
                                                                                                         model.wellbores.PumpingPower.value[i*model.economics.timestepsperyear.value],
@@ -356,7 +361,7 @@ class Outputs:
                     f.write('  YEAR       THERMAL               GEOFLUID               PUMP               NET\n')
                     f.write('             DRAWDOWN             TEMPERATURE             POWER              HEAT\n')
                     f.write('                                   (deg C)                (MW)               (MW)\n')
-                    for i in range(0, model.surfaceplant.plantlifetime.value+1):
+                    for i in range(0, model.surfaceplant.plantlifetime.value):
                         f.write('  {0:2.0f}         {1:8.4f}              {2:8.2f}             {3:8.4f}          {4:8.4f}'.format(i,
                                                 model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value]/model.wellbores.ProducedTemperature.value[0],
                                                                         model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value],
@@ -366,7 +371,7 @@ class Outputs:
                     f.write('  YEAR     THERMAL             GEOFLUID             PUMP             NET              NET             FIRST LAW\n')
                     f.write('           DRAWDOWN           TEMPERATURE           POWER           POWER             HEAT            EFFICIENCY\n')
                     f.write('                                (deg C)             (MW)            (MW)              (MW)               (%)\n')
-                    for i in range(0, model.surfaceplant.plantlifetime.value+1):
+                    for i in range(0, model.surfaceplant.plantlifetime.value):
                         f.write('  {0:2.0f}       {1:8.4f}            {2:8.2f}           {3:8.4f}        {4:8.4f}            {5:8.4f}             {6:8.4f}'.format(i,
                                                 model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value]/model.wellbores.ProducedTemperature.value[0],
                                                                         model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value],
@@ -412,13 +417,16 @@ class Outputs:
                                                                                                                             model.surfaceplant.RemainingReservoirHeatContent.value[i],
                                                                                                                                                 (model.reserv.InitialReservoirHeatContent.value-model.surfaceplant.RemainingReservoirHeatContent.value[i])*100/model.reserv.InitialReservoirHeatContent.value)+NL)
                 f.write(NL)
+            
+            #MIR MIR if model.wellbores.HasHorizontalSection.value: model.cloutputs.PrintOutputs(model)
+            if model.economics.DoAddOnCalculations.value: model.addoutputs.PrintOutputs(model)
+            if model.economics.DoCCUSCalculations.value: model.ccusoutputs.PrintOutputs(model)
         except BaseException as ex:
             tb = sys.exc_info()[2]
             print (str(ex))
-            print("Error: GEOPHIRES failed to Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
+            print("Error: GEOPHIRES Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
             model.logger.critical(str(ex))
-            model.logger.critical("Error: GEOPHIRES failed to Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
+            model.logger.critical("Error: GEOPHIRES Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
             sys.exit()        
-            
-      
+ 
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)

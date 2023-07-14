@@ -31,7 +31,9 @@ def load_key():
     return open("key.key", "rb").read() #Opens the file, reads and returns the key stored in the file
 
 class AdvGeoPHIRESUtils():
+    UseDatabase = False
     def RunStoredProcedure(self, store_procedure_name:str, parameters:list)->list:
+        if not self.UseDatabase: return None
         res = details = warnings = obj = None
         with connect(host="localhost", user="malcolm", password=".Carnot.", database="geophiresx") as connection:
             try:
@@ -45,7 +47,6 @@ class AdvGeoPHIRESUtils():
                 connection.close()
             except connection.Error as err:
                 print("Something went wrong: {}".format(err))
-
         return (details)
 
     def DumpObjectAsJson(self, MyObject)->str:
@@ -116,6 +117,7 @@ class AdvGeoPHIRESUtils():
         model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
 
     def CheckForExistingResult(self, model, object)->str:
+        if not self.UseDatabase: return None
         model.logger.info("Init " + str(__name__))
         #convert the input parwmeters abd code to JSON and hash it
         KeyAsHash = self.CaculateHash(object.MyPath, object)
@@ -145,6 +147,7 @@ class AdvGeoPHIRESUtils():
         return KeyAsHash
 
     def store_result(self, model, object)->str:
+        if not self.UseDatabase: return None
         model.logger.info("Init " + str(__name__))
 
         #handle encrption stuff
@@ -177,18 +180,19 @@ class AdvGeoPHIRESUtils():
                 with connection.cursor() as cursor:
                     cursor.execute(SQLCommand, (KeyAsHash, object.MyClass, suser, sdate_time, ValueToStore, compressed_message))
                     connection.commit()
+                    model.logger.info("Stored " + object.MyClass + " under hash =" + KeyAsHash)
+                    print("Stored " + object.MyClass + " under hash =" + KeyAsHash)
         except Error as ex:
             print (ex)
             model.logger.error("Error " + str(ex) + "writing into the database with the result. Proceeding as if we did.")
             return None
         
-        model.logger.info("Stored " + object.MyClass + " under hash =" + KeyAsHash)
-        print("Stored " + object.MyClass + " under hash =" + KeyAsHash)
         model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
         return KeyAsHash
 
     def returnDictBtKey(self, model, skey:str)->dict:
-    #called like: key = returnDictBtKey(model, key)
+        if not self.UseDatabase: return {}
+    #called like: key = returnDictByKey(model, key)
         model.logger.info("Init " + str(__name__))
         #now try to read the record in the database
         try:
@@ -205,7 +209,7 @@ class AdvGeoPHIRESUtils():
         except Error as ex:
             print (ex)
             model.logger.error("Error " + str(ex) + " getting the database for result. Proceeding as if we didn't find one.")
-            return None
+            return {}
 
     def RestoreValuesFromDict(self, model,  dd:dict, object)->bool:
         #populate the object with the previously calculated results store in a dictionary that was returned from the database
@@ -278,11 +282,11 @@ class AdvGeoPHIRESUtils():
                 model.wellbores.OutputParameterDict[model.wellbores.productionwellpumping.Name] = self.PopulateStructureFromDictEntry(model.wellbores.productionwellpumping, dd["productionwellpumping"])
                 model.wellbores.OutputParameterDict[model.wellbores.impedancemodelused.Name] = self.PopulateStructureFromDictEntry(model.wellbores.impedancemodelused, dd["impedancemodelused"])
                 model.wellbores.OutputParameterDict[model.wellbores.ProdTempDrop.Name] = self.PopulateStructureFromDictEntry(model.wellbores.ProdTempDrop, dd["ProdTempDrop"])
-                model.wellbores.OutputParameterDict[model.wellbores.DP.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DP, dd["DP"]) 
-                model.wellbores.OutputParameterDict[model.wellbores.DP1.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DP1, dd["DP1"])
-                model.wellbores.OutputParameterDict[model.wellbores.DP2.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DP2, dd["DP2"])
-                model.wellbores.OutputParameterDict[model.wellbores.DP3.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DP3, dd["DP3"])
-                model.wellbores.OutputParameterDict[model.wellbores.DP4.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DP4, dd["DP4"]) 
+                model.wellbores.OutputParameterDict[model.wellbores.DPOverall.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DPOverall, dd["DPOverall"]) 
+                model.wellbores.OutputParameterDict[model.wellbores.DPInjWell.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DPInjWell, dd["DPInjWell"])
+                model.wellbores.OutputParameterDict[model.wellbores.DPReserv.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DPReserv, dd["DPReserv"])
+                model.wellbores.OutputParameterDict[model.wellbores.DPProdWell.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DPProdWell, dd["DPProdWell"])
+                model.wellbores.OutputParameterDict[model.wellbores.DPBouyancy.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DPBouyancy, dd["DPBouyancy"]) 
                 model.wellbores.OutputParameterDict[model.wellbores.ProducedTemperature.Name] = self.PopulateStructureFromDictEntry(model.wellbores.ProducedTemperature, dd["ProducedTemperature"])
                 model.wellbores.OutputParameterDict[model.wellbores.PumpingPower.Name] = self.PopulateStructureFromDictEntry(model.wellbores.PumpingPower, dd["PumpingPower"])
                 model.wellbores.OutputParameterDict[model.wellbores.Pprodwellhead.Name] = self.PopulateStructureFromDictEntry(model.wellbores.Pprodwellhead, dd["Pprodwellhead"])
@@ -506,6 +510,7 @@ class AdvGeoPHIRESUtils():
                         elif 'SUPER_CRITICAL_ORC' in dd["value"]: object.value = PowerPlantType.SUPER_CRITICAL_ORC
                         elif 'SINGLE_FLASH' in dd["value"]: object.value = PowerPlantType.SINGLE_FLASH
                         elif 'DOUBLE_FLASH' in dd["value"]: object.value = PowerPlantType.DOUBLE_FLASH
+                        elif 'AGS' in dd["value"]: object.value = EconomicModel.AGS
                         elif 'FCR' in dd["value"]: object.value = EconomicModel.FCR
                         elif 'STANDARDIZED_LEVELIZED_COST' in dd["value"]: object.value = EconomicModel.STANDARDIZED_LEVELIZED_COST
                         elif 'BICYCLE' in dd["value"]: object.value = EconomicModel.BICYCLE

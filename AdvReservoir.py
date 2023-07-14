@@ -54,21 +54,8 @@ class AdvReservoir(AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().read_parameters(model)    #read the paremeters for the parent.
-
-        #Deal with all the parameter values that the user has provided.  They should really only provide values that they want to change from the default values, but they can provide a value that is already set because it is a defaulr value set in __init__.  It will ignore those.
-        #This also deals with all the special cases that need to be talen care of after a vlaue has been read in and checked.
-        #If you choose to sublass this master class, you can also choose to override this method (or not), and if you do, do it before or after you call you own version of this method.  If you do, you can also choose to call this method from you class, which can effectively modify all these superclass parameters in your class.
-
-        #only need to do this if you add any of your own parameters
-        #if len(model.InputParameters) > 0:
-        #    #loop thru all the parameters that the user wishes to set, looking for parameters that match this object
-        #    for item in self.ParameterDict.items():
-        #        ParameterToModify = item[1]
-        #        key = ParameterToModify.Name.strip()
-        #        if key in model.InputParameters:
-        #            ParameterReadIn = model.InputParameters[key]
-        #            ParameterToModify.CurrentUnits = ParameterToModify.PreferredUnits    #Before we change the paremeter, let's assume that the unit preferences will match - if they don't, the later code will fix this.
-        #            ReadParameter(ParameterReadIn, ParameterToModify, model)   #this should handle all the non-special cases
+        #if we call super, we don't need to deal with setting the parameters here, just deal with the special cases for the variables in this class
+        #because the call to the super.readparameters will set all the variables, including the ones that are specific to this class
         
         #handle special cases for the parameters you added
                     
@@ -91,7 +78,7 @@ class AdvReservoir(AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
             super().Calculate(model)    #run calculation because there was nothing in the database
             
             #store the calculate result and associated object paremeters in the database
-            resultkey = self.store_result(model, str(__class__), os.path.abspath(__file__), self)
+            resultkey = self.store_result(model, self)
             if resultkey == None: model.logger.warn("Failed To Store "+ str(__class__) + " " + os.path.abspath(__file__))
             else: model.logger.info("stored " + str(__class__) + " " + os.path.abspath(__file__) + " as: " + resultkey)
 

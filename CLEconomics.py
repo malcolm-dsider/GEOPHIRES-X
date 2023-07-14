@@ -33,17 +33,20 @@ class CLEconomics:
         self.ParameterDict = {}
         self.OutputParameterDict = {}
         
-        self.horizontalccwellfixed = self.ParameterDict[self.horizontalccwellfixed.Name] = floatParameter("Horizontal Well Drilling and Completion Capital Cost", value = -1.0, DefaultValue=-1.0, Min=0, Max=200, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS, Provided = False, Valid = False, ToolTipText = "Horizontal Well Drilling and Completion Capital Cost")
+        self.horizontalccwellfixed = self.ParameterDict[self.horizontalccwellfixed.Name] = floatParameter("Horizontal Well Drilling and Completion Capital Cost", value = -1.0, DefaultValue=-1.0, Min=0, Max=200, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS, Provided = False, Valid = False, ToolTipText = "Horizontal Well Drilling and Completion Capital Cost (per horizontal section)")
         self.horizontalccwelladjfactor = self.ParameterDict[self.horizontalccwelladjfactor.Name] = floatParameter("Horizontal Well Drilling and Completion Capital Cost Adjustment Factor", value = 1.0, DefaultValue=1.0, Min=0, Max=10, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, Provided = False, Valid = True, ToolTipText = "Horizontal Well Drilling and Completion Capital Cost Adjustment Factor")
-        self.horizontalwellcorrelation = self.ParameterDict[self.horizontalwellcorrelation.Name] = intParameter("Horizontal Well Drilling Cost Correlation", value = WellDrillingCostCorrelation.VERTICAL_SMALL, DefaultValue=WellDrillingCostCorrelation.VERTICAL_SMALL, AllowableRange=[1,2,3,4], UnitType = Units.NONE, ErrMessage="assume default horizontal well drilling cost correlation (1)", ToolTipText="Select the built-in horizontal well drilling and completion cost correlation. 1: vertical open-hole, small diameter; 2: deviated liner, small diameter; 3: vertical open-hole, large diameter; 4: deviated liner, large diameter")
+        self.horizontalwellcorrelation = self.ParameterDict[self.horizontalwellcorrelation.Name] = intParameter("Horizontal Well Drilling Cost Correlation", value = WellDrillingCostCorrelation.VERTICAL_SMALL, DefaultValue=WellDrillingCostCorrelation.VERTICAL_SMALL, AllowableRange=[1,2,3,4,5], UnitType = Units.NONE, ErrMessage="assume default horizontal well drilling cost correlation (1)", ToolTipText="Select the built-in horizontal well drilling and completion cost correlation. 1: vertical open-hole, small diameter; 2: deviated liner, small diameter; 3: vertical open-hole, large diameter; 4: deviated liner, large diameter; 5: Simple - user specified cost per meter")
+        self.Vertical_drilling_cost_per_m  = self.ParameterDict[self.Vertical_drilling_cost_per_m.Name] = floatParameter("All-in Vertical Drilling Costs", value = 1000.0, DefaultValue=1000.0, Min=0.0, Max = 10_000.0, UnitType = Units.COSTPERDISTANCE, PreferredUnits = CostPerDistanceUnit.DOLLARSPERM, CurrentUnits = CostPerDistanceUnit.DOLLARSPERM, ErrMessage="assume default all-in cost for drill vertical well segment(s) (1000 $/m)", ToolTipText="Set user specified all-in cost per meter of vertical drilling, including drilling, casing, cement, insulated insert")
+        self.Nonvertical_drilling_cost_per_m  = self.ParameterDict[self.Nonvertical_drilling_cost_per_m.Name] = floatParameter("All-in Nonvertical Drilling Costs", value = 1300.0, DefaultValue=1300.0, Min=0.0, Max = 15_000.0, UnitType = Units.COSTPERDISTANCE, PreferredUnits = CostPerDistanceUnit.DOLLARSPERM, CurrentUnits = CostPerDistanceUnit.DOLLARSPERM, ErrMessage="assume default all-in cost for drill non-vertical well segment(s) (1300 $/m)", ToolTipText="Set user specified all-in cost per meter of non-vertical drilling, including drilling, casing, cement, insulated insert")
 
         #local variable initialization
-        self.C1well = 0.0
         sclass = str(__class__).replace("<class \'", "")
         self.MyClass = sclass.replace("\'>","")
         self.MyPath = os.path.abspath(__file__)
 
         #results
+        self.C1well = self.OutputParameterDict[self.C1well.Name] = OutputParameter(Name = "Cost of One Horizontal", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
+        self.CHorizwell = self.OutputParameterDict[self.CHorizwell.Name] = OutputParameter(Name = "Cost of All Horizontals", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
 
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -75,7 +78,8 @@ class CLEconomics:
                         if ParameterReadIn.sValue == '1': ParameterToModify.value = WellDrillingCostCorrelation.VERTICAL_SMALL
                         elif ParameterReadIn.sValue == '2': ParameterToModify.value = WellDrillingCostCorrelation.DEVIATED_SMALL
                         elif ParameterReadIn.sValue == '3': ParameterToModify.value = WellDrillingCostCorrelation.VERTICAL_LARGE
-                        else: ParameterToModify.value = WellDrillingCostCorrelation.DEVIATED_LARGE
+                        elif ParameterReadIn.sValue == '4': ParameterToModify.value = WellDrillingCostCorrelation.DEVIATED_LARGE
+                        else: ParameterToModify.value = WellDrillingCostCorrelation.SIMPLE
                     elif ParameterToModify.Name == "Horizontal Well Drilling and Completion Capital Cost Adjustment Factor":
                         if self.horizontalccwellfixed.Valid and ParameterToModify.Valid:
                             print("Warning: Provided horizontal well drilling and completion cost adjustment factor not considered because valid total horizontal well drilling and completion cost provided.")
@@ -118,21 +122,32 @@ class CLEconomics:
         #-------------
         #horizontal well costs. These are calculated whether or not totalcapcostvalid = 1  
         if self.horizontalccwellfixed.Valid:  #increment the cost of wells by the cost of the horizontal sections give by user
-            model.economics.Cwell.value = model.economics.Cwell.value + self.horizontalccwellfixed.value*model.clwellbores.numhorizontalsections.value
+            self.C1well.value = self.horizontalccwellfixed.value
+            self.CHorizwell.value = 1.05*self.C1well.value*model.clwellbores.numhorizontalsections.value #1.05 for 5% indirect cost
+            model.economics.Cwell.value = model.economics.Cwell.value + self.CHorizwell.value
         else:
             if self.horizontalwellcorrelation.value == WellDrillingCostCorrelation.VERTICAL_SMALL:
-                self.C1well = (0.3021*model.clwellbores.l_pipe.value**2 + 584.9112*model.clwellbores.l_pipe.value + 751368.)*1E-6 #well drilling and completion cost in M$/well
+                self.C1well.value = (0.3021*model.clwellbores.l_pipe.value**2 + 584.9112*model.clwellbores.l_pipe.value + 751368.)*1E-6 #well drilling and completion cost in M$/well
             elif self.horizontalwellcorrelation.value == WellDrillingCostCorrelation.DEVIATED_SMALL:
-                self.C1well = (0.2898*model.clwellbores.l_pipe.value**2 + 822.1507*model.clwellbores.l_pipe.value + 680563.)*1E-6
+                self.C1well.value = (0.2898*model.clwellbores.l_pipe.value**2 + 822.1507*model.clwellbores.l_pipe.value + 680563.)*1E-6
             elif self.horizontalwellcorrelation.value == WellDrillingCostCorrelation.VERTICAL_LARGE:
-                self.C1well = (0.2818*model.clwellbores.l_pipe.value**2 + 1275.5213*model.clwellbores.l_pipe.value + 632315.)*1E-6
+                self.C1well.value = (0.2818*model.clwellbores.l_pipe.value**2 + 1275.5213*model.clwellbores.l_pipe.value + 632315.)*1E-6
             elif self.horizontalwellcorrelation.value == WellDrillingCostCorrelation.DEVIATED_LARGE:
-                self.C1well = (0.2553*model.clwellbores.l_pipe.value**2 + 1716.7157*model.clwellbores.l_pipe.value + 500867.)*1E-6
+                self.C1well.value = (0.2553*model.clwellbores.l_pipe.value**2 + 1716.7157*model.clwellbores.l_pipe.value + 500867.)*1E-6
+            else:
+                #MIR MIR MIR
+                pass
+            if model.clwellbores.HorizontalsCased.value:
+                self.C1well.value= self.horizontalccwelladjfactor.value*self.C1well.value * 0.5   #assumes that cost of casing & cement is 50% of the cost of a well.
+            else:
+               self.C1well.value = self.horizontalccwelladjfactor.value*self.C1well.value
+               
 
-            self.C1well = self.horizontalccwelladjfactor.value*self.C1well
-            model.economics.Cwell.value = model.economics.Cwell.value + 1.05*self.C1well*model.clwellbores.numhorizontalsections.value #1.05 for 5% indirect costs
+            self.CHorizwell.value = 1.05*self.C1well.value*model.clwellbores.numhorizontalsections.value #1.05 for 5% indirect costs
             
-        #adjust the CAPEX for the cost of ther horizontals
+            model.economics.Cwell.value = model.economics.Cwell.value + self.CHorizwell.value   #total cost os cost of verticals please cost of horizontal field
+            
+        #adjust the CAPEX for the cost of the horizontals
         if not  model.economics.totalcapcost.Valid:
             model.economics.CCap.value = model.economics.CCap.value + model.economics.Cwell.value
             #ReCalculate LCOE/LCOH

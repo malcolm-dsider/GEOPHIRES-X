@@ -3,8 +3,8 @@ import sys
 import os
 import numpy as np
 import Model
-from OptionList import WellDrillingCostCorrelation, EconomicModel, EndUseOptions, PowerPlantType
-from Parameter import intParameter, floatParameter, OutputParameter, ReadParameter
+from OptionList import Configuration, WellDrillingCostCorrelation, EconomicModel, EndUseOptions, PowerPlantType
+from Parameter import intParameter, floatParameter, OutputParameter, ReadParameter, boolParameter
 from Units import *
 
 class Economics:
@@ -35,7 +35,7 @@ class Economics:
         self.OutputParameterDict = {}
         
         #Note: setting Valid to False for any of the cost parmeters forces GEOPHIRES to use it's builtin cost engine.  This is the default.
-        self.econmodel = self.ParameterDict[self.econmodel.Name] = intParameter("Economic Model", value = EconomicModel.STANDARDIZED_LEVELIZED_COST, DefaultValue=EconomicModel.STANDARDIZED_LEVELIZED_COST, AllowableRange=[1,2,3], Required=True, ErrMessage="assume default economic model (2)", ToolTipText="Specify the economic model to calculate the levelized cost of energy. 1: Fixed Charge Rate Model, 2: Standard Levelized Cost Model, 3: BICYCLE Levelized Cost Model")
+        self.econmodel = self.ParameterDict[self.econmodel.Name] = intParameter("Economic Model", value = EconomicModel.STANDARDIZED_LEVELIZED_COST, DefaultValue=EconomicModel.STANDARDIZED_LEVELIZED_COST, AllowableRange=[1,2,3,4], Required=True, ErrMessage="assume default economic model (2)", ToolTipText="Specify the economic model to calculate the levelized cost of energy. 1: Fixed Charge Rate Model, 2: Standard Levelized Cost Model, 3: BICYCLE Levelized Cost Model, 4: CLGS")
         self.ccstimfixed = self.ParameterDict[self.ccstimfixed.Name] = floatParameter("Reservoir Stimulation Capital Cost", value = -1.0, DefaultValue=-1.0, Min=0, Max=100, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS, Provided = False, Valid = False, ToolTipText = "Total reservoir stimulation capital cost")
         self.ccstimadjfactor = self.ParameterDict[self.ccstimadjfactor.Name] = floatParameter("Reservoir Stimulation Capital Cost Adjustment Factor", value = 1.0, DefaultValue=1.0, Min=0, Max=10, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, Provided = False, Valid = True, ToolTipText = "Multiplier for built-in reservoir stimulation capital cost correlation")
         self.ccexplfixed = self.ParameterDict[self.ccexplfixed.Name] = floatParameter("Exploration Capital Cost", value = -1.0, DefaultValue=-1.0, Min=0, Max=100, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS, Provided = False, Valid = False, ToolTipText = "Total exploration capital cost")
@@ -66,9 +66,13 @@ class Economics:
         self.RITC = self.ParameterDict[self.RITC.Name] = floatParameter("Investment Tax Credit Rate", value = 0.0, DefaultValue=0.0, Min=0.0, Max = 1.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage="assume default investment tax credit rate (0)", ToolTipText="Investment tax credit rate (see docs)")
         self.PTR = self.ParameterDict[self.PTR.Name] = floatParameter("Property Tax Rate", value = 0.0, DefaultValue=0.0, Min=0.0, Max = 1.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage="assume default property tax rate (0)", ToolTipText="Property tax rate (see docs)")
         self.inflrateconstruction = self.ParameterDict[self.inflrateconstruction.Name] = floatParameter("Inflation Rate During Construction", value = 0.0, DefaultValue=0.0, Min=0.0, Max = 1.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage="assume default inflation rate during construction (0)")
-        self.wellcorrelation = self.ParameterDict[self.wellcorrelation.Name] = intParameter("Well Drilling Cost Correlation", value = WellDrillingCostCorrelation.VERTICAL_SMALL, DefaultValue=WellDrillingCostCorrelation.VERTICAL_SMALL, AllowableRange=[1,2,3,4], UnitType = Units.NONE, ErrMessage="assume default well drilling cost correlation (1)", ToolTipText="Select the built-in well drilling and completion cost correlation. 1: vertical open-hole, small diameter; 2: deviated liner, small diameter; 3: vertical open-hole, large diameter; 4: deviated liner, large diameter")
-
-        #local variable initialization
+        self.wellcorrelation = self.ParameterDict[self.wellcorrelation.Name] = intParameter("Well Drilling Cost Correlation", value = WellDrillingCostCorrelation.VERTICAL_SMALL, DefaultValue=WellDrillingCostCorrelation.VERTICAL_SMALL, AllowableRange=[1,2,3,4,5], UnitType = Units.NONE, ErrMessage="assume default well drilling cost correlation (1)", ToolTipText="Select the built-in horizontal well drilling and completion cost correlation. 1: vertical open-hole, small diameter; 2: deviated liner, small diameter; 3: vertical open-hole, large diameter; 4: deviated liner, large diameter; 5: Simple - user specified cost per meter")
+        self.DoAddOnCalculations = self.ParameterDict[self.DoAddOnCalculations.Name] = boolParameter("Do AddOn Calculations", value = False, DefaultValue=False, UnitType = Units.NONE, Required=False, ErrMessage = "assume default: no economics calculations", ToolTipText="Set to true if you want the add-on economics calculations to be made")
+        self.DoCCUSCalculations = self.ParameterDict[self.DoCCUSCalculations.Name] = boolParameter("Do CCUS Calculations", value = False, DefaultValue=False, UnitType = Units.NONE, Required=False, ErrMessage = "assume default: no CCUS calculations", ToolTipText="Set to true if you want the CCUS economics calculations to be made")
+        self.Vertical_drilling_cost_per_m  = self.ParameterDict[self.Vertical_drilling_cost_per_m.Name] = floatParameter("All-in Vertical Drilling Costs", value = 1000.0, DefaultValue=1000.0, Min=0.0, Max = 10_000.0, UnitType = Units.COSTPERDISTANCE, PreferredUnits = CostPerDistanceUnit.DOLLARSPERM, CurrentUnits = CostPerDistanceUnit.DOLLARSPERM, ErrMessage="assume default all-in cost for drill vertical well segment(s) (1000 $/m)", ToolTipText="Set user specified all-in cost per meter of vertical drilling, including drilling, casing, cement, insulated insert")
+        self.Nonvertical_drilling_cost_per_m  = self.ParameterDict[self.Nonvertical_drilling_cost_per_m.Name] = floatParameter("All-in Nonvertical Drilling Costs", value = 1300.0, DefaultValue=1300.0, Min=0.0, Max = 15_000.0, UnitType = Units.COSTPERDISTANCE, PreferredUnits = CostPerDistanceUnit.DOLLARSPERM, CurrentUnits = CostPerDistanceUnit.DOLLARSPERM, ErrMessage="assume default all-in cost for drill non-vertical well segment(s) (1300 $/m)", ToolTipText="Set user specified all-in cost per meter of non-vertical drilling, including drilling, casing, cement, insulated insert")
+    
+    #local variable initialization
         self.Claborcorrelation = 0.0
         self.Cpumps = 0.0
         self.annualelectricityincome = 0.0
@@ -93,7 +97,7 @@ class Economics:
         self.Cpiping = self.OutputParameterDict[self.Cpiping.Name] = OutputParameter(Name = "Transmission pipeline costs", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
         self.Coamwater = self.OutputParameterDict[self.Coamwater.Name] = OutputParameter(Name = "O&M Make-up Water costs", value=-999.9, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
         self.CCap = self.OutputParameterDict[self.CCap.Name] = OutputParameter(Name = "Total Capital Cost", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
-        self.Coam = self.OutputParameterDict[self.Coam.Name] = OutputParameter(Name = "Total O & M Cost", value=-999.9, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.Coam = self.OutputParameterDict[self.Coam.Name] = OutputParameter(Name = "Total O&M Cost", value=-999.9, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
         self.averageannualpumpingcosts = self.OutputParameterDict[self.averageannualpumpingcosts.Name] = OutputParameter(Name = "Average Annual Pumping Costs", value=-0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
 
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
@@ -123,14 +127,16 @@ class Economics:
 
                     #handle special cases
                     if ParameterToModify.Name == "Economic Model":
-                        if ParameterReadIn.sValue == '1': ParameterToModify.value = EconomicModel.FCR
-                        elif ParameterReadIn.sValue == '2': ParameterToModify.value = EconomicModel.STANDARDIZED_LEVELIZED_COST  #use standard LCOE/LCOH calculation as found on wikipedia (requries an interest rate).
-                        else: ParameterToModify.value = EconomicModel.BICYCLE  #use Bicycle LCOE/LCOH model (requires several financial input parameters)
+                        if ParameterReadIn.sValue == '1': self.econmodel.value = EconomicModel.FCR
+                        elif ParameterReadIn.sValue == '2': self.econmodel.value = EconomicModel.STANDARDIZED_LEVELIZED_COST  #use standard LCOE/LCOH calculation as found on wikipedia (requries an interest rate).
+                        elif ParameterReadIn.sValue == '3': self.econmodel.value = EconomicModel.BICYCLE  #use Bicycle LCOE/LCOH model (requires several financial input parameters)
+                        else: self.econmodel.value = EconomicModel.CLGS  #CLGS
                     elif ParameterToModify.Name == "Well Drilling Cost Correlation":
                         if ParameterReadIn.sValue == '1': ParameterToModify.value = WellDrillingCostCorrelation.VERTICAL_SMALL
-                        elif ParameterReadIn.sValue == '2': ParameterToModify.value = WellDrillingCostCorrelation.DEVIATED_SMALL
-                        elif ParameterReadIn.sValue == '3': ParameterToModify.value = WellDrillingCostCorrelation.VERTCAL_LARGE
-                        else: ParameterToModify.value = WellDrillingCostCorrelation.DEVIATED_LARGE
+                        elif ParameterReadIn.sValue == '2': self.wellcorrelation.value = WellDrillingCostCorrelation.DEVIATED_SMALL
+                        elif ParameterReadIn.sValue == '3': self.wellcorrelation.value = WellDrillingCostCorrelation.VERTICAL_LARGE
+                        elif ParameterReadIn.sValue == '4': self.wellcorrelation.value = WellDrillingCostCorrelation.DEVIATED_LARGE
+                        else: self.wellcorrelation.value = WellDrillingCostCorrelation.SIMPLE
                     elif ParameterToModify.Name == "Reservoir Stimulation Capital Cost Adjustment Factor":
                         if self.ccstimfixed.Valid and ParameterToModify.Valid:
                             print("Warning: Provided reservoir stimulation cost adjustment factor not considered because valid total reservoir stimulation cost provided.")
@@ -331,25 +337,44 @@ class Economics:
         #capital costs
         #-------------
         #well costs (using GeoVision drilling correlations). These are calculated whether or not totalcapcostvalid = 1  
+        #start with the cost of one well
         if self.ccwellfixed.Valid:
             self.C1well = self.ccwellfixed.value
             self.Cwell.value = self.C1well*(model.wellbores.nprod.value+model.wellbores.ninj.value)
         else:
-            if self.wellcorrelation.value == WellDrillingCostCorrelation.VERTICAL_SMALL:
-                self.C1well = (0.3021*model.reserv.depth.value**2 + 584.9112*model.reserv.depth.value + 751368.)*1E-6 #well drilling and completion cost in M$/well
+            # if depth is > 7000 m, we don't have a correlation for it, so we must use the SIMPLE logic
+            checkdepth = model.reserv.depth.value
+            if model.reserv.depth.CurrentUnits != LengthUnit.METERS:checkdepth = checkdepth*1000.0
+            if (checkdepth > 7000.0 or checkdepth < 500) and not self.wellcorrelation.value == WellDrillingCostCorrelation.SIMPLE:
+                print ("Warning: simple user-specified cost per meter used for drilling depth < 500 or > 7000 m")
+                model.logger.warning("Warning: simple user-specified cost per meter used for drilling depth < 500 or > 7000 m")
+                self.wellcorrelation.value = WellDrillingCostCorrelation.SIMPLE
+            if self.wellcorrelation.value == WellDrillingCostCorrelation.SIMPLE: #use SIMPLE approach
+                if hasattr(model.wellbores, 'Configuration'):
+                   if model.wellbores.Configuration.value == Configuration.ULOOP:
+                        if hasattr(model.reserv, 'InputDepth'): #must be using simple cylindrical model, which has an Input and Output Depth
+                            self.C1well = ((self.Vertical_drilling_cost_per_m.value * (model.reserv.InputDepth.value*1000.0)) +(self.Vertical_drilling_cost_per_m.value * (model.reserv.OutputDepth.value*1000.0)) + (self.Nonvertical_drilling_cost_per_m.value * model.wellbores.Nonvertical_length.value))*1E-6
+                        else:
+                            if hasattr(model.wellbores, 'Nonvertical_length'):
+                                self.C1well = ((2 * self.Vertical_drilling_cost_per_m.value * (model.reserv.depth.value*1000.0)) + (self.Nonvertical_drilling_cost_per_m.value * model.wellbores.Nonvertical_length.value))*1E-6
+                            else:
+                                self.C1well = ((2 * self.Vertical_drilling_cost_per_m.value * (model.reserv.depth.value*1000.0)))*1E-6
+                   else:  #Coaxial
+                        self.C1well = ((self.Vertical_drilling_cost_per_m.value * (model.reserv.depth.value*1000.0)) + (self.Nonvertical_drilling_cost_per_m.value * model.wellbores.Nonvertical_length.value))*1E-6
+
+            elif self.wellcorrelation.value == WellDrillingCostCorrelation.VERTICAL_SMALL:
+                self.C1well = (0.3021*checkdepth**2 + 584.9112*checkdepth + 751368.)*1E-6 #well drilling and completion cost in M$/well
             elif self.wellcorrelation.value == WellDrillingCostCorrelation.DEVIATED_SMALL:
-                self.C1well = (0.2898*model.reserv.depth.value**2 + 822.1507*model.reserv.depth.value + 680563.)*1E-6
+                self.C1well = (0.2898*checkdepth**2 + 822.1507*checkdepth + 680563.)*1E-6
             elif self.wellcorrelation.value == WellDrillingCostCorrelation.VERTICAL_LARGE:
-                self.C1well = (0.2818*model.reserv.depth.value**2 + 1275.5213*model.reserv.depth.value + 632315.)*1E-6
+                self.C1well = (0.2818*checkdepth**2 + 1275.5213*checkdepth + 632315.)*1E-6
             elif self.wellcorrelation.value == WellDrillingCostCorrelation.DEVIATED_LARGE:
-                self.C1well = (0.2553*model.reserv.depth.value**2 + 1716.7157*model.reserv.depth.value + 500867.)*1E-6
-            if model.reserv.depth.value < 500.:
-                print ("Warning: drilling cost correlation extrapolated for drilling depth < 500 m")
-                model.logger.warning("Drilling cost correlation extrapolated for drilling depth < 500 m")
-            if model.reserv.depth.value > 7000.:
-                print ("Warning: drilling cost correlation extrapolated for drilling depth > 7000 m")
-                model.logger.warning("drilling cost correlation extrapolated for drilling depth > 7000 m")
+                self.C1well = (0.2553*checkdepth**2 + 1716.7157*checkdepth + 500867.)*1E-6
+
+            #account for adjustment factor
             self.C1well = self.ccwelladjfactor.value*self.C1well
+
+            #cost of the well field
             self.Cwell.value = 1.05*self.C1well*(model.wellbores.nprod.value+model.wellbores.ninj.value) #1.05 for 5% indirect costs
 
         #reservoir stimulation costs (M$/injection well). These are calculated whether or not totalcapcost.Valid = 1
@@ -548,9 +573,6 @@ class Economics:
         else:
             self.CCap.value = self.totalcapcost.value
 
-        #add in the O&M costs of the AddOns
-        self.CCap.value = self.CCap.value
-
         #---------
         #O&M costs
         #---------
@@ -587,7 +609,9 @@ class Economics:
         if model.wellbores.redrill.value > 0: model.Coam.value = model.Coam.value + (self.Cwell.value + model.reserv.Cstim.value)*model.wellbores.redrill.value/model.surfaceplant.plantlifetime.value   #account for well redrilling
 
         #The Reservoir depth measure was arbitarily changed to meters, desipte being defined in the docs as kilometers.  For display consistency sake, we need to convert it back
-        if model.reserv.depth.value > 500: model.reserv.depth.value = model.reserv.depth.value/1000.0
+        if model.reserv.depth.value > 500:
+            model.reserv.depth.value = model.reserv.depth.value/1000.0
+            model.reserv.depth.CurrentUnits = LengthUnit.KILOMETERS
 
         #Calculate LCOE/LCOH
         self.CalculateLCOELCOH(model)

@@ -389,43 +389,82 @@ class AGSWellBores(WellBores.WellBores, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
         return self.error
  
-
     #Multilateral code
     ############################################point source/sink solution functions#########################################
     def thetaY(self, yt, ye, alpha, t):
-        y = 0
-        y1 = 0
+        coeff = 1.0 / math.sqrt(math.pi * alpha * t)
+        y_coeff = yt + 2 * ye
+
         i = 0
-        while abs(1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(yt + 2 * i*ye) * (yt + 2 * i*ye) / 4.0 / alpha / t)) > esp2: i += 1
+        while True:
+            term = abs(coeff * math.exp(-y_coeff * y_coeff / 4.0 / alpha / t))
+            if term <= esp2:
+                break
+            i += 1
+
         k = -1
-        while abs(1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(yt + 2 * k*ye) * (yt + 2 * k*ye) / 4.0 / alpha / t)) > esp2: k -= 1
-        for j in range(i, -1, -1): y += 1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(yt + 2 * j*ye) * (yt + 2 * j*ye) / 4.0 / alpha / t)
-        for w in range(k, 0): y1 += 1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(yt + 2 * w*ye) * (yt + 2 * w*ye) / 4.0 / alpha / t)
+        while True:
+            term = abs(coeff * math.exp(-y_coeff * y_coeff / 4.0 / alpha / t))
+            if term <= esp2:
+                break
+            k -= 1
+
+        y_values = [coeff * math.exp(-(yt + 2 * j * ye) * (yt + 2 * j * ye) / 4.0 / alpha / t) for j in range(i, -1, -1)]
+        y1_values = [coeff * math.exp(-(yt + 2 * w * ye) * (yt + 2 * w * ye) / 4.0 / alpha / t) for w in range(k, 0)]
+        y = sum(y_values)
+        y1 = sum(y1_values)
+
         return y + y1
 
     def thetaZ(self, zt, ze, alpha, t):
-        y = 0
-        y1 = 0
+        coeff = 1.0 / math.sqrt(math.pi * alpha * t)
+        z_coeff = zt + 2 * ze
+
         i = 0
-        while abs(1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * i*ze) * (zt + 2 * i*ze) / 4.0 / alpha / t)) > esp2: i += 1
+        while True:
+            term = abs(coeff * math.exp(-z_coeff * z_coeff / 4.0 / alpha / t))
+            if term <= esp2:
+                break
+            i += 1
+
         k = -1
-        while abs(1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * k*ze) * (zt + 2 * k*ze) / 4.0 / alpha / t)) > esp2: k -= 1
-        for j in range(i, -1, -1): y += 1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * j*ze) * (zt + 2 * j*ze) / 4.0 / alpha / t)
-        for w in range(k, 0): y1 += 1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * w*ze) * (zt + 2 * w*ze) / 4.0 / alpha / t)
+        while True:
+            term = abs(coeff * math.exp(-z_coeff * z_coeff / 4.0 / alpha / t))
+            if term <= esp2:
+                break
+            k -= 1
+
+        y_values = [coeff * math.exp(-(zt + 2 * j * ze) * (zt + 2 * j * ze) / 4.0 / alpha / t) for j in range(i, -1, -1)]
+        y1_values = [coeff * math.exp(-(zt + 2 * w * ze) * (zt + 2 * w * ze) / 4.0 / alpha / t) for w in range(k, 0)]
+        y = sum(y_values)
+        y1 = sum(y1_values)
+
         return y + y1
 
     def pointsource(self, yy, zz, yt, zt, ye, ze, alpha, sp, t):
-        z = 1.0 / self.rhorock / self.cprock / 4.0 * (self.thetaY(yt - yy, ye, alpha, t) + self.thetaY(yt + yy, ye, alpha, t)) * (self.thetaZ(zt - zz, ze, alpha, t) + self.thetaZ(zt + zz, ze, alpha, t)) * math.exp(-sp*t)
-        return z
+        rhorock_cprock_4 = self.rhorock * self.cprock * 4.0
+        theta_yt_minus_yy = self.thetaY(yt - yy, ye, alpha, t)
+        theta_yt_plus_yy = self.thetaY(yt + yy, ye, alpha, t)
+        theta_zt_minus_zz = self.thetaZ(zt - zz, ze, alpha, t)
+        theta_zt_plus_zz = self.thetaZ(zt + zz, ze, alpha, t)
 
+        z = (1.0 / rhorock_cprock_4) * (theta_yt_minus_yy + theta_yt_plus_yy) * (theta_zt_minus_zz + theta_zt_plus_zz) * math.exp(-sp * t)
+
+        return z
     ############################################Chebyshev approximation for numerical Laplace transformation integration from 1e-8 to 1e30##############################
     def Chebyshev(self, a, b, n,yy, zz, yt, zt, ye, ze, alpha, sp, func):
         bma = 0.5 * (b - a)
         bpa = 0.5 * (b + a)
-        f = [func(yy, zz, yt, zt, ye, ze, alpha, sp,math.cos(math.pi * (k + 0.5) / n) * bma + bpa) for k in range(n)]
+        cos_vals = [math.cos(math.pi * (k + 0.5) / n) for k in range(n)]
+        f = [func(yy, zz, yt, zt, ye, ze, alpha, sp, cos_val * bma + bpa) for cos_val in cos_vals]
         fac = 2.0 / n
-        c = [fac * np.sum([f[k] * math.cos(math.pi * j * (k + 0.5) / n)
-                      for k in range(n)]) for j in range(n)]
+        pi_div_n = math.pi / n
+        #c = [fac * np.sum([f[k] * math.cos(math.pi * j * (k + 0.5) / n)
+        #             for k in range(n)]) for j in range(n)]
+        #optimized:
+        fac_times_f = [fac * f_k for f_k in f]
+        cos_vals = np.cos(np.pi * np.arange(n) * (np.arange(n)[:, np.newaxis] + 0.5) / n)
+        c = fac_times_f @ cos_vals
         con=0.25*(b-a)
         fac2=1.0
         cint=np.zeros(513)

@@ -3,12 +3,10 @@ import logging
 import time
 import logging
 from GeoPHIRESUtils import read_input_file
-from Reservoir import Reservoir, MPFReservoir, LHSReservoir, SFReservoir, TDPReservoir, UPPReservoir, TOUGH2Reservoir
 from WellBores import WellBores
 from SurfacePlant import SurfacePlant
 from Economics import Economics
 from Outputs import Outputs
-from OptionList import ReservoirModel
 
 class Model(object):
     """
@@ -45,12 +43,27 @@ class Model(object):
         #this is where you can change what class get initiated - the superclass, or one of the subclasses
         self.logger.info("Initiate the elements of the Model")
         # we need to decide which reservoir to instantiate based on the user input (InputParameters), which we just read above for the first time
-        if self.InputParameters['Reservoir Model'].sValue == '1': self.reserv = MPFReservoir(self)     #Multiple parallel fractures model (LANL)
-        elif self.InputParameters['Reservoir Model'].sValue == '2': self.reserv = LHSReservoir(self)    #Multiple parallel fractures model (LANL)
-        elif self.InputParameters['Reservoir Model'].sValue == '3': self.reserv = SFReservoir(self)    #Drawdown parameter model (Tester)
-        elif self.InputParameters['Reservoir Model'].sValue == '4': self.reserv = TDPReservoir(self)     #Thermal drawdown percentage model (GETEM)
-        elif self.InputParameters['Reservoir Model'].sValue == '5': self.reserv = UPPReservoir(self)    #Generic user-provided temperature profile
-        elif self.InputParameters['Reservoir Model'].sValue == '6': self.reserv = TOUGH2Reservoir(self)    #Tough2 is called
+        from TDPReservoir import TDPReservoir as TDPReservoir
+        self.reserv = TDPReservoir(self)     #Default is Thermal drawdown percentage model (GETEM)
+        if 'Reservoir Model' in self.InputParameters:
+            if self.InputParameters['Reservoir Model'].sValue == '0':
+                from CylindricalReservoir import CylindricalReservoir as CylindricalReservoir
+                self.reserv = CylindricalReservoir(self)     #Simple Cylindrical Reservoir
+            elif self.InputParameters['Reservoir Model'].sValue == '1': 
+                from MPFReservoir import MPFReservoir as MPFReservoir
+                self.reserv = MPFReservoir(self)     #Multiple parallel fractures model (LANL)
+            elif self.InputParameters['Reservoir Model'].sValue == '2':
+                from LHSReservoir import LHSReservoir as LHSReservoir
+                self.reserv = LHSReservoir(self)    #Multiple parallel fractures model (LANL)
+            elif self.InputParameters['Reservoir Model'].sValue == '3':
+                from SFReservoir import SFReservoir as SFReservoir
+                self.reserv = SFReservoir(self)    #Drawdown parameter model (Tester)
+            elif self.InputParameters['Reservoir Model'].sValue == '5':
+                from UPPReservoir import UPPReservoir as UPPReservoir
+                self.reserv = UPPReservoir(self)    #Generic user-provided temperature profile
+            elif self.InputParameters['Reservoir Model'].sValue == '6':
+                from TOUGH2Reservoir import TOUGH2Reservoir as TOUGH2Reservoir
+                self.reserv = TOUGH2Reservoir(self)    #Tough2 is called
         self.wellbores = WellBores(self)
         self.surfaceplant = SurfacePlant(self)
         self.economics = Economics(self)

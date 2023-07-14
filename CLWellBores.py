@@ -1,15 +1,16 @@
-# copyright, 2023, Malcolm I Ross
-#except for code from Wanju Yuan based on: "Closed-Loop Geothermal Energy Recovery from Deep High Enthalpy Systems"
-#ref: Yuan, Wanju, et al. "Closed-loop geothermal energy recovery from deep high enthalpy systems." Renewable Energy 177 (2021): 976-991.
+
 import math
+from pickle import FALSE
 import sys
 import os
 import numpy as np
-
-from Parameter import ReadParameter
+import scipy.interpolate
 import AdvModel
-import Wellbores
+import WellBores
 import AdvGeoPHIRESUtils
+from Parameter import ReadParameter, floatParameter, intParameter, boolParameter, OutputParameter
+from Units import *
+
 esp2 = 10.0e-10
 
 class CLWellBores(WellBores.WellBores, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
@@ -31,7 +32,7 @@ class CLWellBores(WellBores.WellBores, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
-        #Initialze the superclass first
+        #Initialze the superclass first to make those variables available
         super().__init__(model)
         sclass = str(__class__).replace("<class \'", "")
         self.MyClass = sclass.replace("\'>","")
@@ -45,15 +46,19 @@ class CLWellBores(WellBores.WellBores, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         # Required (is it reuired to run? default value = False), ErrMessage (what GEOPHIRES will report if the value provided is invalid, "assume default value (see manual)"), ToolTipText (when there is a GIU, this is the text that the user will see, "This is ToolTip Text"),
         # UnitType (the type of units associated with this parameter (length, temperature, density, etc), Units.NONE), CurrentUnits (what the units are for this parameter (meters, celcius, gm/cc, etc, Units:NONE), and PreferredUnits (ususally equal to CurrentUnits, but these are the units that the calculations assume when running, Units.NONE
         self.WaterThermalConductivity = self.ParameterDict[self.WaterThermalConductivity.Name] = floatParameter("Water Thermal Conductivity", value = 0.6, DefaultValue=0.6, Min=0.0, Max = 100.0, UnitType = Units.THERMAL_CONDUCTIVITY, PreferredUnits = ThermalConductivityUnit.WPERMPERK, CurrentUnits = ThermalConductivityUnit.WPERMPERK, ErrMessage="assume default for water thermal conductivity (0.6 W/m/K)", ToolTipText="Water Thermal Conductivity")
-        self.l_pipe = self.ParameterDict[self.l_pipe.Name] = floatParameter("Horizontal Wellbore Length", value = 5000.0, DefaultValue=5000.0, Min=0.01, Max = 100000.0, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS, ErrMessage="assume default for Horizontal Wellbore Length (5000.0 m)", ToolTipText="Horizontal Wellbore Length")
+        self.l_pipe = self.ParameterDict[self.l_pipe.Name] = floatParameter("Horizontal Wellbore Length", value = 5000.0, DefaultValue=5000.0, Min=0.01, Max = 100_000.0, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS, ErrMessage="assume default for Horizontal Wellbore Length (5000.0 m)", ToolTipText="Horizontal Wellbore Length")
         self.diameter = self.ParameterDict[self.diameter.Name] = floatParameter("Horizontal Wellbore Diameter", value = 0.156, DefaultValue=0.156, Min=0.01, Max = 100.0, UnitType = Units.LENGTH, PreferredUnits = LengthUnit.METERS, CurrentUnits = LengthUnit.METERS, ErrMessage="assume default for Horizontal Wellbore Diameter (5000.0 m)", ToolTipText="Horizontal Wellbore Diameter")
-        self.numhorizontalsections = self.ParameterDict[self.numhorizontalsections.Name] = intParameter("Number of Horizontal Wellbore Sections", value = 1, DefaultValue=1, Min=1, Max = 100, UnitType = Units.NONE, ErrMessage="assume default for Number of Horizontal Wellbore Sections (1)", ToolTipText="Number of Horizontal Wellbore Sections")
-        self.time_operation = self.ParameterDict[self.calculationstartyear.Name] = floatParameter("Closed Loop Calculation Start Year", value = 0.01, DefaultValue=0.01, Min=0.01, Max = 100.0, UnitType = Units.TIME, PreferredUnits = TimeUnit.YEARS, CurrentUnits = TimeUnit.YEARS, ErrMessage="assume default for Closed Loop Calculation Start Year (0.01)", ToolTipText="Closed Loop Calculation Start Year")
-
+        self.numhorizontalsections = self.ParameterDict[self.numhorizontalsections.Name] = intParameter("Number of Horizontal Wellbore Sections", value = 1, DefaultValue=1, AllowableRange=list(range(0,101,1)), UnitType = Units.NONE, ErrMessage="assume default for Number of Horizontal Wellbore Sections (1)", ToolTipText="Number of Horizontal Wellbore Sections")
+        self.time_operation = self.ParameterDict[self.time_operation.Name] = floatParameter("Closed Loop Calculation Start Year", value = 0.01, DefaultValue=0.01, Min=0.01, Max = 100.0, UnitType = Units.TIME, PreferredUnits = TimeUnit.YEAR, CurrentUnits = TimeUnit.YEAR, ErrMessage="assume default for Closed Loop Calculation Start Year (0.01)", ToolTipText="Closed Loop Calculation Start Year")
+        self.HorizontalsCased = self.ParameterDict[self.HorizontalsCased.Name] = boolParameter("Horizontals Cased", value=False, DefaultValue=False, Required=False, Provided=False, Valid=True, ErrMessage= "assume feault value (False)")
+        
         #local variables that need initialization
 
-        #results are stored in the parent ProducedTemperature array
-
+        #results are stored here and in the parent ProducedTemperature array
+        self.HorizontalProducedTemperature = self.OutputParameterDict[self.ProducedTemperature.Name] = OutputParameter(Name = "Horizontal Produced Temperature", value=[0.0], UnitType = Units.TEMPERATURE, PreferredUnits = TemperatureUnit.CELCIUS, CurrentUnits = TemperatureUnit.CELCIUS)
+        self.HorizontalProducedTemperature.value = [0.0]*model.surfaceplant.plantlifetime.value #intialize the array
+        self.HorizontalPressureDrop = self.OutputParameterDict[self.HorizontalPressureDrop.Name] = OutputParameter(Name = "Horizontal Pressure Drop", value=[0.0], UnitType = Units.PRESSURE, PreferredUnits = PressureUnit.KPASCAL, CurrentUnits = PressureUnit.KPASCAL)
+        self.HorizontalPressureDrop.value = [0.0]*model.surfaceplant.plantlifetime.value #intialize the array
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
     def read_parameters(self, model:AdvModel) -> None:
@@ -67,144 +72,51 @@ class CLWellBores(WellBores.WellBores, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         """
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
         super().read_parameters(model)    #read the paremeters for the parent.
-
-        #Deal with all the parameter values that the user has provided.  They should really only provide values that they want to change from the default values, but they can provide a value that is already set because it is a defaulr value set in __init__.  It will ignore those.
-        #This also deals with all the special cases that need to be talen care of after a vlaue has been read in and checked.
-        #If you choose to sublass this master class, you can also choose to override this method (or not), and if you do, do it before or after you call you own version of this method.  If you do, you can also choose to call this method from you class, which can effectively modify all these superclass parameters in your class.
-
-        #only need to do this if you add any of your own parameters
-        #if len(model.InputParameters) > 0:
-        #    #loop thru all the parameters that the user wishes to set, looking for parameters that match this object
-        #    for item in self.ParameterDict.items():
-        #        ParameterToModify = item[1]
-        #        key = ParameterToModify.Name.strip()
-        #        if key in model.InputParameters:
-        #            ParameterReadIn = model.InputParameters[key]
-        #            ParameterToModify.CurrentUnits = ParameterToModify.PreferredUnits    #Before we change the paremeter, let's assume that the unit preferences will match - if they don't, the later code will fix this.
-        #            ReadParameter(ParameterReadIn, ParameterToModify, model)   #this should handle all the non-special cases
+        #if we call super, we don't need to deal with setting the parameters here, just deal with the special cases for the variables in this class
+        #because the call to the super.readparameters will set all the variables, including the ones that are specific to this class
         
+        #handle special cases for the parameters you added
+        if self.diameter.value > 2.0: self.diameter.value = self.diameter.value * 0.0254
         self.area = math.pi * (self.diameter.value * 0.5) * (self.diameter.value * 0.5)
-        self.q_circulation = (self.prodwellflowrate.value * 3.6) / self.numhorizontalsections.value #need to convert prodwellflowrate in l/sec to m3/hour and then split the flow equally across all the sections
+        self.q_circulation = (self.prodwellflowrate.value / 3.6) / self.numhorizontalsections.value #need to convert prodwellflowrate in l/sec to m3/hour and then split the flow equally across all the sections
         self.velocity = self.q_circulation / self.area * 24.0
-        self.x_boundary = self.y_boundary = self.z_boundary = 2.0e15 #Wanju says it ts KO to make these numbers large - "we consider it is an infinite system"
+        self.x_boundary = self.y_boundary = self.z_boundary = 2.0e15 #Wanju says it ts OK to make these numbers large - "we consider it is an infinite system"
         self.y_well = 0.5 * self.y_boundary###Horizontal wellbore in the center
         self.z_well = 0.5 * self.z_boundary###Horizontal wellbore in the center
-        self.alpha_fluid = self.WaterThermalConductivity.value / self.densitywawater(Tini) / self.heatcapacitywater(Tini) * 24.0 * 3600.0
-        self.alpha_rock = self.krock.value / self.rhorock.value / self.cprock.value * 24.0 * 3600.0
-        self.al = 365.0/4.0 * self.timestepsperyear.value
+        self.al = 365.0/4.0 * model.economics.timestepsperyear.value
         self.time_max = model.surfaceplant.plantlifetime.value * 365.0
-        self.Tini = 0.0
-
-        #handle special cases for the parameters you added
-                    
+        self.rhorock = model.reserv.rhorock.value
+        self.cprock = model.reserv.cprock.value
+        self.alpha_rock = model.reserv.krock.value / model.reserv.rhorock.value / model.reserv.cprock.value * 24.0 * 3600.0
         model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
-    
-#user-defined functions
-    def densitywater(self, Twater) -> float:   
-        T = Twater+273.15
-        rhowater = ( .7983223 + (1.50896E-3 - 2.9104E-6*T) * T) * 1E3 #water density correlation as used in Geophires v1.2 [kg/m3]
-        return  rhowater
-
-    def viscositywater(self, Twater) -> float:
-        muwater = 2.414E-5*np.power(10,247.8/(Twater+273.15-140))     #accurate to within 2.5% from 0 to 370 degrees C [Ns/m2]
-        return muwater
-
-    def heatcapacitywater(self, Twater) -> float:
-    #J/kg/K (based on TARB in Geophires v1.2)
-        Twater = (Twater + 273.15)/1000
-        A = -203.6060
-        B = 1523.290
-        C = -3196.413
-        D = 2474.455
-        E = 3.855326
-        cpwater = (A + B*Twater + C*Twater**2 + D*Twater**3 + E/(Twater**2))/18.02*1000 #water specific heat capacity in J/kg-K
-        return cpwater
-
-    def thetaY(self, yt, ye, alpha, t):
     ############################################point source/sink solution functions#########################################
-    y = 0
-    y1 = 0
-    i = 0
-    while abs(1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(yt + 2 * i*ye) * (yt + 2 * i*ye) / 4.0 / alpha / t)) > esp2: i += 1
-    k = -1
-    while abs(1.0 / math.sqrt(PI*alpha*t) * math.exp(-(yt + 2 * k*ye) * (yt + 2 * k*ye) / 4.0 / alpha / t)) > esp2: k -= 1
-    for j in range(i, -1, -1): y += 1.0 / math.sqrt(PI*alpha*t) * math.exp(-(yt + 2 * j*ye) * (yt + 2 * j*ye) / 4.0 / alpha / t)
-    for w in range(k, 0): y1 += 1.0 / math.sqrt(PI*alpha*t) * math.exp(-(yt + 2 * w*ye) * (yt + 2 * w*ye) / 4.0 / alpha / t)
-    return y + y1
-
-    def inverselaplace(self, NL, MM):
-        ################################Numerical Laplace transformation algorism#########################
-
-        V = np.zeros(50)
-        Gi = np.zeros(50)
-        H = np.zeros(25)
-        DLN2 = 0.6931471805599453
-        FI = 0.0
-        SN = 0.0
-        Az = 0.0
-        Z = 0.0
-    
-        if NL != MM:
-            Gi[1] = 1.0
-            NH = NL // 2
-            SN = 2.0 * (NH % 2) - 1.0
-        
-            for i in range(1,NL+1):
-                Gi[i + 1] = Gi[i] * (i)
-            
-            H[1] = 2.0 / Gi[NH]
-            for i in range(1,NH+1):
-                FI = i
-                H[i] = math.pow(FI, NH) * Gi[2 * i + 1] / Gi[NH - i+1] / Gi[i + 1] / Gi[i]
-            
-            for i in range(1,NL+1):
-                V[i] = 0.0
-                KBG = (i + 1) // 2
-                temp = NH if i >= NH else i
-                KND = temp
-                for k in range(KBG, KND+1):
-                    V[i] = V[i] + H[k] / Gi[i - k + 1] / Gi[2 * k - i + 1]
-                V[i] = SN * V[i]
-                SN = -SN
-            MM = NL
-    
-        FI = 0.0
-        Az = DLN2 / self.time_operation.value
-        Toutlet = 0.0
-        for k in range(1,NL+1):
-            Z = Az * (k)
-            Toutletl = laplace_solution(Z)
-            Toutlet += Toutletl * V[k]
-        Toutlet = self.Tini-Az * Toutlet
-        return Toutlet
-    def laplace_solution(self, sp):
-    ##################################################Duhamerl convolution method for closed-loop system######################################
-
-        Toutletl = 0.0
-        ss = 1.0 / sp / chebeve_pointsource(y_well, z_well, y_well, z_well-0.078, y_boundary, z_boundary, alpha_rock, sp)
-  
-        Toutletl = (self.Tini - self.Tinj.value) / sp * np.exp(-sp * ss / self.q_circulation.value / 24.0 / self.densitywater(Tini) / self.heatcapacitywater(Tini) * self.l_pipe.value - sp / self.velocity * self.l_pipe.value)
-        return Toutletl
+    def thetaY(self, yt, ye, alpha, t):
+        y = 0
+        y1 = 0
+        i = 0
+        while abs(1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(yt + 2 * i*ye) * (yt + 2 * i*ye) / 4.0 / alpha / t)) > esp2: i += 1
+        k = -1
+        while abs(1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(yt + 2 * k*ye) * (yt + 2 * k*ye) / 4.0 / alpha / t)) > esp2: k -= 1
+        for j in range(i, -1, -1): y += 1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(yt + 2 * j*ye) * (yt + 2 * j*ye) / 4.0 / alpha / t)
+        for w in range(k, 0): y1 += 1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(yt + 2 * w*ye) * (yt + 2 * w*ye) / 4.0 / alpha / t)
+        return y + y1
 
     def thetaZ(self, zt, ze, alpha, t):
         y = 0
         y1 = 0
         i = 0
-        while abs(1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * i*ze) * (zt + 2 * i*ze) / 4.0 / alpha / t)) > esp2:
-            i += 1
+        while abs(1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * i*ze) * (zt + 2 * i*ze) / 4.0 / alpha / t)) > esp2: i += 1
         k = -1
-        while abs(1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * k*ze) * (zt + 2 * k*ze) / 4.0 / alpha / t)) > esp2:
-            k -= 1
-        for j in range(i, -1, -1):
-            y += 1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * j*ze) * (zt + 2 * j*ze) / 4.0 / alpha / t)
-        for w in range(k, 0):
-            y1 += 1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * w*ze) * (zt + 2 * w*ze) / 4.0 / alpha / t)
+        while abs(1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * k*ze) * (zt + 2 * k*ze) / 4.0 / alpha / t)) > esp2: k -= 1
+        for j in range(i, -1, -1): y += 1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * j*ze) * (zt + 2 * j*ze) / 4.0 / alpha / t)
+        for w in range(k, 0): y1 += 1.0 / math.sqrt(math.pi*alpha*t) * math.exp(-(zt + 2 * w*ze) * (zt + 2 * w*ze) / 4.0 / alpha / t)
         return y + y1
 
     def pointsource(self, yy, zz, yt, zt, ye, ze, alpha, sp, t):
-        z = 1.0 / self.rhorock.value / self.cprock.value / 4.0 * (thetaY(yt - yy, ye, alpha, t) + thetaY(yt + yy, ye, alpha, t)) * (thetaZ(zt - zz, ze, alpha, t) + thetaZ(zt + zz, ze, alpha, t)) * math.exp(-sp*t)
+        z = 1.0 / self.rhorock / self.cprock / 4.0 * (self.thetaY(yt - yy, ye, alpha, t) + self.thetaY(yt + yy, ye, alpha, t)) * (self.thetaZ(zt - zz, ze, alpha, t) + self.thetaZ(zt + zz, ze, alpha, t)) * math.exp(-sp*t)
         return z
+
     ############################################Chebyshev approximation for numerical Laplace transformation integration from 1e-8 to 1e30##############################
     def Chebyshev(self, a, b, n,yy, zz, yt, zt, ye, ze, alpha, sp, func):
         bma = 0.5 * (b - a)
@@ -231,7 +143,7 @@ class CLWellBores(WellBores.WellBores, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         for j in range (n-1,0,-1):
             sv=d
             d=y2*d-dd+cint[j]
-            dd=sv   
+            dd=sv
         return y * d - dd + 0.5 *cint[0]   # Last step is different
 
     def chebeve_pointsource(self, yy, zz, yt, zt, ye, ze, alpha, sp):
@@ -243,14 +155,64 @@ class CLWellBores(WellBores.WellBores, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         temp = 0.0
         for i in range(1, n + 1):
             b = a * 10.0
-            temp = temp + Chebyshev(a,b,m,yy, zz, yt, zt, ye, ze, alpha, sp,pointsource)
+            temp = temp + self.Chebyshev(a,b,m,yy, zz, yt, zt, ye, ze, alpha, sp, self.pointsource)
             a = b
-        return temp + (1 / sp * (math.exp(-sp * 1.0e5) - math.exp(-sp * 1.0e30))) / (ye * ze) / self.rhorock.value / self.cprock.value
+        return temp + (1 / sp * (math.exp(-sp * 1.0e5) - math.exp(-sp * 1.0e30))) / (ye * ze) / self.rhorock / self.cprock
+    
+    ##################################################Duhamerl convolution method for closed-loop system######################################
+    def laplace_solution(self, sp, model):
+        Toutletl = 0.0
+        ss = 1.0 / sp / self.chebeve_pointsource(self.y_well, self.z_well, self.y_well, self.z_well-0.078, self.y_boundary, self.z_boundary, self.alpha_rock, sp)
+  
+        Toutletl = (self.Tini - self.Tinj.value) / sp * np.exp(-sp * ss / self.q_circulation / 24.0 / model.reserv.densitywater(self.Tini) / model.reserv.heatcapacitywater(self.Tini) * self.l_pipe.value - sp / self.velocity * self.l_pipe.value)
+        return Toutletl
+
+    ################################Numerical Laplace transformation algorism#########################
+    def inverselaplace(self, NL, MM, model):
+        V = np.zeros(50)
+        Gi = np.zeros(50)
+        H = np.zeros(25)
+        DLN2 = 0.6931471805599453
+        FI = 0.0
+        SN = 0.0
+        Az = 0.0
+        Z = 0.0
+    
+        if NL != MM:
+            Gi[1] = 1.0
+            NH = NL // 2
+            SN = 2.0 * (NH % 2) - 1.0
+        
+            for i in range(1,NL+1): Gi[i + 1] = Gi[i] * (i)
+            
+            H[1] = 2.0 / Gi[NH]
+            for i in range(1,NH+1):
+                FI = i
+                H[i] = math.pow(FI, NH) * Gi[2 * i + 1] / Gi[NH - i+1] / Gi[i + 1] / Gi[i]
+            
+            for i in range(1,NL+1):
+                V[i] = 0.0
+                KBG = (i + 1) // 2
+                temp = NH if i >= NH else i
+                KND = temp
+                for k in range(KBG, KND+1): V[i] = V[i] + H[k] / Gi[i - k + 1] / Gi[2 * k - i + 1]
+                V[i] = SN * V[i]
+                SN = -SN
+            MM = NL
+    
+        FI = 0.0
+        Az = DLN2 / self.time_operation.value
+        Toutlet = 0.0
+        for k in range(1,NL+1):
+            Z = Az * (k)
+            Toutletl = self.laplace_solution(Z, model)
+            Toutlet += Toutletl * V[k]
+        Toutlet = self.Tini-Az * Toutlet
+        return Toutlet
 
     def Calculate(self, model:AdvModel) -> None:
         """
         The Calculate function is the main function that runs all the calculations for this child.
-        
         :param self: Reference the class itself
         :param model (AdvModel): The container class of the application, giving access to everything else, including the logger
         :return: None
@@ -262,17 +224,57 @@ class CLWellBores(WellBores.WellBores, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         key = self.CheckForExistingResult(model, os.path.abspath(__file__))
         if key == None: 
             super().Calculate(model)    #run calculation because there was nothing in the database
-            
-            with open("temperature.txt", "w") as fp_temperature:
-                while self.time_operation.value <= time_max:
-                    year=1   #MIR figure out how to calculate year ands extract Tini from reserv Tresoutput array
-                    Tini = model.Reservoir.Tresoutput[year].Value
-                    Toutlet=inverselaplace(16, 0)
-                    self.ProducedTemperature[].value = Toutlet
-                    self.time_operation.value += al
+            self.Tini = model.reserv.Tresoutput.value[0] #initialize the temperature to be the initial temperature of the reservoir
+
+            while self.time_operation.value <= self.time_max:
+                year=math.trunc(self.time_operation.value/self.al)   #MIR figure out how to calculate year ands extract Tini from reserv Tresoutput array
+                self.HorizontalProducedTemperature.value[year] = self.inverselaplace(16, 0, model)
+                self.alpha_fluid = self.WaterThermalConductivity.value / model.reserv.densitywater(self.HorizontalProducedTemperature.value[year]) / model.reserv.heatcapacitywater(self.HorizontalProducedTemperature.value[year]) * 24.0 * 3600.0  #update alpha_fluid value based on next temperature of resevoir
+                self.time_operation.value += self.al
+
+            #------------------------------------------
+            #recalculate pressure drops and pumping power
+            #------------------------------------------
+            #horizontal wellbore fluid conditions based on current temperature
+            rhowater = model.reserv.densitywater(self.HorizontalProducedTemperature.value[year])
+            muwater = model.reserv.viscositywater(self.HorizontalProducedTemperature.value[year])
+            vhoriz = self.q_circulation/rhowater/(math.pi/4.*self.diameter.value**2)
+
+            Rewaterhoriz = 4.*(self.q_circulation)/(muwater*math.pi*self.diameter.value) #Calculate reynolds number to decide if laminar or turbulent flow.
+            if Rewaterhoriz < 2300.0: friction = 64./Rewaterhoriz    #laminar
+            else:
+                if self.HorizontalsCased: relroughness = 1E-4/self.diameter.value
+                else: relroughness = 0.02/self.diameter.value   #not the higher relative roughness for uncased horizontal bores
+                friction = 1./np.power(-2*np.log10(relroughness/3.7+5.74/np.power(Rewaterhoriz,0.9)),2.)
+                friction = 1./np.power((-2*np.log10(relroughness/3.7+2.51/Rewaterhoriz/np.sqrt(friction))),2.)
+                friction = 1./np.power((-2*np.log10(relroughness/3.7+2.51/Rewaterhoriz/np.sqrt(friction))),2.)
+                friction = 1./np.power((-2*np.log10(relroughness/3.7+2.51/Rewaterhoriz/np.sqrt(friction))),2.)
+                friction = 1./np.power((-2*np.log10(relroughness/3.7+2.51/Rewaterhoriz/np.sqrt(friction))),2.)
+                friction = 1./np.power((-2*np.log10(relroughness/3.7+2.51/Rewaterhoriz/np.sqrt(friction))),2.) #6 iterations to converge
+    
+                #assume everything stays liquid throughout
+                #horizontal section pressure drop [kPa] per lateral section
+                #assume no bouyancy effect becasue laterals are horizontal, or if they are not, they return to the same place, so there is no bouyancy effect
+                self.HorizontalPressureDrop.value[year] = friction*(rhowater*vhoriz**2/2)*(self.l_pipe.value/self.diameter.value)/1E3      #/1E3 to convert from Pa to kPa
+
+            #overall pressure drop  = previous pressure drop (as calculated from the verticals) + horizontal section pressure drop
+            #interpolation is required because HorizontalPressureDrop is sampled yearly, and DPOverall is sampled more frequently
+            f = scipy.interpolate.interp1d(np.arange(0, len(self.HorizontalPressureDrop.value)), self.HorizontalPressureDrop.value, fill_value="extrapolate")
+            self.HorizontalPressureDrop.value = f(np.arange(0, len(self.DPOverall.value), 1))   # use interpolation function returned by `interp1d`
+            model.wellbores.DPOverall.value = model.wellbores.DPOverall.value + self.HorizontalPressureDrop.value
+
+            #recalculate pumping power [MWe] (approximate)
+            model.wellbores.PumpingPower.value = model.wellbores.DPOverall.value*self.q_circulation/rhowater/model.surfaceplant.pumpeff.value/1E3   
+
+            #in GEOPHIRES v1.2, negative pumping power values become zero (b/c we are not generating electricity) = thermosiphon is happening!
+            model.wellbores.PumpingPower.value = [0. if x<0. else x for x in self.PumpingPower.value]
+
+#done with calculations. Now overlay the HorizontalProducedTemperature onto WellBores.ProducedTemperatures - interpolation is required because HorizontalProducedTemperature is sampled yearly, and ProducedTemperature is sampled more frequently
+            f = scipy.interpolate.interp1d(np.arange(0, len(self.HorizontalProducedTemperature.value)), self.HorizontalProducedTemperature.value, fill_value="extrapolate")
+            model.wellbores.ProducedTemperature.value = f(np.arange(0, len(self.HorizontalProducedTemperature.value), 1.0/model.economics.timestepsperyear.value))   # use interpolation function returned by `interp1d`
 
             #store the calculate result and associated object paremeters in the database
-            resultkey = self.store_result(model, str(__class__), os.path.abspath(__file__), self)
+            resultkey = self.store_result(model, self)
             if resultkey == None: model.logger.warn("Failed To Store "+ str(__class__) + " " + os.path.abspath(__file__))
             else: model.logger.info("stored " + str(__class__) + " " + os.path.abspath(__file__) + " as: " + resultkey)
 

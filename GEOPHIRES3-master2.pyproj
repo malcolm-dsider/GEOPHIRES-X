@@ -5,21 +5,27 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{a83eb736-df6d-47f6-b75d-1fb69c228472}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>GEOPHIRESv3.py</StartupFile>
-    <SearchPath />
+    <StartupFile>AdvGEOPHIRESv3.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>Global|VisualStudio|arcgispro-py3</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.9</InterpreterId>
     <TestFramework>Pytest</TestFramework>
-    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\HIPexample1.txt</CommandLineArguments>
+    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\example1.txt</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
     <Environment>MC_GEOPHIRES: AdvGeoPHIRESv3.py examples\example1_mc.txt D:\Work\GEOPHIRES3-master\MC_Settings_file.txt
 MC_HIP: HIP-RA.py examples\example1_GCGP.txt MC_HIP_Settings_file.txt
 HIP: D:\Work\GEOPHIRES3-master\Examples\HIPexample1.txt
-GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt</Environment>
+GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt
+GEOPHIRES Closed loops: D:\Work\GEOPHIRES3-master\Examples\Wanju_Yuan_Closed-Loop_Geothermal_Energy_Recovery.txt
+GEOPHIRES-X_Output_validation_tool: D:\Work\GEOPHIRES3-master\Examples\GEOPHIRES-X_Output_Validation_Tool_input.txt
+D:\Work\GEOPHIRES3-master\Examples\Beckers_et_al_2023_Tabulated_Database_Uloop_water_elec.txt
+D:\Work\GEOPHIRES3-master\Examples\CATF_SHR_Thunderbird.txt
+D:\Work\GEOPHIRES3-master\Examples\CATF_SHR_Thunderbird-mutlilateral.txt</Environment>
     <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
@@ -250,6 +256,14 @@ GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt</Environment>
     <Content Include="doc\source\splot.png" />
     <Content Include="doc\source\technical.txt" />
     <Content Include="Examples\andreas.txt" />
+    <Content Include="Examples\Beckers_et_al_2023_Tabulated_Database_Coaxial_sCO2_heat.txt" />
+    <Content Include="Examples\Beckers_et_al_2023_Tabulated_Database_Coaxial_water_heat.txt" />
+    <Content Include="Examples\Beckers_et_al_2023_Tabulated_Database_Uloop_sCO2_elec.txt" />
+    <Content Include="Examples\Beckers_et_al_2023_Tabulated_Database_Uloop_sCO2_heat.txt" />
+    <Content Include="Examples\Beckers_et_al_2023_Tabulated_Database_Uloop_water_elec.txt" />
+    <Content Include="Examples\Beckers_et_al_2023_Tabulated_Database_Uloop_water_heat.txt" />
+    <Content Include="Examples\CATF_SHR_Thunderbird.txt" />
+    <Content Include="Examples\ClosedLoopTest.txt" />
     <Content Include="Examples\coso.txt" />
     <Content Include="Examples\coso2.txt" />
     <Content Include="Examples\coso3.txt" />
@@ -337,7 +351,14 @@ GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt</Environment>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CanaryGISPreprocessing.py" />
+    <Compile Include="CLEconomics.py" />
+    <Compile Include="AGSEconomics.py" />
+    <Compile Include="AGSSurfacePlant.py" />
+    <Compile Include="CLOutputs.py" />
     <Compile Include="CLWellBores.py" />
+    <Compile Include="AGSOutputs.py" />
+    <Compile Include="AGSWellBores.py" />
+    <Compile Include="CylindricalReservoir.py" />
     <Compile Include="doc\build.py" />
     <Compile Include="doc\source\conf.py" />
     <Compile Include="doc\source\plots\ai.py" />
@@ -391,16 +412,21 @@ GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt</Environment>
     <Compile Include="Economics.py" />
     <Compile Include="EconomicsAddOns.py" />
     <Compile Include="EconomicsCCUS.py" />
+    <Compile Include="GEOPHIRES-X_Output_Validation_Tool.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="GeoPHIRESUtils.py" />
     <Compile Include="GEOPHIRESv3.py" />
     <Compile Include="AdvReservoir.py" />
     <Compile Include="HIP-RA.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="LHSReservoir.py" />
     <Compile Include="MC_GeoPHIRES3.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Model.py" />
+    <Compile Include="MPFReservoir.py" />
     <Compile Include="mpmath\calculus\approximation.py" />
     <Compile Include="mpmath\calculus\calculus.py" />
     <Compile Include="mpmath\calculus\differentiation.py" />
@@ -494,8 +520,12 @@ GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt</Environment>
     <Compile Include="Parameter.py" />
     <Compile Include="Reservoir.py" />
     <Compile Include="setup.py" />
+    <Compile Include="SFReservoir.py" />
     <Compile Include="SurfacePlant.py" />
+    <Compile Include="TDPReservoir.py" />
+    <Compile Include="TOUGH2Reservoir.py" />
     <Compile Include="Units.py" />
+    <Compile Include="UPPReservoir.py" />
     <Compile Include="WellBores.py" />
     <Compile Include="__init__.py" />
   </ItemGroup>
@@ -542,6 +572,7 @@ GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt</Environment>
     </Interpreter>
   </ItemGroup>
   <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.9" />
     <InterpreterReference Include="Global|VisualStudio|arcgispro-py3" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

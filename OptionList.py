@@ -11,6 +11,7 @@ class EndUseOptions(Enum):
     COGENERATION_PARALLEL_EXTRA_ELECTRICTY = "Cogeneration Parallel Cycle, Electricity sales considered as extra income"   #52
 
 class EconomicModel(Enum):
+    CLGS = "Simple (CLGS)"
     FCR = "Fixed Charge Rate (FCR)"
     STANDARDIZED_LEVELIZED_COST = "Standard Levelized Cost"
     BICYCLE = "BICYCLE"
@@ -22,6 +23,7 @@ class PowerPlantType(Enum):
     DOUBLE_FLASH = "Double-Flash"
 
 class ReservoirModel(Enum):
+    CYLINDRICAL = "Simple cylindrical"
     MULTIPLE_PARALLEL_FRACTURES = "Multiple Parallel Fractures"
     LINEAR_HEAT_SWEEP = "1-D Linear Heat Sweep"
     SINGLE_FRACTURE = "Single Fracture m/A Thermal Drawdown"
@@ -40,6 +42,7 @@ class WellDrillingCostCorrelation(Enum):
     DEVIATED_SMALL = "deviated liner, small diameter"
     VERTICAL_LARGE = "vertical open-hole, large diameter"
     DEVIATED_LARGE = "deviated liner, large diameter"
+    SIMPLE = "Simple"
 
 class FractureShape(Enum):
     CIRCULAR_AREA = "Circular fracture with known area"
@@ -47,4 +50,11 @@ class FractureShape(Enum):
     SQUARE = "Square"
     RECTANGULAR = "Rectangular"
 
+class WorkingFluid(Enum):
+    WATER = "water"
+    SCO2 = "sCO2"
+
+class Configuration(Enum):
+    ULOOP = "utube"
+    COAXIAL = "coaxial"
 
