@@ -1,0 +1,392 @@
+import datetime
+import time
+import sys
+import numpy as np
+from Parameter import ConvertUnitsBack, ConvertOutputUnits, LookupUnits
+from OptionList import EndUseOptions, EconomicModel, ReservoirModel, FractureShape, ReservoirVolume
+from Units import *
+import AdvModel
+import Outputs
+import numpy as np
+NL="\n"
+
+class CLGSOutputs(Outputs.Outputs):
+    """description of class"""
+    def PrintOutputs(self, model:AdvModel):
+        model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
+    
+        #Deal with converting Units back to PreferredUnits, if required.
+        #before we write the outputs, we go thru all the parameters for all of the objects and set the values back to the units that the user entered the data in
+        #We do this because the value may be displayed in the output, and we want the user to recginze their value, not some converted value
+        for obj in [model.reserv, model.wellbores, model.surfaceplant, model.economics]:
+            for key in obj.ParameterDict:
+                param = obj.ParameterDict[key]
+                if not param.UnitsMatch: ConvertUnitsBack(param, model)
+
+        #now we need to loop thru all thw output parameters to update their units to whatever units the user has specified.
+        #i.e., they may have specified that all LENGTH results must be in feet, so we need to convert those from whatver LENGTH unit they are to feet.
+        #same for all the other classes of units (TEMPERATURE, DENSITY, etc).
+        
+        for obj in [model.reserv, model.wellbores, model.surfaceplant, model.economics]:
+            for key in obj.OutputParameterDict:
+                if key in self.ParameterDict:
+                    if self.ParameterDict[key] != obj.OutputParameterDict[key].CurrentUnits:
+                        ConvertOutputUnits(obj.OutputParameterDict[key], self.ParameterDict[key], model)
+
+        #Do CL output, assuming that no results have been published yet
+        #---------------------------------------
+        #write results to output file and screen
+        #---------------------------------------
+        try:
+            outputfile = "HDR.out"
+            if len(sys.argv) > 2: outputfile = sys.argv[2]
+            with open(outputfile,'a', encoding='UTF-8') as f: 
+                f.write('                               *****************\n')
+                f.write('                               ***CASE REPORT***\n')
+                f.write('                               *****************\n')
+                f.write(NL)
+                f.write("Simulation Metadata\n")
+                f.write("----------------------\n")
+                f.write(" GEOPHIRES Version: 3.0\n")
+                f.write(" GEOPHIRES Build Date: 2022-06-30\n")
+                f.write(" Simulation Date: "+ datetime.datetime.now().strftime("%Y-%m-%d\n"))
+                f.write(" Simulation Time:  "+ datetime.datetime.now().strftime("%H:%M\n"))
+                f.write(" Calculation Time: "+"{0:10.3f}".format((time.time()-model.tic)) +" sec\n")
+    
+                f.write(NL)
+                f.write('                           ***SUMMARY OF RESULTS***\n')
+                f.write(NL)
+                f.write("      End-Use Option: " + str(model.surfaceplant.enduseoption.value.value) + NL)
+                if model.surfaceplant.enduseoption.value != EndUseOptions.HEAT:    #there is an electricity component
+                    f.write(f"      Average Net Electricity Production:               {np.average(model.surfaceplant.NetElectricityProduced.value):10.2f} " + model.surfaceplant.NetElectricityProduced.CurrentUnits.value + NL)
+                if model.surfaceplant.enduseoption.value != EndUseOptions.ELECTRICITY:    #there is a direct-use component
+                    f.write(f"      Average Direct-Use Heat Production:               {np.average(model.surfaceplant.HeatProduced.value):10.2f} "+ model.surfaceplant.HeatProduced.CurrentUnits.value + NL)
+
+                if model.surfaceplant.enduseoption.value in [EndUseOptions.ELECTRICITY, EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT,  EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]:    #levelized cost expressed as LCOE
+                    f.write(f"      Electricity breakeven price:                      {model.economics.LCOE.value:10.2f} " + model.economics.LCOE.CurrentUnits.value + NL)
+                elif model.surfaceplant.enduseoption.value in [EndUseOptions.HEAT, EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY,  EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY]:    #levelized cost expressed as LCOH
+                    f.write(f"      Direct-Use heat breakeven price:                  {model.economics.LCOH.value:10.2f} " + model.economics.LCOH.CurrentUnits.value + NL)
+
+                f.write(f"      Number of coaxial wells:                    {model.wellbores.nprod.value:10.0f}"+NL)  
+                f.write(f"      Flowrate per coaxial well:                    {model.wellbores.prodwellflowrate.value:10.1f} "  + model.wellbores.prodwellflowrate.CurrentUnits.value + NL)
+                f.write(f"      Well depth:                                      {model.reserv.depth.value:10.1f} " +model.reserv.depth.CurrentUnits.value + NL)
+ 
+                if model.reserv.numseg.value == 1:
+                    f.write(f"      Geothermal gradient:                             {model.reserv.gradient.value[0]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value + NL)
+#                else:
+#                    for i in range(1, model.reserv.numseg.value):
+#                        f.write(f"      Segment {str(i):s}   geothermal gradient:                   {model.reserv.gradient.value[i-1]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value +NL)
+#                        f.write(f"      Segment {str(i):s}   thickness (km):                        {model.reserv.layerthickness.value[i-1]/1E3:10.0f} " + model.reserv.layerthickness.CurrentUnits.value + NL)
+#                        f.write(f"      Segment {str(i+1):s} geothermal gradient:                   {model.reserv.gradient.value[i]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value + NL)
+
+                f.write(NL)
+                f.write(NL)
+                f.write('                           ***ECONOMIC PARAMETERS***\n')
+                f.write(NL)
+                if model.economics.econmodel.value == EconomicModel.FCR:
+                    f.write("      Economic Model = " + model.economics.econmodel.value.value + NL)
+                    f.write(f"      Fixed Charge Rate (FCR):                          {model.economics.FCR.value*100.0:10.2f} " + model.economics.FCR.CurrentUnits.value + NL)
+                elif model.economics.econmodel.value == EconomicModel.STANDARDIZED_LEVELIZED_COST:
+                    f.write("      Economic Model = " + model.economics.econmodel.value.value + NL)
+                    f.write(f"      Interest Rate:                                    {model.economics.discountrate.value*100.0:10.2f} " + model.economics.discountrate.CurrentUnits.value + NL)
+                elif model.economics.econmodel.value == EconomicModel.BICYCLE:
+                    f.write("      Economic Model  = " + model.economics.econmodel.value.value + NL)
+                f.write(f"      Accrued financing during construction:            {model.economics.inflrateconstruction.value*100:10.2f} " + model.economics.inflrateconstruction.CurrentUnits.value + NL)   
+                f.write(f"      Project lifetime:                              {model.surfaceplant.plantlifetime.value:10.0f} " + model.surfaceplant.plantlifetime.CurrentUnits.value + NL)
+                f.write(f"      Capacity factor:                                 {model.surfaceplant.utilfactor.value*100:10.1f} %" + NL)
+
+                f.write(NL)
+                f.write('                          ***ENGINEERING PARAMETERS***\n')
+                f.write(NL)
+#                f.write(f"      Number of Injection Wells:                     {model.wellbores.ninj.value:10.0f}" + NL)
+                f.write(f"      Well depth:                                      {model.reserv.depth.value:10.1f} " + model.reserv.depth.CurrentUnits.value + NL)
+#                f.write(f"      Water loss rate:                                 {model.reserv.waterloss.value*100:10.1f} " + model.reserv.waterloss.CurrentUnits.value + NL)
+                f.write(f"      Pump efficiency:                                 {model.surfaceplant.pumpeff.value*100:10.1f} " + model.surfaceplant.pumpeff.CurrentUnits.value + NL)
+                f.write(f"      Injection temperature:                           {model.wellbores.Tinj.value:10.1f} " + model.wellbores.Tinj.CurrentUnits.value + NL)
+                if model.wellbores.rameyoptionprod.value:
+                    f.write("      Production Wellbore heat transmission calculated with Ramey's model\n")    
+                    f.write(f"      Average production well temperature drop:        {np.average(model.wellbores.ProdTempDrop.value):10.1f} " + model.wellbores.ProdTempDrop.PreferredUnits.value + NL)
+                else:
+                    f.write("      User-provided production well temperature drop\n")
+                    f.write(f"      Constant production well temperature drop:       {model.wellbores.tempdropprod.value:10.1f} " + model.wellbores.tempdropprod.PreferredUnits.value + NL)
+                f.write(f"      Flowrate per production well:                    {model.wellbores.prodwellflowrate.value:10.1f} " + model.wellbores.prodwellflowrate.CurrentUnits.value + NL)
+#                f.write(f"      Interior insulated tubing ID:                      {model.wellbores.injwelldiam.value/0.0254:10.3f} " + model.wellbores.injwelldiam.CurrentUnits.value + NL)
+                f.write(f"      Exterior coaxial well casing ID:                   {model.wellbores.prodwelldiam.value:10.3f} " + model.wellbores.prodwelldiam.CurrentUnits.value + NL)
+#                f.write(f"      Number of times redrilling:                    {model.wellbores.redrill.value:10.0f}"+NL)
+                if model.surfaceplant.enduseoption.value != EndUseOptions.HEAT:
+                    f.write("      Power plant type:                                       " +  str(model.surfaceplant.pptype.value.value) + NL)
+                f.write(NL)
+                f.write(NL)
+                f.write('                         ***RESOURCE CHARACTERISTICS***\n')
+                f.write(NL)
+                f.write(f"      Maximum reservoir temperature:                   {model.reserv.Tmax.value:10.1f} " + model.reserv.Tmax.CurrentUnits.value + NL)
+#                f.write(f"      Number of segments:                            {model.reserv.numseg.value:10.0f} " + NL)
+                if model.reserv.numseg.value == 1:
+                    f.write(f"      Geothermal gradient:                             {model.reserv.gradient.value[0]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value + NL)
+#                else:
+#                    for i in range(1, model.reserv.numseg.value):
+#                        f.write(f"      Segment " + str(i) + " geothermal gradient:                   {model.reserv.gradient.value[i-1]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value + NL)
+#                        f.write(f"      Segment " + str(i) + " thickness:                           {model.reserv.layerthickness.value[i-1]/1E3:10.0f} " + model.reserv.layerthickness.CurrentUnits.value + NL)
+#                        f.write(f"      Segment " + str(i+1) + " geothermal gradient:                   {model.reserv.gradient.value[i]*1E3:10.1f} " + model.reserv.gradient.CurrentUnits.value + NL)
+    
+                f.write(NL)
+                f.write(NL)
+                f.write('                           ***RESERVOIR PARAMETERS***\n')
+                f.write(NL)
+                f.write("CLGS models contain an intrinsic reservoir model that doesn't expose values that can be used in extensive reporting." + NL)
+#                else:
+#                    f.write("      Reservoir Model = " + str(model.reserv.resoption.value.value) + " Model\n")
+#                    if model.reserv.resoption.value == ReservoirModel.SINGLE_FRACTURE:
+#                        f.write(f"      m/A Drawdown Parameter:                                 {model.reserv.drawdp.value:.5f} " + model.reserv.drawdp.CurrentUnits.value + NL)    
+#                    elif model.reserv.resoption.value == ReservoirModel.ANNUAL_PERCENTAGE:
+#                        f.write(f"      Annual Thermal Drawdown:                                {model.reserv.drawdp.value*100:.3f} " + model.reserv.drawdp.CurrentUnits.value + NL)
+#
+#                    f.write(f"      Bottom-hole temperature:                          {model.reserv.Trock.value:10.2f} " + model.reserv.Trock.CurrentUnits.value +  NL)
+#                    if model.reserv.resoption.value in [ReservoirModel.ANNUAL_PERCENTAGE, ReservoirModel.USER_PROVIDED_PROFILE, ReservoirModel.TOUGH2_SIMULATOR]:
+#                        f.write('      Warning: the reservoir dimensions and thermo-physical properties \n')    
+#                        f.write('               listed below are default values if not provided by the user.   \n')    
+#                        f.write('               They are only used for calculating remaining heat content.  \n')
+
+#                    if model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP]:
+#                        f.write("      Fracture model = " + model.reserv.fracshape.value.value + NL)
+#                        if model.reserv.fracshape.value == FractureShape.CIRCULAR_AREA:
+#                            f.write(f"      Well seperation: fracture diameter:               {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
+#                        elif model.reserv.fracshape.value == FractureShape.CIRCULAR_DIAMETER:
+#                            f.write(f"      Well seperation: fracture diameter:               {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
+#                        elif model.reserv.fracshape.value == FractureShape.SQUARE:
+#                            f.write(f"      Well seperation: fracture height:                 {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)
+#                        elif model.reserv.fracshape.value == FractureShape.RECTANGULAR:
+#                            f.write(f"      Well seperation: fracture height:                 {model.reserv.fracheightcalc.value:10.2f} " + model.reserv.fracheight.CurrentUnits.value + NL)        
+#                            f.write(f"      Fracture width:                                             {model.reserv.fracwidthcalc.value:10.2f} " + model.reserv.fracwidth.CurrentUnits.value + NL)
+#                        f.write(f"      Fracture area:                                    {model.reserv.fracareacalc.value:10.2f} " + model.reserv.fracarea.CurrentUnits.value + NL)
+#                    if model.reserv.resvoloption.value == ReservoirVolume.FRAC_NUM_SEP:
+#                        f.write('      Reservoir volume calculated with fracture separation and number of fractures as input\n')
+#                    elif model.reserv.resvoloption.value == ReservoirVolume.RES_VOL_FRAC_SEP:
+#                        f.write('      Number of fractures calculated with reservoir volume and fracture separation as input\n')    
+#                    elif model.reserv.resvoloption.value == ReservoirVolume.FRAC_NUM_SEP:
+#                        f.write('      Fracture separation calculated with reservoir volume and number of fractures as input\n')    
+#                    elif model.reserv.resvoloption.value == ReservoirVolume.RES_VOL_ONLY:
+#                        f.write('      Reservoir volume provided as input\n')
+#                    if model.reserv.resvoloption.value in [ReservoirVolume.FRAC_NUM_SEP, ReservoirVolume.RES_VOL_FRAC_SEP,ReservoirVolume.FRAC_NUM_SEP]:
+#                        f.write(f"      Number of fractures:                              {model.reserv.fracnumbcalc.value:10.2f}" + NL)
+#                        f.write(f"      Fracture separation:                              {model.reserv.fracsepcalc.value:10.2f} " + model.reserv.fracsep.CurrentUnits.value + NL)
+#                    f.write(f"      Reservoir volume:                              {model.reserv.resvolcalc.value:10.0f} " + model.reserv.resvol.CurrentUnits.value + NL)
+#                    if model.wellbores.impedancemodelused.value:
+#                        f.write(f"      Reservoir impedance:                              {model.wellbores.impedance.value/1000:10.2f} " + model.wellbores.impedance.CurrentUnits.value + NL)    
+#                    else:
+#                        f.write(f"      Reservoir hydrostatic pressure:                   {model.wellbores.Phydrostaticcalc.value:10.2f} " + model.wellbores.Phydrostaticcalc.CurrentUnits.value + NL)    
+#                        f.write(f"      Plant outlet pressure:                            {model.surfaceplant.Pplantoutlet.value:10.2f} " + model.surfaceplant.Pplantoutlet.CurrentUnits.value + NL)    
+#                        if model.wellbores.productionwellpumping.value:
+#                            f.write(f"      Production wellhead pressure:                     {model.wellbores.Pprodwellhead.value:10.2f} " + model.wellbores.Pprodwellhead.CurrentUnits.value + NL)
+#                            f.write(f"      Productivity Index:                               {model.wellbores.PI.value:10.2f} " + model.wellbores.PI.CurrentUnits.value + NL)
+#                        f.write(f"      Injectivity Index:                                {model.wellbores.II.value:10.2f} " + model.wellbores.II.CurrentUnits.value + NL)
+    
+#                    f.write(f"      Reservoir density:                                {model.reserv.rhorock.value:10.2f} " + model.reserv.rhorock.CurrentUnits.value + NL)
+#                    if model.wellbores.rameyoptionprod.value or model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.SINGLE_FRACTURE, ReservoirModel.TOUGH2_SIMULATOR]:
+#                        f.write(f"      Reservoir thermal conductivity:                   {model.reserv.krock.value:10.2f} " + model.reserv.krock.CurrentUnits.value + NL)
+#                    f.write(f"      Reservoir heat capacity:                          {model.reserv.cprock.value:10.2f} " + model.reserv.cprock.CurrentUnits.value + NL)
+#                    if model.reserv.resoption.value == ReservoirModel.LINEAR_HEAT_SWEEP or (model.reserv.resoption.value == ReservoirModel.TOUGH2_SIMULATOR and model.reserv.usebuiltintough2model):
+#                        f.write(f"      Reservoir porosity:                               {model.reserv.porrock.value*100:10.2f} " + model.reserv.porrock.CurrentUnits.value + NL)
+#                    if model.reserv.resoption.value == ReservoirModel.TOUGH2_SIMULATOR and model.reserv.usebuiltintough2model:
+#                        f.write(f"      Reservoir permeability:                           {model.reserv.permrock.value:10.2E} " + model.reserv.permrock.CurrentUnits.value + NL)
+#                        f.write(f"      Reservoir thickness:                              {model.reserv.resthickness.value:10.2f} " + model.reserv.resthickness.CurrentUnits.value + NL)
+#                        f.write(f"      Reservoir width:                                  {model.reserv.reswidth.value:10.2f} " + model.reserv.reswidth.CurrentUnits.value + NL)
+#                        f.write(f"      Well separation:                                  {model.wellbores.wellsep.value:10.2f} " + model.wellbores.wellsep.CurrentUnits.value + NL)
+
+                f.write(NL)
+                f.write(NL)
+                f.write("                           ***RESERVOIR SIMULATION RESULTS***" + NL)
+                f.write(NL)
+                f.write(f"      Maximum Production Temperature:                  {np.max(model.wellbores.ProducedTemperature.value):10.1f} " + model.wellbores.ProducedTemperature.PreferredUnits.value + NL)
+                f.write(f"      Average Production Temperature:                  {np.average(model.wellbores.ProducedTemperature.value):10.1f} " + model.wellbores.ProducedTemperature.PreferredUnits.value + NL)
+                f.write(f"      Minimum Production Temperature:                  {np.min(model.wellbores.ProducedTemperature.value):10.1f} " + model.wellbores.ProducedTemperature.PreferredUnits.value + NL)
+                f.write(f"      Initial Production Temperature:                  {model.wellbores.ProducedTemperature.value[0]:10.1f} " + model.wellbores.ProducedTemperature.PreferredUnits.value + NL)
+                f.write("CLGS models contain an intrinsic reservoir model that doesn't expose values that can be used in extensive reporting." + NL)
+#                else:
+#                    f.write(f"      Average Reservoir Heat Extraction:                {np.average(model.surfaceplant.HeatExtracted.value):10.2f} " + model.surfaceplant.HeatExtracted.PreferredUnits.value + NL)
+#                    if model.wellbores.rameyoptionprod.value:
+#                        f.write("      Production Wellbore Heat Transmission Model = Ramey Model" + NL)
+#                        f.write(f"      Average Production Well Temperature Drop:        {np.average(model.wellbores.ProdTempDrop.value):10.1f} " + model.wellbores.ProdTempDrop.PreferredUnits.value + NL)
+#                    else:
+#                        f.write(f" Wellbore Heat Transmission Model = Constant Temperature Drop:{model.wellbores.tempdropprod.value:10.1f} " + model.wellbores.tempdropprod.PreferredUnits.value + NL)
+#                    if model.wellbores.impedancemodelused.value:
+#                        f.write(f"      Total Average Pressure Drop:                     {np.average(model.wellbores.DPOverall.value):10.1f} " + model.wellbores.DPOverall.PreferredUnits.value + NL)
+#                        f.write(f"      Average Injection Well Pressure Drop:            {np.average(model.wellbores.DPInjWell.value):10.1f} " + model.wellbores.DPInjWell.PreferredUnits.value + NL)
+#                        f.write(f"      Average Reservoir Pressure Drop:                 {np.average(model.wellbores.DPReserv.value):10.1f} " + model.wellbores.DPReserv.PreferredUnits.value + NL)
+#                        f.write(f"      Average Production Well Pressure Drop:           {np.average(model.wellbores.DPProdWell.value):10.1f} " + model.wellbores.DPProdWell.PreferredUnits.value + NL)
+#                        f.write(f"      Average Buoyancy Pressure Drop:                  {np.average(model.wellbores.DPBouyancy.value):10.1f} " + model.wellbores.DPBouyancy.PreferredUnits.value + NL)
+#                    else:
+#                        f.write(f"      Average Injection Well Pump Pressure Drop:       {np.average(model.wellbores.DPInjWell.value):10.1f} " + model.wellbores.DPInjWell.PreferredUnits.value + NL)
+#                        if model.wellbores.productionwellpumping.value:
+#                            f.write(f"      Average Production Well Pump Pressure Drop:      {np.average(model.wellbores.DPProdWell.value):10.1f} " + model.wellbores.DPProdWell.PreferredUnits.value + NL)
+            
+                f.write(NL)
+                f.write(NL)
+                f.write('                          ***CAPITAL COSTS (M$)***\n')
+                f.write(NL)
+                if not model.economics.totalcapcost.Valid:
+                    f.write(f"         Drilling and completion costs:                 {model.economics.Cwell.value:10.2f} " + model.economics.Cwell.CurrentUnits.value + NL)
+                    f.write(f"         Drilling and completion costs per well:        {model.economics.Cwell.value/(model.wellbores.nprod.value+model.wellbores.ninj.value):10.2f} " + model.economics.Cwell.CurrentUnits.value + NL)
+                    f.write(f"         Stimulation costs:                             {model.economics.Cstim.value:10.2f} " + model.economics.Cstim.CurrentUnits.value + NL)
+                    f.write(f"         Surface power plant costs:                     {model.economics.Cplant.value:10.2f} " + model.economics.Cplant.CurrentUnits.value + NL)
+                    f.write(f"         Field gathering system costs:                  {model.economics.Cgath.value:10.2f} " + model.economics.Cgath.CurrentUnits.value + NL)
+                    if model.surfaceplant.pipinglength.value > 0: f.write(f"         Transmission pipeline cost                     {model.economics.Cpiping.value:10.2f} " + model.economics.Cpiping.CurrentUnits.value + NL)
+                    f.write(f"         Total surface equipment costs:                 {(model.economics.Cplant.value+model.economics.Cgath.value):10.2f} " + model.economics.Cplant.CurrentUnits.value + NL)
+                    f.write(f"         Exploration costs:                             {model.economics.Cexpl.value:10.2f} " + model.economics.Cexpl.CurrentUnits.value + NL)
+                if model.economics.totalcapcost.Valid and model.wellbores.redrill.value > 0:
+                    f.write(f"         Drilling and completion costs (for redrilling):{model.economics.Cwell.value:10.2f} " + model.economics.Cwell.CurrentUnits.value + NL)
+                    f.write(f"      Drilling and completion costs per redrilled well: {(model.economics.Cwell.value/(model.wellbores.nprod.value+model.wellbores.ninj.value)):10.2f} " + model.economics.Cwell.CurrentUnits.value + NL)
+                    f.write(f"         Stimulation costs (for redrilling):            {model.economics.Cstim.value:10.2f} " + model.economics.Cstim.CurrentUnits.value + NL)
+                f.write(f"      Total capital costs:                              {model.economics.CCap.value:10.2f} " + model.economics.CCap.CurrentUnits.value + NL)
+                if model.economics.econmodel.value == EconomicModel.FCR:
+                    f.write(f"      Annualized capital costs:                         {(model.economics.CCap.value*(1+model.economics.inflrateconstruction.value)*model.economics.FCR.value):10.2f} " + model.economics.CCap.CurrentUnits.value + NL)
+
+                f.write(NL)
+                f.write(NL)
+                f.write('                ***OPERATING AND MAINTENANCE COSTS (M$/yr)***\n')
+                f.write(NL)
+                if not model.economics.oamtotalfixed.Valid:
+                    f.write(f"         Wellfield maintenance costs:                   {model.economics.Coamwell.value:10.2f} " + model.economics.Coamwell.CurrentUnits.value + NL)
+                    f.write(f"         Power plant maintenance costs:                 {model.economics.Coamplant.value:10.2f} " + model.economics.Coamplant.CurrentUnits.value + NL)
+                    f.write(f"         Water costs:                                   {model.economics.Coamwater.value:10.2f} " + model.economics.Coamwater.CurrentUnits.value + NL)
+                    if model.surfaceplant.enduseoption.value == EndUseOptions.HEAT: f.write(f"         Average annual pumping costs                   {model.economics.averageannualpumpingcosts.value:10.2f} " + model.economics.averageannualpumpingcosts.CurrentUnits.value + NL)
+                    f.write(f"      Total operating and maintenance costs:            {(model.economics.Coam.value + model.economics.averageannualpumpingcosts.value):10.2f} " + model.economics.Coam.CurrentUnits.value + NL)
+                else:
+                    f.write(f"      Total operating and maintenance costs:            {model.economics.Coam.value:10.2f} " + model.economics.Coam.CurrentUnits.value + NL)
+
+                f.write(NL)
+                f.write(NL)
+                f.write('                           ***SURFACE EQUIPMENT SIMULATION RESULTS***\n')
+                f.write(NL)
+                if model.surfaceplant.enduseoption.value != EndUseOptions.HEAT:
+                    f.write(f"      Initial geofluid availability:                    {model.surfaceplant.Availability.value[0]:10.2f} " + model.surfaceplant.Availability.PreferredUnits.value + NL)
+                    f.write(f"      Maximum Total Electricity Generation:             {np.max(model.surfaceplant.ElectricityProduced.value):10.2f} " + model.surfaceplant.ElectricityProduced.PreferredUnits.value + NL)
+                    f.write(f"      Average Total Electricity Generation:             {np.average(model.surfaceplant.ElectricityProduced.value):10.2f} " + model.surfaceplant.ElectricityProduced.PreferredUnits.value + NL)
+                    f.write(f"      Minimum Total Electricity Generation:             {np.min(model.surfaceplant.ElectricityProduced.value):10.2f} " + model.surfaceplant.ElectricityProduced.PreferredUnits.value + NL)
+                    f.write(f"      Initial Total Electricity Generation:             {model.surfaceplant.ElectricityProduced.value[0]:10.2f} " + model.surfaceplant.ElectricityProduced.PreferredUnits.value + NL)
+                    f.write(f"      Maximum Net Electricity Generation:               {np.max(model.surfaceplant.NetElectricityProduced.value):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
+                    f.write(f"      Average Net Electricity Generation:               {np.average(model.surfaceplant.NetElectricityProduced.value):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
+                    f.write(f"      Minimum Net Electricity Generation:               {np.min(model.surfaceplant.NetElectricityProduced.value):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
+                    f.write(f"      Initial Net Electricity Generation:               {model.surfaceplant.NetElectricityProduced.value[0]:10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
+                    f.write(f"      Average Annual Total Electricity Generation:      {np.average(model.surfaceplant.TotalkWhProduced.value/1E6):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
+                    f.write(f"      Average Annual Net Electricity Generation:        {np.average(model.surfaceplant.NetkWhProduced.value/1E6):10.2f} " + model.surfaceplant.NetElectricityProduced.PreferredUnits.value + NL)
+                    f.write(f"      Initial pumping power/net installed power:        {(model.wellbores.PumpingPower.value[0]/model.surfaceplant.NetElectricityProduced.value[0]*100):10.2f} %" + NL)
+                if model.surfaceplant.enduseoption.value != EndUseOptions.ELECTRICITY:
+                    f.write(f"      Maximum Net Heat Production:                      {np.max(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
+                    f.write(f"      Average Net Heat Production:                      {np.average(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
+                    f.write(f"      Minimum Net Heat Production:                      {np.min(model.surfaceplant.HeatProduced.value):10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
+                    f.write(f"      Initial Net Heat Production:                      {model.surfaceplant.HeatProduced.value[0]:10.2f} " + model.surfaceplant.HeatProduced.PreferredUnits.value + NL)
+                    f.write(f"      Average Annual Heat Production:                   {np.average(model.surfaceplant.HeatkWhProduced.value/1E6):10.2f} " + model.surfaceplant.HeatkWhProduced.PreferredUnits.value + NL)
+                f.write(f"      Average Pumping Power:                            {np.average(model.wellbores.PumpingPower.value):10.2f} " + model.wellbores.PumpingPower.PreferredUnits.value + NL)
+
+                f.write(NL)
+                f.write('                                        ******************************\n')
+                f.write('                                        *  POWER GENERATION PROFILE  *\n')
+                f.write('                                        ******************************\n')
+                if model.surfaceplant.enduseoption.value == EndUseOptions.ELECTRICITY:   #only electricity
+                    f.write('  YEAR       THERMAL               GEOFLUID               PUMP               NET               FIRST LAW\n')
+                    f.write('             DRAWDOWN             TEMPERATURE             POWER             POWER              EFFICIENCY\n')
+                    f.write("                                     (" + model.wellbores.ProducedTemperature.CurrentUnits.value+")               (" + model.wellbores.PumpingPower.CurrentUnits.value + ")              (" + model.surfaceplant.NetElectricityProduced.CurrentUnits.value + ")                  (%)\n")
+                    for i in range(0, model.surfaceplant.plantlifetime.value):
+                        f.write('  {0:2.0f}         {1:8.4f}              {2:8.2f}             {3:8.4f}          {4:8.4f}              {5:8.4f}'.format(i, 
+                                                model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value]/model.wellbores.ProducedTemperature.value[0], 
+                                                                        model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value],
+                                                                                                        model.wellbores.PumpingPower.value[i*model.economics.timestepsperyear.value],
+                                                                                                                            model.surfaceplant.NetElectricityProduced.value[i*model.economics.timestepsperyear.value],
+                                                                                                                                                        model.surfaceplant.FirstLawEfficiency.value[i*model.economics.timestepsperyear.value]*100)+NL)
+                elif model.surfaceplant.enduseoption.value == EndUseOptions.HEAT: #only direct-use
+                    f.write('  YEAR       THERMAL               GEOFLUID               PUMP               NET\n')
+                    f.write('             DRAWDOWN             TEMPERATURE             POWER              HEAT\n')
+                    f.write('                                   (deg C)                (MW)               (MW)\n')
+                    for i in range(0, model.surfaceplant.plantlifetime.value):
+                        f.write('  {0:2.0f}         {1:8.4f}              {2:8.2f}             {3:8.4f}          {4:8.4f}'.format(i,
+                                                model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value]/model.wellbores.ProducedTemperature.value[0],
+                                                                        model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value],
+                                                                                                        model.wellbores.PumpingPower.value[i*model.economics.timestepsperyear.value],
+                                                                                                                                model.surfaceplant.HeatProduced.value[i*model.economics.timestepsperyear.value])+NL)
+                elif model.surfaceplant.enduseoption.value not in [EndUseOptions.ELECTRICITY, EndUseOptions.HEAT]:  #both electricity and direct-use
+                    f.write('  YEAR     THERMAL             GEOFLUID             PUMP             NET              NET             FIRST LAW\n')
+                    f.write('           DRAWDOWN           TEMPERATURE           POWER           POWER             HEAT            EFFICIENCY\n')
+                    f.write('                                (deg C)             (MW)            (MW)              (MW)               (%)\n')
+                    for i in range(0, model.surfaceplant.plantlifetime.value):
+                        f.write('  {0:2.0f}       {1:8.4f}            {2:8.2f}           {3:8.4f}        {4:8.4f}            {5:8.4f}             {6:8.4f}'.format(i,
+                                                model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value]/model.wellbores.ProducedTemperature.value[0],
+                                                                        model.wellbores.ProducedTemperature.value[i*model.economics.timestepsperyear.value],
+                                                                                                    model.wellbores.PumpingPower.value[i*model.economics.timestepsperyear.value],
+                                                                                                                            model.surfaceplant.NetElectricityProduced.value[i*model.economics.timestepsperyear.value],
+                                                                                                                                                    model.surfaceplant.HeatProduced.value[i*model.economics.timestepsperyear.value],
+                                                                                                                                                                                model.surfaceplant.FirstLawEfficiency.value[i*model.economics.timestepsperyear.value]*100)+NL)
+                f.write(NL)
+
+                f.write(NL)
+                f.write('                              ***************************************************************\n')
+                f.write('                              *  HEAT AND/OR ELECTRICITY EXTRACTION AND GENERATION PROFILE  *\n')
+                f.write('                              ***************************************************************\n')
+                if model.surfaceplant.enduseoption.value == EndUseOptions.ELECTRICITY:  #only electricity
+                    f.write('  YEAR             ELECTRICITY                   HEAT                RESERVOIR            PERCENTAGE OF\n')
+                    f.write('                    PROVIDED                   EXTRACTED            HEAT CONTENT        TOTAL HEAT MINED\n')
+                    f.write('                   (GWh/year)                  (GWh/year)            (10^15 J)                 (%)\n')
+                    for i in range(0, model.surfaceplant.plantlifetime.value):
+                        f.write('  {0:2.0f}              {1:8.1f}                    {2:8.1f}              {3:8.2f}               {4:8.2f}'.format(i+1,
+                                                model.surfaceplant.NetkWhProduced.value[i]/1E6, 
+                                                                            model.surfaceplant.HeatkWhExtracted.value[i]/1E6, 
+                                                                                                    model.surfaceplant.RemainingReservoirHeatContent.value[i],
+                                                                                                                            (model.reserv.InitialReservoirHeatContent.value-model.surfaceplant.RemainingReservoirHeatContent.value[i])*100/model.reserv.InitialReservoirHeatContent.value)+NL)
+                elif model.surfaceplant.enduseoption.value == EndUseOptions.HEAT: #only direct-use
+                    f.write('  YEAR               HEAT                       HEAT                RESERVOIR            PERCENTAGE OF\n')
+                    f.write('                    PROVIDED                   EXTRACTED            HEAT CONTENT        TOTAL HEAT MINED\n')
+                    f.write('                   (GWh/year)                  (GWh/year)            (10^15 J)                 (%)\n')
+                    for i in range(0, model.surfaceplant.plantlifetime.value):
+                        f.write('  {0:2.0f}              {1:8.1f}                    {2:8.1f}              {3:8.2f}               {4:8.2f}'.format(i+1,
+                                                model.surfaceplant.HeatkWhProduced.value[i]/1E6,
+                                                                            model.surfaceplant.HeatkWhExtracted.value[i]/1E6,
+                                                                                                    model.surfaceplant.RemainingReservoirHeatContent.value[i],
+                                                                                                                            (model.reserv.InitialReservoirHeatContent.value-model.surfaceplant.RemainingReservoirHeatContent.value[i])*100/model.reserv.InitialReservoirHeatContent.value)+NL)
+                elif model.surfaceplant.enduseoption.value not in [EndUseOptions.ELECTRICITY, EndUseOptions.HEAT]:  #both electricity and direct-use
+                    f.write('  YEAR             HEAT                 ELECTRICITY                HEAT              RESERVOIR        PERCENTAGE OF\n')
+                    f.write('                  PROVIDED               PROVIDED                EXTRACTED          HEAT CONTENT    TOTAL HEAT MINED\n')
+                    f.write('                 (GWh/year)             (GWh/year)               (GWh/year)          (10^15 J)           (%)\n')
+                    for i in range(0, model.surfaceplant.plantlifetime.value):
+                        f.write('  {0:2.0f}            {1:8.1f}               {2:8.1f}                  {3:8.2f}            {4:8.2f}             {5:8.2f}'.format(i+1,
+                                            model.surfaceplant.HeatkWhProduced.value[i]/1E6,
+                                                                        model.surfaceplant.NetkWhProduced.value[i]/1E6,
+                                                                                                    model.surfaceplant.HeatkWhExtracted.value[i]/1E6,
+                                                                                                                            model.surfaceplant.RemainingReservoirHeatContent.value[i],
+                                                                                                                                                (model.reserv.InitialReservoirHeatContent.value-model.surfaceplant.RemainingReservoirHeatContent.value[i])*100/model.reserv.InitialReservoirHeatContent.value)+NL)
+                f.write(NL)
+            
+                f.write(NL)
+                f.write(NL)
+                f.write("                                ***COAX CLOSED-LOOP ECONOMICS***"+ NL);
+                f.write(NL)
+                f.write(NL)
+                #f.write(f"      Cost per horizontal section:      {model.cleconomics.C1well.value:10.2f} " + model.cleconomics.C1well.PreferredUnits.value + NL)
+                #f.write(f"      Total Cost of horizontal section: {model.cleconomics.CHorizwell.value:10.2f} " + model.cleconomics.CHorizwell.PreferredUnits.value + NL)
+                f.write(NL)
+                f.write(NL)
+                f.write("                    ********************************************************" + NL)
+                f.write("                    *  COAX CLOSED-LOOP PER LATERAL PERFORMANCE PROFILE    *" + NL)
+                f.write("                    *      (EACH SEGMENT ASSUMED TO BE EQUIVILENT          *" + NL)
+                f.write("                    *  AND PLACED FAR ENOUGH APART SO AS TO NOT INTERFERE) *" + NL)
+                f.write("                    ********************************************************" + NL)
+                f.write("Year       CLGS Section         CLGS Pressure" + NL)
+                f.write("Since      Output Temperature    Drop" + NL)
+                f.write("Start      ("+model.coaxwellbores.CLGSProducedTemperature.PreferredUnits.value+")"+
+                                           "                ("+model.coaxwellbores.CLGSPressureDrop.PreferredUnits.value +")" +NL)
+                i = 0
+                ii = 0
+                for i in range(0, len(model.coaxwellbores.CLGSProducedTemperature.value), 1):
+                    #construction years...
+                    f.write(f"   {i+1:3.0f}     {model.coaxwellbores.CLGSProducedTemperature.value[i]:5.2f}                {model.coaxwellbores.CLGSPressureDrop.value[i]:5.2f}"    + NL)
+                    i = i + 1
+                    ii = ii + model.economics.timestepsperyear.value
+                                    
+        except BaseException as ex:
+            tb = sys.exc_info()[2]
+            print (str(ex))
+            print("Error: GEOPHIRES failed to Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
+            model.logger.critical(str(ex))
+            model.logger.critical("Error: GEOPHIRES failed to Failed to write the output file.  Exiting....Line %i" % tb.tb_lineno)
+            sys.exit()
+
+        model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)

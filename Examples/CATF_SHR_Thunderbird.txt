@@ -1,0 +1,59 @@
+GEOPHIRES v3.0 Input File
+Created on 5/15/2023
+Last modified on 5/15/2023
+
+Based on Example 1 of GEOPHIRES 2 - Geothermal Electricity Problem using a Multiple Parallel Fractures Model
+
+CAT_SHR_Thunderbird Description: This problem considers an EGS reservoir at 6km depth and 350 C  - gradient 55 C/km. 
+Ramey's model is applied to simulate production wellbore heat losses. The heat
+is used in for electricity application with a reinjection temperature of 50deg.C.
+
+
+***Subsurface technical parameters***
+*************************************
+Reservoir Model,1,                        			---Multiple Fractures reservoir model
+Reservoir Depth,6,                     				---[km]
+Gradient 1,55,                          			---[deg.C/km]
+Number of Production Wells,10,            			---[-]
+Number of Injection Wells,5,            			---[-]
+Production Well Diameter,7,		     			---[inch]
+Injection Well Diameter,7,					---[inch]
+Ramey Production Wellbore Model,1,       			---0 if disabled  1 if enabled
+Production Wellbore Temperature Drop,.5,			---[deg.C]
+Production Flow Rate per Well,55,       			---[kg/s]
+Fracture Shape,3,                       			---[-] Should be 1 2 3 or 4. See manual for details
+Fracture Height,900, 						---[m]
+Reservoir Volume Option,3,              			---[-] Should be 1 2 3 or 4. See manual for details
+Number of Fractures,20,		  				---[-]
+Reservoir Volume,3375000000,		 			---[m^3]
+Water Loss Fraction,.02,					---[-]
+Productivity Index,5,						---[kg/s/bar]
+Injectivity Index,5,						---[kg/s/bar]
+Injection Temperature,50,		 			---[deg.C]
+Reservoir Heat Capacity,1100,		  			---[J/kg/K]
+Reservoir Density,2650,			  			---[kg/m^3]
+Reservoir Thermal Conductivity,2.7,	  			---[W/m/K]
+Ramey Production Wellbore Model, False, 		---turn it off
+
+***SURFACE TECHNICAL PARAMETERS***
+**********************************
+End-Use Option,1,			  			---[-] Electricity
+Power Plant Type,2,			  			---[-] Supercritcal ORC
+Circulation Pump Efficiency,.95,	  				---[-] between .1 and 1
+Utilization Factor,.8116,			  			---[-] between .1 and 1
+Surface Temperature,20,		  				---[deg.C]
+Ambient Temperature,20,		 				---[deg.C]
+Plant Outlet Pressure, 15,					----[kPa]
+
+***FINANCIAL PARAMETERS***
+**************************
+Plant Lifetime,31,			  			---[years]
+Economic Model,1,			  			---[-] Fixed Charge Rate Model
+Fixed Charge Rate,.08,			 			---[-] between 0 and 1
+
+
+***Simulation Parameters***
+***************************
+
+Print Output to Console,1,		  			---[-] Should be 0 (don't print results) or 1 (print results)
+Time steps per year,6,		  				---[1/year]
