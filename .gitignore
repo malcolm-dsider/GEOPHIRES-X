@@ -59,7 +59,6 @@ htmlcov/
 .vscode/
 .ideas/
 _build/
-*.py
 *.sln
 
 #MIR my Files
