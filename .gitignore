@@ -59,11 +59,10 @@ htmlcov/
 .vscode/
 .ideas/
 _build/
-*.py
-*.sln
 
 #MIR my Files
 Results/
+CLG Simulator/
 HDR*.*
 *.Json
 *.json
@@ -128,3 +127,5 @@ Examples\Test2.json
 /Muffler and Cataldi Methods for regional assessment of geothermal resources.pdf
 /Preliminary_Corpus Christi GRA_093019.xlsx
 /temperature.txt
+/CodeFromWanju.py
+/Outputs brain surgery.py
