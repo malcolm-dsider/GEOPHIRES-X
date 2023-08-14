@@ -14,7 +14,7 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>Global|PythonCore|3.9</InterpreterId>
     <TestFramework>Pytest</TestFramework>
-    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\example1.txt</CommandLineArguments>
+    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\S-DAC-GT.txt</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
     <Environment>MC_GEOPHIRES: AdvGeoPHIRESv3.py examples\example1_mc.txt D:\Work\GEOPHIRES3-master\MC_Settings_file.txt
@@ -25,7 +25,8 @@ GEOPHIRES Closed loops: D:\Work\GEOPHIRES3-master\Examples\Wanju_Yuan_Closed-Loo
 GEOPHIRES-X_Output_validation_tool: D:\Work\GEOPHIRES3-master\Examples\GEOPHIRES-X_Output_Validation_Tool_input.txt
 D:\Work\GEOPHIRES3-master\Examples\Beckers_et_al_2023_Tabulated_Database_Uloop_water_elec.txt
 D:\Work\GEOPHIRES3-master\Examples\CATF_SHR_Thunderbird.txt
-D:\Work\GEOPHIRES3-master\Examples\CATF_SHR_Thunderbird-mutlilateral.txt</Environment>
+D:\Work\GEOPHIRES3-master\Examples\CATF_SHR_Thunderbird-mutlilateral.txt
+D:\Work\GEOPHIRES3-master\Examples\S-DAC-GT.txt</Environment>
     <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
@@ -517,8 +518,10 @@ D:\Work\GEOPHIRES3-master\Examples\CATF_SHR_Thunderbird-mutlilateral.txt</Enviro
     <Compile Include="Outputs.py" />
     <Compile Include="OutputsAddOns.py" />
     <Compile Include="OutputsCCUS.py" />
+    <Compile Include="OutputsS_DAC_GT.py" />
     <Compile Include="Parameter.py" />
     <Compile Include="Reservoir.py" />
+    <Compile Include="EconomicsS_DAC_GT.py" />
     <Compile Include="setup.py" />
     <Compile Include="SFReservoir.py" />
     <Compile Include="SurfacePlant.py" />

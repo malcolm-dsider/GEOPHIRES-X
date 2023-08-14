@@ -2,6 +2,7 @@ import math
 import sys
 import os
 import numpy as np
+import numpy_financial as npf
 import Model
 from OptionList import Configuration, WellDrillingCostCorrelation, EconomicModel, EndUseOptions, PowerPlantType
 from Parameter import intParameter, floatParameter, OutputParameter, ReadParameter, boolParameter
@@ -69,9 +70,28 @@ class Economics:
         self.wellcorrelation = self.ParameterDict[self.wellcorrelation.Name] = intParameter("Well Drilling Cost Correlation", value = WellDrillingCostCorrelation.VERTICAL_SMALL, DefaultValue=WellDrillingCostCorrelation.VERTICAL_SMALL, AllowableRange=[1,2,3,4,5], UnitType = Units.NONE, ErrMessage="assume default well drilling cost correlation (1)", ToolTipText="Select the built-in horizontal well drilling and completion cost correlation. 1: vertical open-hole, small diameter; 2: deviated liner, small diameter; 3: vertical open-hole, large diameter; 4: deviated liner, large diameter; 5: Simple - user specified cost per meter")
         self.DoAddOnCalculations = self.ParameterDict[self.DoAddOnCalculations.Name] = boolParameter("Do AddOn Calculations", value = False, DefaultValue=False, UnitType = Units.NONE, Required=False, ErrMessage = "assume default: no economics calculations", ToolTipText="Set to true if you want the add-on economics calculations to be made")
         self.DoCCUSCalculations = self.ParameterDict[self.DoCCUSCalculations.Name] = boolParameter("Do CCUS Calculations", value = False, DefaultValue=False, UnitType = Units.NONE, Required=False, ErrMessage = "assume default: no CCUS calculations", ToolTipText="Set to true if you want the CCUS economics calculations to be made")
+        self.DoSDACGTCalculations = self.ParameterDict[self.DoSDACGTCalculations.Name] = boolParameter("Do S-DAC-GT Calculations", value = False, DefaultValue=False, UnitType = Units.NONE, Required=False, ErrMessage = "assume default: no S-DAC-GT calculations", ToolTipText="Set to true if you want the S-DAC-GT economics calculations to be made")
         self.Vertical_drilling_cost_per_m  = self.ParameterDict[self.Vertical_drilling_cost_per_m.Name] = floatParameter("All-in Vertical Drilling Costs", value = 1000.0, DefaultValue=1000.0, Min=0.0, Max = 10_000.0, UnitType = Units.COSTPERDISTANCE, PreferredUnits = CostPerDistanceUnit.DOLLARSPERM, CurrentUnits = CostPerDistanceUnit.DOLLARSPERM, ErrMessage="assume default all-in cost for drill vertical well segment(s) (1000 $/m)", ToolTipText="Set user specified all-in cost per meter of vertical drilling, including drilling, casing, cement, insulated insert")
         self.Nonvertical_drilling_cost_per_m  = self.ParameterDict[self.Nonvertical_drilling_cost_per_m.Name] = floatParameter("All-in Nonvertical Drilling Costs", value = 1300.0, DefaultValue=1300.0, Min=0.0, Max = 15_000.0, UnitType = Units.COSTPERDISTANCE, PreferredUnits = CostPerDistanceUnit.DOLLARSPERM, CurrentUnits = CostPerDistanceUnit.DOLLARSPERM, ErrMessage="assume default all-in cost for drill non-vertical well segment(s) (1300 $/m)", ToolTipText="Set user specified all-in cost per meter of non-vertical drilling, including drilling, casing, cement, insulated insert")
-    
+
+        self.ElecPrice = self.OutputParameterDict[self.ElecPrice.Name] = OutputParameter("Electricity Sale Price Model", value = [0.055], UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
+        self.HeatPrice = self.OutputParameterDict[self.HeatPrice.Name] = OutputParameter("Heat Sale Price Model", value = [0.025], UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.CENTSSPERKWH, CurrentUnits = EnergyCostUnit.CENTSSPERKWH)
+        self.HeatStartPrice = self.ParameterDict[self.HeatStartPrice.Name] = floatParameter("Starting Heat Sale Price", value = 0.025, DefaultValue=0.025, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
+        self.HeatEndPrice = self.ParameterDict[self.HeatEndPrice.Name] = floatParameter("Ending Heat Sale Price", value = 0.025, DefaultValue=0.025, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
+        self.HeatEscalationStart = self.ParameterDict[self.HeatEscalationStart.Name]  = intParameter("Heat Escalation Start Year", value = 5, DefaultValue=5, AllowableRange=list(range(0,101,1)), UnitType = Units.TIME, PreferredUnits = TimeUnit.YEAR, CurrentUnits = TimeUnit.YEAR, ErrMessage="assume default heat escalation delay time (5 years)", ToolTipText="Number of years after start of project before start of escalation")
+        self.HeatEscalationRate = self.ParameterDict[self.HeatEscalationRate.Name] = floatParameter("Heat Escalation Rate Per Year", value = 0.0, DefaultValue=0.0, Min=0.0, Max = 100.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH, ErrMessage="assume no heat price escalation (0.0)", ToolTipText="additional cost per year of price after escalation starts")
+        self.ElecStartPrice = self.ParameterDict[self.ElecStartPrice.Name] = floatParameter("Starting Electricity Sale Price", value = 0.055, DefaultValue=0.055, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
+        self.ElecEndPrice = self.ParameterDict[self.ElecEndPrice.Name] = floatParameter("Ending Electricity Sale Price", value = 0.055, DefaultValue=0.055, Min=0, Max=100, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH)
+        self.ElecEscalationStart = self.ParameterDict[self.ElecEscalationStart.Name]  = intParameter("Electricity Escalation Start Year", value = 5, DefaultValue=5, AllowableRange=list(range(0,101,1)), UnitType = Units.TIME, PreferredUnits = TimeUnit.YEAR, CurrentUnits = TimeUnit.YEAR, ErrMessage="assume default electricty escalation delay time (5 years)", ToolTipText="Number of years after start of project before start of escalation")
+        self.ElecEscalationRate = self.ParameterDict[self.ElecEscalationRate.Name] = floatParameter("Electricity Escalation Rate Per Year", value = 0.0, DefaultValue=0.0, Min=0.0, Max = 100.0, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyCostUnit.DOLLARSPERKWH, CurrentUnits = EnergyCostUnit.DOLLARSPERKWH, ErrMessage="assume no electricty price escalation (0.0)", ToolTipText="additional cost per year of price after escalation starts")
+
+        self.AnnualLicenseEtc = self.ParameterDict[self.AnnualLicenseEtc.Name] = floatParameter("Annual License Fees Etc", value = 0.0, DefaultValue=0.0, Min= -1000.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.FlatLicenseEtc = self.ParameterDict[self.FlatLicenseEtc.Name] = floatParameter("One-time Flat License Fees Etc", Min= -1000.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.OtherIncentives = self.ParameterDict[self.OtherIncentives.Name] = floatParameter("Other Incentives", Min= -1000.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.TaxRelief = self.ParameterDict[self.TaxRelief.Name] = floatParameter("Tax Relief Per Year", value = 0.0, DefaultValue=0.0, Min=0.0, Max = 100.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.PERCENT, CurrentUnits = PercentUnit.PERCENT, ErrMessage="assume no tax relief (0.0)", ToolTipText="Fixed percent reduction in annual tax rate")
+        self.TotalGrant = self.ParameterDict[self.TotalGrant.Name] = floatParameter("One-time Grants Etc", Min= -1000.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.FixedInternalRate = self.ParameterDict[self.FixedInternalRate.Name] = floatParameter("Fixed Internal Rate", value = 6.25, DefaultValue=6.25, Min=0.0, Max = 100.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage="assume default for fixed internal rate (6.25%)", ToolTipText="Fixed Internal Rate (used in NPV calculation)")
+
     #local variable initialization
         self.Claborcorrelation = 0.0
         self.Cpumps = 0.0
@@ -99,6 +119,17 @@ class Economics:
         self.CCap = self.OutputParameterDict[self.CCap.Name] = OutputParameter(Name = "Total Capital Cost", value=-999.9, UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
         self.Coam = self.OutputParameterDict[self.Coam.Name] = OutputParameter(Name = "Total O&M Cost", value=-999.9, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
         self.averageannualpumpingcosts = self.OutputParameterDict[self.averageannualpumpingcosts.Name] = OutputParameter(Name = "Average Annual Pumping Costs", value=-0.0, UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+
+        self.ElecRevenue = self.OutputParameterDict[self.ElecRevenue.Name] = OutputParameter(Name = "Annual Revenue from Electrcity Production", value=[0.0], UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.ElecCummRevenue = self.OutputParameterDict[self.ElecCummRevenue.Name] = OutputParameter(Name = "Cummulative Revenue from Electrcity Production", value=[0.0], UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
+        self.HeatRevenue = self.OutputParameterDict[self.HeatRevenue.Name] = OutputParameter(Name = "Annual Revenue from Heat Production", value=[0.0], UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.HeatCummRevenue = self.OutputParameterDict[self.HeatCummRevenue.Name] = OutputParameter(Name = "Cummulative Revenue from Electrcity Production", value=[0.0], UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
+        self.TotalRevenue = self.OutputParameterDict[self.TotalRevenue.Name] = OutputParameter(Name = "Annual Revenue from Project", value=[0.0], UnitType = Units.CURRENCYFREQUENCY, PreferredUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR, CurrentUnits = CurrencyFrequencyUnit.MDOLLARSPERYEAR)
+        self.TotalCummRevenue = self.OutputParameterDict[self.TotalCummRevenue.Name] = OutputParameter(Name = "Cummulative Revenue from Project", value=[0.0], UnitType = Units.CURRENCY, PreferredUnits = CurrencyUnit.MDOLLARS, CurrentUnits = CurrencyUnit.MDOLLARS)
+        self.ProjectNPV = self.OutputParameterDict[self.ProjectNPV.Name] = OutputParameter("Project Net Present Value", value = 0.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
+        self.ProjectIRR = self.OutputParameterDict[self.ProjectIRR.Name] = OutputParameter("Project Internal Rate of Return", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.PERCENT, CurrentUnits=PercentUnit.PERCENT)
+        self.ProjectVIR = self.OutputParameterDict[self.ProjectVIR.Name] = OutputParameter("Project Value Investment Ratio", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.TENTH, CurrentUnits=PercentUnit.TENTH)
+        self.ProjectMOIC = self.OutputParameterDict[self.ProjectMOIC.Name] = OutputParameter("Project Multiple of Invested Capital", value = 0.0, UnitType = Units.PERCENT, PreferredUnits=PercentUnit.TENTH, CurrentUnits=PercentUnit.TENTH)
 
         model.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -315,7 +346,61 @@ class Economics:
                                 ParameterToModify.value = 1.0
         else:
             model.logger.info("No parameters read becuase no content provided")
+        
+        # we can determine on-the-fly if Addons, CCUS, or S-DAC-GT are being used in the user input file
+        for key in model.InputParameters.keys():
+            if key.startswith("AddOn"):
+                self.DoAddOnCalculations.value = True
+                break
+        for key in model.InputParameters.keys():
+            if key.startswith("CCUS"):
+                self.DoCCUSCalculations.value = True
+                break
+        for key in model.InputParameters.keys():
+            if key.startswith("S-DAC-GT"):
+                self.DoSDACGTCalculations.value = True
+                break
+
         model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
+
+    def BuildPricingModel(self, plantlifetime:int, StartYear:int, StartPrice:float, EndPrice:float, EscalationStart:int, EscalationRate:float):
+        #build the a price model array
+        Price = [StartPrice] * plantlifetime
+        if StartPrice == EndPrice: return Price
+        for i in range(StartYear,plantlifetime,1):
+            if i >= EscalationStart: Price[i] = Price[i] + ((i - EscalationStart) * EscalationRate)
+            if Price[i] > EndPrice: Price[i] = EndPrice
+        return Price
+
+    def CalculateRevenue(self, plantlifetime:int, ConstructionYears:int, CAPEX:float, OPEX:float, Energy, Price):
+        #Calculate the revenue
+        ProjectCAPEXPerConstructionYear = CAPEX/ConstructionYears
+        CashFlow = [0.0] * (plantlifetime+ConstructionYears)
+        CummCashFlow = [0.0] * (plantlifetime+ConstructionYears)
+
+        # Insert the cost of construction into the front of the array that will be used to calculate NPV = the convention is that the upfront CAPEX is negative
+        for i in range(0,ConstructionYears,1):
+            CashFlow[i] =  -1.0 * ProjectCAPEXPerConstructionYear
+            CummCashFlow[i] = -1.0 * ProjectCAPEXPerConstructionYear
+
+        for i in range(ConstructionYears,plantlifetime+ConstructionYears,1):
+            CashFlow[i] = ((Energy[i-ConstructionYears] * Price[i-ConstructionYears]) / 1_000_000.0) - OPEX    #Revenue/yr in MUSD
+
+        #Calculate the cummulative revenue, skipping the first year because it is cummulative
+        for i in range(1,plantlifetime+ConstructionYears,1): CummCashFlow[i] = CummCashFlow[i-1] + CashFlow[i]
+        return CashFlow, CummCashFlow
+
+    def CalculateFinancialPerformance(self, plantlifetime:int, FixedInternalRate:float, TotalRevenue, TotalCummRevenue, CAPEX:float, OPEX:float):
+        #Calculate financial performance values using numpy financials
+        NPV = npf.npv(FixedInternalRate/100, TotalRevenue)
+        IRR = npf.irr(TotalRevenue)
+        if math.isnan(IRR): IRR = 0.0
+        VIR  = 1.0 + (NPV/CAPEX)
+
+        #Calculate MOIC which depends on CumCashFlow
+        MOIC = TotalCummRevenue[len(TotalCummRevenue)-1] / (CAPEX + (OPEX * plantlifetime))
+
+        return NPV, IRR, VIR, MOIC
 
     def Calculate(self, model:Model) -> None:
         """
@@ -603,57 +688,85 @@ class Economics:
 
         else: self.Coam.value = self.oamtotalfixed.value #total O&M cost (M$/year)
 
-        #add in the O&M costs of the AddOns
-        self.Coam.value = self.Coam.value
-
         if model.wellbores.redrill.value > 0: model.Coam.value = model.Coam.value + (self.Cwell.value + model.reserv.Cstim.value)*model.wellbores.redrill.value/model.surfaceplant.plantlifetime.value   #account for well redrilling
 
         #The Reservoir depth measure was arbitarily changed to meters, desipte being defined in the docs as kilometers.  For display consistency sake, we need to convert it back
         if model.reserv.depth.value > 500:
             model.reserv.depth.value = model.reserv.depth.value/1000.0
             model.reserv.depth.CurrentUnits = LengthUnit.KILOMETERS
+ 
+        #build the price models
+        self.ElecPrice.value = self.BuildPricingModel(model.surfaceplant.plantlifetime.value, 0, self.ElecStartPrice.value, self.ElecEndPrice.value, self.ElecEscalationStart.value, self.ElecEscalationRate.value)
+        self.HeatPrice.value = self.BuildPricingModel(model.surfaceplant.plantlifetime.value, 0, self.HeatStartPrice.value, self.HeatEndPrice.value, self.HeatEscalationStart.value, self.HeatEscalationRate.value)
+        
+        #Add in the FlatLicenseEtc, OtherIncentives, TotalGrant, AnnualLicenseEtc, and TaxRelief
+        self.CCap.value = self.CCap.value + self.FlatLicenseEtc.value - self.OtherIncentives.value - self.TotalGrant.value
+        self.Coam.value = self.Coam.value + self.AnnualLicenseEtc.value - self.TaxRelief.value
+
+        #Calculate cashflow and cummulative cash flow
+        if model.surfaceplant.enduseoption.value == EndUseOptions.ELECTRICITY:
+           self.ElecRevenue.value, self.ElecCummRevenue.value = self.CalculateRevenue(model.surfaceplant.plantlifetime.value, model.surfaceplant.ConstructionYears.value, self.CCap.value, self.Coam.value, model.surfaceplant.NetkWhProduced.value, self.ElecPrice.value)
+           self.TotalRevenue.value = self.ElecRevenue.value
+           self.TotalCummRevenue.value = self.ElecCummRevenue.value
+        elif model.surfaceplant.enduseoption.value == EndUseOptions.HEAT:
+           self.HeatRevenue.value, self.HeatCummRevenue.value = self.CalculateRevenue(model.surfaceplant.plantlifetime.value, model.surfaceplant.ConstructionYears.value, self.CCap.value, self.Coam.value, model.surfaceplant.HeatkWhProduced.value, self.HeatPrice.value)
+           self.TotalRevenue.value = self.HeatRevenue.value
+           self.TotalCummRevenue.value = self.HeatCummRevenue.value
+        else:
+           self.ElecRevenue.value, self.ElecCummRevenue.self = self.CalculateRevenue(model.surfaceplant.plantlifetime.value, model.surfaceplant.ConstructionYears.value, self.CCap.value, self.Coam.value, model.surfaceplant.NetkWhProduced.value, self.ElecPrice.value)
+           self.HeatRevenue.value, self.HeatCummRevenue.self = self.CalculateRevenue(model.surfaceplant.plantlifetime.value, model.surfaceplant.ConstructionYears.value, 0.0, 0.0, model.surfaceplant.HeatkWhProduced.value, self.HeatPrice.value) #note that CAPEX & OPEX are 0.0 because we only want them counted once, and it will be accounted for in the previous line
+           self.TotalRevenue.value = [0.0] * (model.surfaceplant.plantlifetime.value+model.surfaceplant.ConstructionYears.value)
+           self.TotalCummRevenue.value = [0.0] * (model.surfaceplant.plantlifetime.value+model.surfaceplant.ConstructionYears.value)
+           for i in range(0,model.surfaceplant.plantlifetime.value+model.surfaceplant.ConstructionYears.value,1):
+                self.TotalRevenue.value[i] = self.ElecRevenue.value[i] + self.HeatRevenue.value[i]
+                self.TotalCummRevenue.value[i] = self.TotalRevenue.value[i]
+                if i > 0: self.TotalCummRevenue.value[i] = self.TotalCummRevenue.value[i-1] + self.TotalRevenue.value[i]
+
+        #Calculate more financial values using numpy financials
+        self.ProjectNPV.value, self.ProjectIRR.value, self.ProjectVIR.value, self.ProjectMOIC.value = self.CalculateFinancialPerformance(model.surfaceplant.plantlifetime.value, self.FixedInternalRate.value, self.TotalRevenue.value, self.TotalCummRevenue.value, self.CCap.value, self.Coam.value)
 
         #Calculate LCOE/LCOH
-        self.CalculateLCOELCOH(model)
+        self.LCOE.value, self.LCOH.value =  self.CalculateLCOELCOH(model)
 
         model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
-    def CalculateLCOELCOH(self, model:Model) -> None:
+    def CalculateLCOELCOH(self, model:Model) -> tuple:
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
+        LCOE = LCOH = 0.0
         #---------------------------
         #Calculate LCOE/LCOH
         #---------------------------
         if self.econmodel.value == EconomicModel.FCR:
             if model.surfaceplant.enduseoption.value == EndUseOptions.ELECTRICITY:
-                self.LCOE.value = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value)/np.average(model.surfaceplant.NetkWhProduced.value)*1E8 #cents/kWh
+                LCOE = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value)/np.average(model.surfaceplant.NetkWhProduced.value)*1E8 #cents/kWh
             elif model.surfaceplant.enduseoption.value == EndUseOptions.HEAT:
                 self.averageannualpumpingcosts.value = np.average(model.surfaceplant.PumpingkWh.value)*model.surfaceplant.elecprice.value/1E6 #M$/year
-                self.LCOH.value = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value + self.averageannualpumpingcosts.value)/np.average(model.surfaceplant.HeatkWhProduced.value)*1E8 #cents/kWh
-                self.LCOH.value = self.LCOH.value*2.931 #$/Million Btu
+                LCOH = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value + self.averageannualpumpingcosts.value)/np.average(model.surfaceplant.HeatkWhProduced.value)*1E8 #cents/kWh
+                LCOH = LCOH*2.931 #$/Million Btu
             elif model.surfaceplant.enduseoption.value not in [EndUseOptions.ELECTRICITY, EndUseOptions.HEAT]: #cogeneration
                 if model.surfaceplant.enduseoption.value in [EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT, EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]: #heat sales is additional income revenue stream
                     averageannualheatincome = np.average(self.HeatkWhProduced.value)*self.heatprice.value/1E6 #M$/year ASSUMING heatprice IS IN $/KWH FOR HEAT SALES
-                    self.LCOE.value = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value - averageannualheatincome)/np.average(model.surfaceplant.NetkWhProduced.value)*1E8 #cents/kWh   
+                    LCOE = (self.FCR.value*(1+self.inflrateconstruction.value)*self.CCap.value + self.Coam.value - averageannualheatincome)/np.average(model.surfaceplant.NetkWhProduced.value)*1E8 #cents/kWh   
                 elif model.surfaceplant.enduseoption.value in [EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY]: #electricity sales is additional income revenue stream
                     averageannualelectricityincome =  np.average(model.surfaceplant.NetkWhProduced.value)*model.surfaceplant.elecprice.value/1E6 #M$/year
-                    self.LCOH.value = (self.CCap.value + self.Coam.value - averageannualelectricityincome)/np.average(model.surfaceplant.HeatkWhProduced.value)*1E8 #cents/kWh
-                    self.LCOH.value = self.LCOH.value*2.931 #$/MMBTU
+                    LCOH = (self.CCap.value + self.Coam.value - averageannualelectricityincome)/np.average(model.surfaceplant.HeatkWhProduced.value)*1E8 #cents/kWh
+                    LCOH = LCOH*2.931 #$/MMBTU
         elif self.econmodel.value == EconomicModel.STANDARDIZED_LEVELIZED_COST:
             discountvector = 1./np.power(1+self.discountrate.value,np.linspace(0,model.surfaceplant.plantlifetime.value-1,model.surfaceplant.plantlifetime.value))
             if model.surfaceplant.enduseoption.value == EndUseOptions.ELECTRICITY:
-                self.LCOE.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum(self.Coam.value*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*discountvector)*1E8 #cents/kWh
+                LCOE = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum(self.Coam.value*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*discountvector)*1E8 #cents/kWh
             elif model.surfaceplant.enduseoption.value == EndUseOptions.HEAT:
                 self.averageannualpumpingcosts.value = np.average(model.surfaceplant.PumpingkWh.value)*model.surfaceplant.elecprice.value/1E6 #M$/year
-                self.LCOH.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value+model.surfaceplant.PumpingkWh.value*model.surfaceplant.elecprice.value/1E6)*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*discountvector)*1E8 #cents/kWh
-                self.LCOH.value = self.LCOH.value*2.931 #$/MMBTU
+                LCOH = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value+model.surfaceplant.PumpingkWh.value*model.surfaceplant.elecprice.value/1E6)*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*discountvector)*1E8 #cents/kWh
+                LCOH = LCOH*2.931 #$/MMBTU
             elif model.surfaceplant.enduseoption.value not in [EndUseOptions.ELECTRICITY, EndUseOptions.HEAT]:
                 if model.surfaceplant.enduseoption.value  in [EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT, EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]: #heat sales is additional income revenue stream
                     annualheatincome = model.surfaceplant.HeatkWhProduced.value*model.surfaceplant.heatprice.value/1E6 #M$/year ASSUMING heatprice IS IN $/KWH FOR HEAT SALES
-                    self.LCOE.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value-annualheatincome)*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*discountvector)*1E8 #cents/kWh
+                    LCOE = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value-annualheatincome)*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*discountvector)*1E8 #cents/kWh
                 elif model.surfaceplant.enduseoption.value in [EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY]: #electricity sales is additional income revenue stream
                     annualelectricityincome = model.surfaceplant.NetkWhProduced.value*self.elecprice.value/1E6 #M$/year
-                    self.LCOH.value = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value-annualelectricityincome)*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*discountvector)*1E8 #cents/kWh
-                    self.LCOH.value = self.LCOH.value*2.931 #$/MMBTU
+                    LCOH = ((1+self.inflrateconstruction.value)*self.CCap.value + np.sum((self.Coam.value-annualelectricityincome)*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*discountvector)*1E8 #cents/kWh
+                    LCOH = LCOH*2.931 #$/MMBTU
         elif self.econmodel.value == EconomicModel.BICYCLE:
             iave = self.FIB.value*self.BIR.value*(1-self.CTR.value) + (1-self.FIB.value)*self.EIR.value #average return on investment (tax and inflation adjusted)
             CRF = iave/(1-np.power(1+iave,-model.surfaceplant.plantlifetime.value)) #capital recovery factor
@@ -666,27 +779,28 @@ class Economics:
             if model.surfaceplant.enduseoption.value == EndUseOptions.ELECTRICITY:            
                 NPVoandm = np.sum(self.Coam.value*inflationvector*discountvector)
                 NPVgrt = self.GTR.value/(1-self.GTR.value)*(NPVcap + NPVoandm + NPVfc + NPVit - NPVitc)
-                self.LCOE.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc)/np.sum(model.surfaceplant.NetkWhProduced.value*inflationvector*discountvector)*1E8
+                LCOE  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc)/np.sum(model.surfaceplant.NetkWhProduced.value*inflationvector*discountvector)*1E8
             elif model.surfaceplant.enduseoption.value == EndUseOptions.HEAT:
                 PumpingCosts = model.surfaceplant.PumpingkWh.value*model.surfaceplant.elecprice.value/1E6
                 self.averageannualpumpingcosts.value = np.average(model.surfaceplant.PumpingkWh.value)*model.surfaceplant.elecprice.value/1E6 #M$/year
                 NPVoandm = np.sum((self.Coam.value+PumpingCosts)*inflationvector*discountvector)
                 NPVgrt = self.GTR.value/(1-self.GTR.value)*(NPVcap + NPVoandm + NPVfc + NPVit - NPVitc)
-                self.LCOH.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc)/np.sum(model.surfaceplant.HeatkWhProduced.value*inflationvector*discountvector)*1E8
-                self.LCOH.value = self.LCOH.value*2.931 #$/MMBTU
+                LCOH  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc)/np.sum(model.surfaceplant.HeatkWhProduced.value*inflationvector*discountvector)*1E8
+                LCOH = LCOH*2.931 #$/MMBTU
             elif model.surfaceplant.enduseoption.value not in [EndUseOptions.ELECTRICITY, EndUseOptions.HEAT]:
                 if model.surfaceplant.enduseoption.value  in [EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT, EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT]: #heat sales is additional income revenue stream
                     annualheatincome = model.surfaceplant.HeatkWhProduced.value*model.surfaceplant.heatprice.value/1E6 #M$/year ASSUMING ELECPRICE IS IN $/KWH FOR HEAT SALES
                     NPVoandm = np.sum(self.Coam.value*inflationvector*discountvector)            
                     NPVgrt = self.GTR.value/(1-self.GTR.value)*(NPVcap + NPVoandm + NPVfc + NPVit - NPVitc)
-                    self.LCOE.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc - np.sum(annualheatincome*inflationvector*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*inflationvector*discountvector)*1E8 
+                    LCOE  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc - np.sum(annualheatincome*inflationvector*discountvector))/np.sum(model.surfaceplant.NetkWhProduced.value*inflationvector*discountvector)*1E8 
                 elif model.surfaceplant.enduseoption.value  in [EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY, EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY]: #electricity sales is additional income revenue stream
                     annualelectricityincome = model.surfaceplant.NetkWhProduced.value*model.surfaceplant.elecprice.value/1E6 #M$/year
                     NPVoandm = np.sum(self.Coam.value*inflationvector*discountvector)
                     NPVgrt = self.GTR.value/(1-self.GTR.value)*(NPVcap + NPVoandm + NPVfc + NPVit - NPVitc)
-                    self.LCOH.value  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc - np.sum(annualelectricityincome*inflationvector*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*inflationvector*discountvector)*1E8
-                    self.LCOH.value = self.LCOELCOHCombined.value*2.931 #$/MMBTU
+                    LCOH  = (NPVcap + NPVoandm + NPVfc + NPVit + NPVgrt - NPVitc - np.sum(annualelectricityincome*inflationvector*discountvector))/np.sum(model.surfaceplant.HeatkWhProduced.value*inflationvector*discountvector)*1E8
+                    LCOH = self.LCOELCOHCombined.value*2.931 #$/MMBTU
         
         model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
+        return LCOE, LCOH
 
     def __str__(self): return "Economics"

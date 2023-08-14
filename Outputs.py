@@ -153,6 +153,10 @@ class Outputs:
                 f.write(f"      Accrued financing during construction:            {model.economics.inflrateconstruction.value*100:10.2f} " + model.economics.inflrateconstruction.CurrentUnits.value + NL)   
                 f.write(f"      Project lifetime:                              {model.surfaceplant.plantlifetime.value:10.0f} " + model.surfaceplant.plantlifetime.CurrentUnits.value + NL)
                 f.write(f"      Capacity factor:                                 {model.surfaceplant.utilfactor.value*100:10.1f} %" + NL)
+                f.write(f"      Project NPV:                                     {model.economics.ProjectNPV.value:10.2f} " + model.economics.ProjectNPV.PreferredUnits.value + NL)
+                f.write(f"      Project IRR:                                     {model.economics.ProjectIRR.value:10.2f} " + model.economics.ProjectIRR.PreferredUnits.value + NL)
+                f.write(f"      Project VIR=PI=PIR:                              {model.economics.ProjectVIR.value:10.2f}" + NL)
+                f.write(f"      Project MOIC:                                    {model.economics.ProjectMOIC.value:10.2f}" + NL)
 
                 f.write(NL)
                 f.write('                          ***ENGINEERING PARAMETERS***\n')
@@ -421,6 +425,7 @@ class Outputs:
             #MIR MIR if model.wellbores.HasHorizontalSection.value: model.cloutputs.PrintOutputs(model)
             if model.economics.DoAddOnCalculations.value: model.addoutputs.PrintOutputs(model)
             if model.economics.DoCCUSCalculations.value: model.ccusoutputs.PrintOutputs(model)
+            if model.economics.DoSDACGTCalculations.value: model.sdacgtoutputs.PrintOutputs(model)
         except BaseException as ex:
             tb = sys.exc_info()[2]
             print (str(ex))

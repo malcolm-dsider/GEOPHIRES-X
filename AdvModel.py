@@ -66,7 +66,7 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
             self.economics.read_parameters(self)
             self.outputs.read_parameters(self)
 
-        if self.economics.DoAddOnCalculations.value:    #if we find out we have a add-ons, we need to instanitaite it, then read for the parameters
+        if self.economics.DoAddOnCalculations.value:    #if we find out we have add-ons calculations, we need to instanitaite it, then read for the parameters
             self.logger.info("Initiate the Add-on elemnets")
             import EconomicsAddOns   #do this only is user wants add-ons
             self.addeconomics = EconomicsAddOns.EconomicsAddOns(self)
@@ -74,7 +74,7 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
             self.addeconomics.read_parameters(self)
             self.addoutputs = OutputsAddOns.OutputsAddOns(self)
             self.addoutputs.read_parameters(self)
-        if self.economics.DoCCUSCalculations.value:    #if we find out we have a ccus, we need to instanitaite it, then read for the parameters
+        if self.economics.DoCCUSCalculations.value:    #if we find out we have a CCUS calculation, we need to instanitaite it, then read for the parameters
             self.logger.info("Initiate the CCUS elements")
             import EconomicsCCUS   #do this only is user wants CCUS
             self.ccuseconomics = EconomicsCCUS.EconomicsCCUS(self)
@@ -82,6 +82,14 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
             import OutputsCCUS
             self.ccusoutputs = OutputsCCUS.OutputsCCUS(self)
             self.ccusoutputs.read_parameters(self)
+        if self.economics.DoSDACGTCalculations.value:    #if we find out we have a S-DAC-GT calculation, we need to instanitaite it, then read for the parameters
+            self.logger.info("Initiate the S-DAC-GT elements")
+            import EconomicsS_DAC_GT    #do this only is user wants S-DAC-GT
+            self.sdacgteconomics = EconomicsS_DAC_GT.EconomicsS_DAC_GT(self)
+            self.sdacgteconomics.read_parameters(self)
+            import OutputsS_DAC_GT
+            self.sdacgtoutputs = OutputsS_DAC_GT.OutputsS_DAC_GT(self)
+            self.sdacgtoutputs.read_parameters(self)
 
         self.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -112,6 +120,7 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
 
         if self.economics.DoAddOnCalculations.value: self.SmartCalculate(self, self.addeconomics)
         if self.economics.DoCCUSCalculations.value: self.SmartCalculate(self, self.ccuseconomics)
+        if self.economics.DoSDACGTCalculations.value: self.SmartCalculate(self, self.sdacgteconomics)
  
         self.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 

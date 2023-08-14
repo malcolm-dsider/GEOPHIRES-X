@@ -28,7 +28,9 @@ class Units(IntEnum):
     CURRENCY = auto()
     CURRENCYFREQUENCY = auto()
     ENERGYCOST = auto()
+    ENERGYDENSITY = auto()
     COSTPERMASS = auto()
+    MASSPERTIME = auto()
     COSTPERDISTANCE = auto()
     PERCENT = auto()
     ENERGY = auto()
@@ -36,6 +38,7 @@ class Units(IntEnum):
     ENERGYFREQUENCY = auto()
     AVAILABILITY = auto()
     CO2PRODUCTION = auto()
+    ENERGYPERCO2 = auto()
 
 class  TemperatureUnit(Enum):
     """Temperature Units"""
@@ -141,10 +144,18 @@ class EnergyCostUnit(Enum):
     DOLLARSPERKW = "USD/kW"
     CENTSSPERKW = "cents/kW"
     DOLLARSPERMMBTU = "USD/MMBTU"
+    DOLLARSPERMCF = "USD/MCF"
+    
+class EnergyDensityUnit(Enum):
+    KWHPERMCF = "kWh/MCF"
+    
+class MassPerTimeUnit(Enum):
+    TONNEPERYEAR = "tonne/yr"
     
 class CostPerMassUnit(Enum):
     CENTSSPERMT = "cents/mt"
     DOLLARSPERMT = "USD/mt"
+    DOLLARSPERTONNE = "USD/tonne"
     CENTSSPERLB = "cents/lb"
     DOLLARSPERLB = "USD/lb"
     
@@ -229,6 +240,11 @@ class CO2ProductionUnit(Enum):
     LBSPERKWH= "lbs/kWh"
     KPERKWH= "k/kWh"
     TONNEPERMWH = "t/MWh"
+    
+class EnergyPerCO2Unit(Enum):
+    """Energy cost per toone of CO2 extracted Units"""
+    KWHEPERTONNE = "kWh/t"
+    KWTHPERTONNE = "kW/t"
 
 class MassUnit(Enum):
     """Mass Units"""
