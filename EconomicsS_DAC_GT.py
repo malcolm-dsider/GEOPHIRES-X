@@ -284,14 +284,14 @@ class EconomicsS_DAC_GT(Economics.Economics):
             sys.exit()
 
         self.CRF = self.calculate_CRF(self.wacc.value, model.surfaceplant.plantlifetime.value)  # Calculate initial CRF value based on default inputs
-        self.CAPEX.value = self.CAPEX.value * self.CRF
-        self.CAPEX.value = self.CAPEX.value * self.CAPEX_mult.value
+        CAPEX = self.CAPEX.value * self.CRF    #don't change a parameters value directly - it throw off the rehydration
+        CAPEX = CAPEX * self.CAPEX_mult.value
         self.OPEX.value = self.OPEX.value * self.OPEX_mult.value
         self.therm.value = self.therm.value * self.therm_index.value
         power_totalcost = self.elec.value * model.surfaceplant.elecprice.value
         elec_heat_totalcost = self.therm.value * model.surfaceplant.elecprice.value
-        self.NG_price.value = self.NG_price.value / self.NG_EnergyDensity.value    # Convert from $/McF to $/kWh_th
-        NG_totalcost = self.therm.value * self.NG_price.value
+        NG_price = self.NG_price.value / self.NG_EnergyDensity.value    # Convert from $/McF to $/kWh_th, but don't change a parameters value directly - it throw off the rehydration
+        NG_totalcost = self.therm.value * NG_price
         self.LCOH.value, self.kWh_e_per_kWh_th.value = self.geo_therm_cost(model.surfaceplant.elecprice.value, self.CAPEX_mult.value, self.OPEX_mult.value, (model.reserv.depth.value * 3280.84), (np.average(model.wellbores.ProducedTemperature.value)), model.wellbores.Tinj.value, (model.wellbores.nprod.value*model.wellbores.prodwellflowrate.value))
         geothermal_totalcost = self.LCOH.value*self.therm.value
         co2_power = self.elec.value/1000*self.power_co2intensity.value
@@ -299,9 +299,9 @@ class EconomicsS_DAC_GT(Economics.Economics):
         co2_ng = self.therm.value/1000*self.NG_co2intensity.value
         co2_geothermal = self.therm.value*self.kWh_e_per_kWh_th.value/1000*self.power_co2intensity.value
     
-        self.LCOD_elec.value = self.CAPEX.value+self.OPEX.value+power_totalcost+elec_heat_totalcost+self.storage.value+self.transport.value
-        self.LCOD_ng.value = self.CAPEX.value+self.OPEX.value+power_totalcost+NG_totalcost+self.storage.value+self.transport.value
-        self.LCOD_geo.value = self.CAPEX.value+self.OPEX.value+power_totalcost+geothermal_totalcost+self.storage.value+self.transport.value
+        self.LCOD_elec.value = CAPEX+self.OPEX.value+power_totalcost+elec_heat_totalcost+self.storage.value+self.transport.value
+        self.LCOD_ng.value = CAPEX+self.OPEX.value+power_totalcost+NG_totalcost+self.storage.value+self.transport.value
+        self.LCOD_geo.value = CAPEX+self.OPEX.value+power_totalcost+geothermal_totalcost+self.storage.value+self.transport.value
     
         self.CO2total_elec.value = co2_power + co2_elec_heat
         self.CO2total_ng.value = co2_power + co2_ng
@@ -310,7 +310,7 @@ class EconomicsS_DAC_GT(Economics.Economics):
         #calculate the net impact of S-DAC-GT on the annual production of the model
         avg_first_law_eff = np.average(model.surfaceplant.FirstLawEfficiency.value)
         self.tot_heat_energy_consumed_per_tonne.value = (self.elec.value / avg_first_law_eff) + self.therm.value   #kWh_th/tonne
-        self.tot_cost_per_tonne.value = self.CAPEX.value + self.OPEX.value + self.storage.value + self.transport.value   #USD/tonne
+        self.tot_cost_per_tonne.value = CAPEX + self.OPEX.value + self.storage.value + self.transport.value   #USD/tonne
         self.percent_thermal_energy_going_to_heat.value = self.therm.value/self.tot_heat_energy_consumed_per_tonne.value
 
         self.S_DAC_GTAnnualCost.value = [0.0] * model.surfaceplant.plantlifetime.value

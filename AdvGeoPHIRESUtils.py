@@ -11,8 +11,7 @@ import jsons
 from mysql.connector import connect, Error
 from Parameter import Parameter, intParameter, boolParameter, floatParameter, strParameter, listParameter, OutputParameter, ReadParameter
 from enum import Enum
-from OptionList import ReservoirModel, FractureShape, ReservoirVolume, EndUseOptions, PowerPlantType, EconomicModel, WellDrillingCostCorrelation
-
+from OptionList import Configuration, ReservoirModel, FractureShape, ReservoirVolume, EndUseOptions, PowerPlantType, EconomicModel, WellDrillingCostCorrelation, WorkingFluid, Configuration
 from cryptography.fernet import Fernet
 import zlib
 
@@ -31,7 +30,7 @@ def load_key():
     return open("key.key", "rb").read() #Opens the file, reads and returns the key stored in the file
 
 class AdvGeoPHIRESUtils():
-    UseDatabase = False
+    UseDatabase = True
     def RunStoredProcedure(self, store_procedure_name:str, parameters:list)->list:
         if not self.UseDatabase: return None
         res = details = warnings = obj = None
@@ -136,7 +135,7 @@ class AdvGeoPHIRESUtils():
                         print("Restored " + object.MyClass + " using hash =" + KeyAsHash)
                     else:
                         model.logger.info("Could not restore " + object.MyClass + " using hash =" + KeyAsHash)
-                        print("Could not restored " + object.MyClass + " using hash =" + KeyAsHash)
+                        print("Could not restore " + object.MyClass + " using hash =" + KeyAsHash)
                         KeyAsHash = None    #if it is not found, return none
         except Error as ex:
             print (ex)
@@ -216,242 +215,32 @@ class AdvGeoPHIRESUtils():
         sclass = str(object.__class__)
         try:
             if "Reservoir" in sclass: #Try to rehydrate the Reservoir object
-                model.reserv.ParameterDict[model.reserv.resoption.Name] = self.PopulateStructureFromDictEntry(model.reserv.resoption, dd["resoption"])
-                model.reserv.ParameterDict[model.reserv.depth.Name] = self.PopulateStructureFromDictEntry(model.reserv.depth, dd["depth"])
-                model.reserv.ParameterDict[model.reserv.Tmax.Name] = self.PopulateStructureFromDictEntry(model.reserv.Tmax, dd["Tmax"])
-                model.reserv.ParameterDict[model.reserv.drawdp.Name] = self.PopulateStructureFromDictEntry(model.reserv.drawdp, dd["drawdp"])
-                model.reserv.ParameterDict[model.reserv.numseg.Name] = self.PopulateStructureFromDictEntry(model.reserv.numseg, dd["numseg"])
-                model.reserv.ParameterDict[model.reserv.gradient.Name] = self.PopulateStructureFromDictEntry(model.reserv.gradient, dd["gradient"])
-                model.reserv.ParameterDict[model.reserv.layerthickness.Name] = self.PopulateStructureFromDictEntry(model.reserv.layerthickness, dd["layerthickness"])
-                model.reserv.ParameterDict[model.reserv.resvoloption.Name] = self.PopulateStructureFromDictEntry(model.reserv.resvoloption, dd["resvoloption"])
-                model.reserv.ParameterDict[model.reserv.fracshape.Name] = self.PopulateStructureFromDictEntry(model.reserv.fracshape, dd["fracshape"])
-                model.reserv.ParameterDict[model.reserv.fracarea.Name] = self.PopulateStructureFromDictEntry(model.reserv.fracarea, dd["fracarea"])
-                model.reserv.ParameterDict[model.reserv.fracheight.Name] = self.PopulateStructureFromDictEntry(model.reserv.fracheight, dd["fracheight"])
-                model.reserv.ParameterDict[model.reserv.fracwidth.Name] = self.PopulateStructureFromDictEntry(model.reserv.fracwidth, dd["fracwidth"])
-                model.reserv.ParameterDict[model.reserv.fracnumb.Name] = self.PopulateStructureFromDictEntry(model.reserv.fracnumb, dd["fracnumb"])
-                model.reserv.ParameterDict[model.reserv.fracsep.Name] = self.PopulateStructureFromDictEntry(model.reserv.fracsep, dd["fracsep"])
-                model.reserv.ParameterDict[model.reserv.resvol.Name] = self.PopulateStructureFromDictEntry(model.reserv.resvol, dd["resvol"])
-                model.reserv.ParameterDict[model.reserv.waterloss.Name] = self.PopulateStructureFromDictEntry(model.reserv.waterloss, dd["waterloss"])
-                model.reserv.ParameterDict[model.reserv.cprock.Name] = self.PopulateStructureFromDictEntry(model.reserv.cprock, dd["cprock"])
-                model.reserv.ParameterDict[model.reserv.rhorock.Name] = self.PopulateStructureFromDictEntry(model.reserv.rhorock, dd["rhorock"])
-                model.reserv.ParameterDict[model.reserv.krock.Name] = self.PopulateStructureFromDictEntry(model.reserv.krock, dd["krock"])
-                model.reserv.ParameterDict[model.reserv.permrock.Name] = self.PopulateStructureFromDictEntry(model.reserv.permrock, dd["permrock"])
-                model.reserv.ParameterDict[model.reserv.porrock.Name] = self.PopulateStructureFromDictEntry(model.reserv.porrock, dd["porrock"])
-                model.reserv.ParameterDict[model.reserv.Tsurf.Name] = self.PopulateStructureFromDictEntry(model.reserv.Tsurf, dd["Tsurf"])
-
-                #Results - used by other objects or printed in output downstream
-                model.reserv.OutputParameterDict[model.reserv.fracsepcalc.Name] = self.PopulateStructureFromDictEntry(model.reserv.fracsepcalc, dd["fracsepcalc"])
-                model.reserv.OutputParameterDict[model.reserv.fracnumbcalc.Name] = self.PopulateStructureFromDictEntry(model.reserv.fracnumbcalc, dd["fracnumbcalc"])
-                model.reserv.OutputParameterDict[model.reserv.fracheightcalc.Name] = self.PopulateStructureFromDictEntry(model.reserv.fracheightcalc, dd["fracheightcalc"])
-                model.reserv.OutputParameterDict[model.reserv.fracwidthcalc.Name] = self.PopulateStructureFromDictEntry(model.reserv.fracwidthcalc, dd["fracwidthcalc"])
-                model.reserv.OutputParameterDict[model.reserv.fracareacalc.Name] = self.PopulateStructureFromDictEntry(model.reserv.fracareacalc, dd["fracareacalc"])
-                model.reserv.OutputParameterDict[model.reserv.resvolcalc.Name] = self.PopulateStructureFromDictEntry(model.reserv.resvolcalc, dd["resvolcalc"])
-                model.reserv.OutputParameterDict[model.reserv.Trock.Name] = self.PopulateStructureFromDictEntry(model.reserv.Trock, dd["Trock"])
-                model.reserv.OutputParameterDict[model.reserv.cpwater.Name] = self.PopulateStructureFromDictEntry(model.reserv.cpwater, dd["cpwater"])
-                model.reserv.OutputParameterDict[model.reserv.rhowater.Name] = self.PopulateStructureFromDictEntry(model.reserv.rhowater, dd["rhowater"])
-                model.reserv.OutputParameterDict[model.reserv.averagegradient.Name] = self.PopulateStructureFromDictEntry(model.reserv.averagegradient, dd["averagegradient"])
-                model.reserv.OutputParameterDict[model.reserv.InitialReservoirHeatContent.Name] = self.PopulateStructureFromDictEntry(model.reserv.InitialReservoirHeatContent, dd["InitialReservoirHeatContent"])
-                model.reserv.OutputParameterDict[model.reserv.timevector.Name] = self.PopulateStructureFromDictEntry(model.reserv.timevector, dd["timevector"])
-                model.reserv.OutputParameterDict[model.reserv.Tresoutput.Name] = self.PopulateStructureFromDictEntry(model.reserv.Tresoutput, dd["Tresoutput"])
+                for key in model.reserv.ParameterDict: model.reserv.ParameterDict[key] = self.PopulateStructureFromDict(model.reserv.ParameterDict[key], dd)
+                for key in model.reserv.OutputParameterDict: model.reserv.OutputParameterDict[key] = self.PopulateStructureFromDict(model.reserv.OutputParameterDict[key], dd)
 
             elif "WellBores" in sclass: #Try to rehydrate the WellBores object
-                model.wellbores.ParameterDict[model.wellbores.nprod.Name] = self.PopulateStructureFromDictEntry(model.wellbores.nprod, dd["nprod"])
-                model.wellbores.ParameterDict[model.wellbores.ninj.Name] =  self.PopulateStructureFromDictEntry(model.wellbores.ninj, dd["ninj"])
-                model.wellbores.ParameterDict[model.wellbores.prodwelldiam.Name] = self.PopulateStructureFromDictEntry(model.wellbores.prodwelldiam, dd["prodwelldiam"])
-                model.wellbores.ParameterDict[model.wellbores.injwelldiam.Name] = self.PopulateStructureFromDictEntry(model.wellbores.injwelldiam, dd["injwelldiam"])
-                model.wellbores.ParameterDict[model.wellbores.rameyoptionprod.Name] = self.PopulateStructureFromDictEntry(model.wellbores.rameyoptionprod, dd["rameyoptionprod"])
-                model.wellbores.ParameterDict[model.wellbores.tempdropprod.Name] = self.PopulateStructureFromDictEntry(model.wellbores.tempdropprod, dd["tempdropprod"])
-                model.wellbores.ParameterDict[model.wellbores.tempgaininj.Name] = self.PopulateStructureFromDictEntry(model.wellbores.tempgaininj, dd["tempgaininj"])
-                model.wellbores.ParameterDict[model.wellbores.prodwellflowrate.Name] = self.PopulateStructureFromDictEntry(model.wellbores.prodwellflowrate, dd["prodwellflowrate"])
-                model.wellbores.ParameterDict[model.wellbores.impedance.Name] = self.PopulateStructureFromDictEntry(model.wellbores.impedance, dd["impedance"])
-                model.wellbores.ParameterDict[model.wellbores.wellsep.Name] = self.PopulateStructureFromDictEntry(model.wellbores.wellsep, dd["wellsep"])
-                model.wellbores.ParameterDict[model.wellbores.Tinj.Name] = self.PopulateStructureFromDictEntry(model.wellbores.Tinj, dd["Tinj"])
-                model.wellbores.ParameterDict[model.wellbores.Phydrostatic.Name] = self.PopulateStructureFromDictEntry(model.wellbores.Phydrostatic, dd["Phydrostatic"])
-                model.wellbores.ParameterDict[model.wellbores.II.Name] = self.PopulateStructureFromDictEntry(model.wellbores.II, dd["II"])
-                model.wellbores.ParameterDict[model.wellbores.PI.Name] = self.PopulateStructureFromDictEntry(model.wellbores.PI, dd["PI"])
-                model.wellbores.ParameterDict[model.wellbores.maxdrawdown.Name] = self.PopulateStructureFromDictEntry(model.wellbores.maxdrawdown, dd["maxdrawdown"])
-
-                #Results - used by other objects or printed in output downstream
-                
-                model.wellbores.OutputParameterDict[model.wellbores.Phydrostaticcalc.Name] = self.PopulateStructureFromDictEntry(model.wellbores.Phydrostaticcalc, dd["Phydrostaticcalc"])
-                model.wellbores.OutputParameterDict[model.wellbores.redrill.Name] = self.PopulateStructureFromDictEntry(model.wellbores.redrill, dd["redrill"])
-                model.wellbores.OutputParameterDict[model.wellbores.PumpingPowerProd.Name] = self.PopulateStructureFromDictEntry(model.wellbores.PumpingPowerProd, dd["PumpingPowerProd"]) 
-                model.wellbores.OutputParameterDict[model.wellbores.PumpingPowerInj.Name] = self.PopulateStructureFromDictEntry(model.wellbores.PumpingPowerInj, dd["PumpingPowerInj"]) 
-                model.wellbores.OutputParameterDict[model.wellbores.pumpdepth.Name] = self.PopulateStructureFromDictEntry(model.wellbores.pumpdepth, dd["pumpdepth"]) 
-                model.wellbores.OutputParameterDict[model.wellbores.impedancemodelallowed.Name] = self.PopulateStructureFromDictEntry(model.wellbores.impedancemodelallowed, dd["impedancemodelallowed"])
-                model.wellbores.OutputParameterDict[model.wellbores.productionwellpumping.Name] = self.PopulateStructureFromDictEntry(model.wellbores.productionwellpumping, dd["productionwellpumping"])
-                model.wellbores.OutputParameterDict[model.wellbores.impedancemodelused.Name] = self.PopulateStructureFromDictEntry(model.wellbores.impedancemodelused, dd["impedancemodelused"])
-                model.wellbores.OutputParameterDict[model.wellbores.ProdTempDrop.Name] = self.PopulateStructureFromDictEntry(model.wellbores.ProdTempDrop, dd["ProdTempDrop"])
-                model.wellbores.OutputParameterDict[model.wellbores.DPOverall.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DPOverall, dd["DPOverall"]) 
-                model.wellbores.OutputParameterDict[model.wellbores.DPInjWell.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DPInjWell, dd["DPInjWell"])
-                model.wellbores.OutputParameterDict[model.wellbores.DPReserv.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DPReserv, dd["DPReserv"])
-                model.wellbores.OutputParameterDict[model.wellbores.DPProdWell.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DPProdWell, dd["DPProdWell"])
-                model.wellbores.OutputParameterDict[model.wellbores.DPBouyancy.Name] = self.PopulateStructureFromDictEntry(model.wellbores.DPBouyancy, dd["DPBouyancy"]) 
-                model.wellbores.OutputParameterDict[model.wellbores.ProducedTemperature.Name] = self.PopulateStructureFromDictEntry(model.wellbores.ProducedTemperature, dd["ProducedTemperature"])
-                model.wellbores.OutputParameterDict[model.wellbores.PumpingPower.Name] = self.PopulateStructureFromDictEntry(model.wellbores.PumpingPower, dd["PumpingPower"])
-                model.wellbores.OutputParameterDict[model.wellbores.Pprodwellhead.Name] = self.PopulateStructureFromDictEntry(model.wellbores.Pprodwellhead, dd["Pprodwellhead"])
+                for key in model.wellbores.ParameterDict: model.wellbores.ParameterDict[key] = self.PopulateStructureFromDict(model.wellbores.ParameterDict[key], dd)
+                for key in model.wellbores.OutputParameterDict: model.wellbores.OutputParameterDict[key] = self.PopulateStructureFromDict(model.wellbores.OutputParameterDict[key], dd)
 
             elif "SurfacePlant" in sclass: #Try to rehydrate the SurfacePlant object
-                model.surfaceplant.ParameterDict[model.surfaceplant.enduseoption.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.enduseoption, dd["enduseoption"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.pptype.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.pptype, dd["pptype"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.pumpeff.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.pumpeff, dd["pumpeff"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.utilfactor.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.utilfactor, dd["utilfactor"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.enduseefficiencyfactor.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.enduseefficiencyfactor, dd["enduseefficiencyfactor"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.chpfraction.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.chpfraction, dd["chpfraction"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.Tchpbottom.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.Tchpbottom, dd["Tchpbottom"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.Tenv.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.Tenv, dd["Tenv"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.plantlifetime.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.plantlifetime, dd["plantlifetime"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.pipinglength.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.pipinglength, dd["pipinglength"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.Pplantoutlet.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.Pplantoutlet, dd["Pplantoutlet"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.elecprice.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.elecprice, dd["elecprice"])
-                model.surfaceplant.ParameterDict[model.surfaceplant.heatprice.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.heatprice, dd["heatprice"])
-
-                #Results - used by other objects or printed in output downstream
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.usebuiltinoutletplantcorrelation.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.usebuiltinoutletplantcorrelation, dd["usebuiltinoutletplantcorrelation"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.TenteringPP.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.TenteringPP, dd["TenteringPP"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.HeatkWhExtracted.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.HeatkWhExtracted, dd["HeatkWhExtracted"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.PumpingkWh.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.PumpingkWh, dd["PumpingkWh"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.ElectricityProduced.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.ElectricityProduced, dd["ElectricityProduced"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.NetElectricityProduced.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.NetElectricityProduced, dd["NetElectricityProduced"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.TotalkWhProduced.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.TotalkWhProduced, dd["TotalkWhProduced"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.NetkWhProduced.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.NetkWhProduced, dd["NetkWhProduced"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.HeatkWhProduced.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.HeatkWhProduced, dd["HeatkWhProduced"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.FirstLawEfficiency.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.FirstLawEfficiency, dd["FirstLawEfficiency"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.HeatExtracted.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.HeatExtracted, dd["HeatExtracted"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.HeatProduced.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.HeatProduced, dd["HeatProduced"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.Availability.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.Availability, dd["Availability"])
-                model.surfaceplant.OutputParameterDict[model.surfaceplant.RemainingReservoirHeatContent.Name] = self.PopulateStructureFromDictEntry(model.surfaceplant.RemainingReservoirHeatContent, dd["RemainingReservoirHeatContent"])
+                for key in model.surfaceplant.ParameterDict: model.surfaceplant.ParameterDict[key] = self.PopulateStructureFromDict(model.surfaceplant.ParameterDict[key], dd)
+                for key in model.surfaceplant.OutputParameterDict: model.surfaceplant.OutputParameterDict[key] = self.PopulateStructureFromDict(model.surfaceplant.OutputParameterDict[key], dd)
                 
             elif "<class 'Economics.Economics'>" in sclass:
-                model.economics.ParameterDict[model.economics.econmodel.Name] = self.PopulateStructureFromDictEntry(model.economics.econmodel, dd["econmodel"])
-                model.economics.ParameterDict[model.economics.ccstimfixed.Name] = self.PopulateStructureFromDictEntry(model.economics.ccstimfixed, dd["ccstimfixed"])
-                model.economics.ParameterDict[model.economics.ccstimadjfactor.Name] = self.PopulateStructureFromDictEntry(model.economics.ccstimadjfactor, dd["ccstimadjfactor"])
-                model.economics.ParameterDict[model.economics.ccexplfixed.Name] = self.PopulateStructureFromDictEntry(model.economics.ccexplfixed, dd["ccexplfixed"])
-                model.economics.ParameterDict[model.economics.ccexpladjfactor.Name] = self.PopulateStructureFromDictEntry(model.economics.ccexpladjfactor, dd["ccexpladjfactor"])
-                model.economics.ParameterDict[model.economics.ccwellfixed.Name] = self.PopulateStructureFromDictEntry(model.economics.ccwellfixed, dd["ccwellfixed"])
-                model.economics.ParameterDict[model.economics.ccwelladjfactor.Name] = self.PopulateStructureFromDictEntry(model.economics.ccwelladjfactor, dd["ccwelladjfactor"])
-                model.economics.ParameterDict[model.economics.oamwellfixed.Name] = self.PopulateStructureFromDictEntry(model.economics.oamwellfixed, dd["oamwellfixed"])
-                model.economics.ParameterDict[model.economics.oamwelladjfactor.Name] = self.PopulateStructureFromDictEntry(model.economics.oamwelladjfactor, dd["oamwelladjfactor"])
-                model.economics.ParameterDict[model.economics.ccplantfixed.Name] = self.PopulateStructureFromDictEntry(model.economics.ccplantfixed, dd["ccplantfixed"])
-                model.economics.ParameterDict[model.economics.ccplantadjfactor.Name] = self.PopulateStructureFromDictEntry(model.economics.ccplantadjfactor, dd["ccplantadjfactor"])
-                model.economics.ParameterDict[model.economics.ccgathfixed.Name] = self.PopulateStructureFromDictEntry(model.economics.ccgathfixed, dd["ccgathfixed"])
-                model.economics.ParameterDict[model.economics.ccgathadjfactor.Name] = self.PopulateStructureFromDictEntry(model.economics.ccgathadjfactor, dd["ccgathadjfactor"])
-                model.economics.ParameterDict[model.economics.oamplantfixed.Name] = self.PopulateStructureFromDictEntry(model.economics.oamplantfixed, dd["oamplantfixed"])
-                model.economics.ParameterDict[model.economics.oamplantadjfactor.Name] = self.PopulateStructureFromDictEntry(model.economics.oamplantadjfactor, dd["oamplantadjfactor"])
-                model.economics.ParameterDict[model.economics.oamwaterfixed.Name] = self.PopulateStructureFromDictEntry(model.economics.oamwaterfixed, dd["oamwaterfixed"])
-                model.economics.ParameterDict[model.economics.oamwateradjfactor.Name] = self.PopulateStructureFromDictEntry(model.economics.oamwateradjfactor, dd["oamwateradjfactor"])
-                model.economics.ParameterDict[model.economics.totalcapcost.Name] = self.PopulateStructureFromDictEntry(model.economics.totalcapcost, dd["totalcapcost"])
-                model.economics.ParameterDict[model.economics.oamtotalfixed.Name] = self.PopulateStructureFromDictEntry(model.economics.oamtotalfixed, dd["oamtotalfixed"])
-                model.economics.ParameterDict[model.economics.timestepsperyear.Name] = self.PopulateStructureFromDictEntry(model.economics.timestepsperyear, dd["timestepsperyear"])
-                model.economics.ParameterDict[model.economics.FCR.Name] = self.PopulateStructureFromDictEntry(model.economics.FCR, dd["FCR"])
-                model.economics.ParameterDict[model.economics.discountrate.Name] = self.PopulateStructureFromDictEntry(model.economics.discountrate, dd["discountrate"])
-                model.economics.ParameterDict[model.economics.FIB.Name] = self.PopulateStructureFromDictEntry(model.economics.FIB, dd["FIB"])
-                model.economics.ParameterDict[model.economics.BIR.Name] = self.PopulateStructureFromDictEntry(model.economics.BIR, dd["BIR"])
-                model.economics.ParameterDict[model.economics.EIR.Name] = self.PopulateStructureFromDictEntry(model.economics.EIR, dd["EIR"])
-                model.economics.ParameterDict[model.economics.RINFL.Name] = self.PopulateStructureFromDictEntry(model.economics.RINFL, dd["RINFL"])
-                model.economics.ParameterDict[model.economics.CTR.Name] = self.PopulateStructureFromDictEntry(model.economics.CTR, dd["CTR"])
-                model.economics.ParameterDict[model.economics.GTR.Name] = self.PopulateStructureFromDictEntry(model.economics.GTR, dd["GTR"])
-                model.economics.ParameterDict[model.economics.RITC.Name] = self.PopulateStructureFromDictEntry(model.economics.RITC, dd["RITC"])
-                model.economics.ParameterDict[model.economics.PTR.Name] = self.PopulateStructureFromDictEntry(model.economics.PTR, dd["PTR"])
-                model.economics.ParameterDict[model.economics.inflrateconstruction.Name] = self.PopulateStructureFromDictEntry(model.economics.inflrateconstruction, dd["inflrateconstruction"])
-                model.economics.ParameterDict[model.economics.wellcorrelation.Name] = self.PopulateStructureFromDictEntry(model.economics.wellcorrelation, dd["wellcorrelation"])
-
-                #results
-                model.economics.OutputParameterDict[model.economics.LCOE.Name] = self.PopulateStructureFromDictEntry(model.economics.LCOE, dd["LCOE"])
-                model.economics.OutputParameterDict[model.economics.LCOH.Name] = self.PopulateStructureFromDictEntry(model.economics.LCOH, dd["LCOH"])
-                model.economics.OutputParameterDict[model.economics.Cstim.Name] = self.PopulateStructureFromDictEntry(model.economics.Cstim, dd["Cstim"])
-                model.economics.OutputParameterDict[model.economics.Cexpl.Name] = self.PopulateStructureFromDictEntry(model.economics.Cexpl, dd["Cexpl"])
-                model.economics.OutputParameterDict[model.economics.Cwell.Name] = self.PopulateStructureFromDictEntry(model.economics.Cwell, dd["Cwell"])
-                model.economics.OutputParameterDict[model.economics.Coamwell.Name] = self.PopulateStructureFromDictEntry(model.economics.Coamwell, dd["Coamwell"])
-                model.economics.OutputParameterDict[model.economics.Cplant.Name] = self.PopulateStructureFromDictEntry(model.economics.Cplant, dd["Cplant"])
-                model.economics.OutputParameterDict[model.economics.Coamplant.Name] = self.PopulateStructureFromDictEntry(model.economics.Coamplant, dd["Coamplant"])
-                model.economics.OutputParameterDict[model.economics.Cgath.Name] = self.PopulateStructureFromDictEntry(model.economics.Cgath, dd["Cgath"])
-                model.economics.OutputParameterDict[model.economics.Cpiping.Name] = self.PopulateStructureFromDictEntry(model.economics.Cpiping, dd["Cpiping"])
-                model.economics.OutputParameterDict[model.economics.Coamwater.Name] = self.PopulateStructureFromDictEntry(model.economics.Coamwater, dd["Coamwater"])
-                model.economics.OutputParameterDict[model.economics.CCap.Name] = self.PopulateStructureFromDictEntry(model.economics.CCap, dd["CCap"])
-                model.economics.OutputParameterDict[model.economics.Coam.Name] = self.PopulateStructureFromDictEntry(model.economics.Coam, dd["Coam"])
-                model.economics.OutputParameterDict[model.economics.averageannualpumpingcosts.Name] = self.PopulateStructureFromDictEntry(model.economics.averageannualpumpingcosts, dd["averageannualpumpingcosts"])
+                for key in model.economics.ParameterDict: model.economics.ParameterDict[key] = self.PopulateStructureFromDict(model.economics.ParameterDict[key], dd)
+                for key in model.economics.OutputParameterDict: model.economics.OutputParameterDict[key] = self.PopulateStructureFromDict(model.economics.OutputParameterDict[key], dd)
 
             elif "EconomicsAddOns" in sclass:
-                model.addeconomics.ParameterDict[model.addeconomics.AddOnNickname.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnNickname, dd["AddOnNickname"])
-                model.addeconomics.ParameterDict[model.addeconomics.AddOnCAPEX.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnCAPEX, dd["AddOnCAPEX"])
-                model.addeconomics.ParameterDict[model.addeconomics.AddOnOPEXPerYear.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnOPEXPerYear, dd["AddOnOPEXPerYear"])
-                model.addeconomics.ParameterDict[model.addeconomics.AddOnElecGainedPerYear.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnElecGainedPerYear, dd["AddOnElecGainedPerYear"])
-                model.addeconomics.ParameterDict[model.addeconomics.AddOnHeatGainedPerYear.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnHeatGainedPerYear, dd["AddOnHeatGainedPerYear"])
-                model.addeconomics.ParameterDict[model.addeconomics.AddOnProfitGainedPerYear.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnProfitGainedPerYear, dd["AddOnProfitGainedPerYear"])
-                model.addeconomics.ParameterDict[model.addeconomics.FixedInternalRate.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.FixedInternalRate, dd["FixedInternalRate"])
-                model.addeconomics.ParameterDict[model.addeconomics.ConstructionYears.Name]  = self.PopulateStructureFromDictEntry(model.addeconomics.ConstructionYears, dd["ConstructionYears"])
-                model.addeconomics.ParameterDict[model.addeconomics.HeatStartPrice.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.HeatStartPrice, dd["HeatStartPrice"])
-                model.addeconomics.ParameterDict[model.addeconomics.HeatEndPrice.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.HeatEndPrice, dd["HeatEndPrice"])
-                model.addeconomics.ParameterDict[model.addeconomics.HeatEscalationStart.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.HeatEscalationStart, dd["HeatEscalationStart"])
-                model.addeconomics.ParameterDict[model.addeconomics.HeatEscalationRate.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.HeatEscalationRate, dd["HeatEscalationRate"])
-                model.addeconomics.ParameterDict[model.addeconomics.ElecStartPrice.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.ElecStartPrice, dd["ElecStartPrice"])
-                model.addeconomics.ParameterDict[model.addeconomics.ElecEndPrice.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.ElecEndPrice, dd["ElecEndPrice"])
-                model.addeconomics.ParameterDict[model.addeconomics.ElecEscalationStart.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.ElecEscalationStart, dd["ElecEscalationStart"])
-                model.addeconomics.ParameterDict[model.addeconomics.ElecEscalationRate.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.ElecEscalationRate, dd["ElecEscalationRate"])
-                model.addeconomics.ParameterDict[model.addeconomics.AnnualLicenseEtc.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AnnualLicenseEtc, dd["AnnualLicenseEtc"])
-                model.addeconomics.ParameterDict[model.addeconomics.FlatLicenseEtc.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.FlatLicenseEtc, dd["FlatLicenseEtc"])
-                model.addeconomics.ParameterDict[model.addeconomics.OtherIncentives.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.OtherIncentives, dd["OtherIncentives"])
-                model.addeconomics.ParameterDict[model.addeconomics.TaxRelief.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.TaxRelief, dd["TaxRelief"])
-                model.addeconomics.ParameterDict[model.addeconomics.TotalGrant.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.TotalGrant, dd["TotalGrant"])
-
-                #results
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnCAPEXTotal.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnCAPEXTotal, dd["AddOnCAPEXTotal"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnOPEXTotalPerYear.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnOPEXTotalPerYear, dd["AddOnOPEXTotalPerYear"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnElecGainedTotalPerYear.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnElecGainedTotalPerYear, dd["AddOnElecGainedTotalPerYear"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnHeatGainedTotalPerYear.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnHeatGainedTotalPerYear, dd["AddOnHeatGainedTotalPerYear"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnProfitGainedTotalPerYear.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnProfitGainedTotalPerYear, dd["AddOnProfitGainedTotalPerYear"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.ProjectNPV.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.ProjectNPV, dd["ProjectNPV"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.ProjectIRR.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.ProjectIRR, dd["ProjectIRR"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.ProjectVIR.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.ProjectVIR, dd["ProjectVIR"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.ProjectPaybackPeriod.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.ProjectPaybackPeriod, dd["ProjectPaybackPeriod"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnPaybackPeriod.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnPaybackPeriod, dd["AddOnPaybackPeriod"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.ProjectMOIC.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.ProjectMOIC, dd["ProjectMOIC"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnElecPrice.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnElecPrice, dd["AddOnElecPrice"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnHeatPrice.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnHeatPrice, dd["AddOnHeatPrice"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AdjustedProjectCAPEX.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AdjustedProjectCAPEX, dd["AdjustedProjectCAPEX"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AdjustedProjectOPEX.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AdjustedProjectOPEX, dd["AdjustedProjectOPEX"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnCashFlow.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnCashFlow, dd["AddOnCashFlow"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnCummCashFlow.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnCummCashFlow, dd["AddOnCummCashFlow"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.ProjectCashFlow.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.ProjectCashFlow, dd["ProjectCashFlow"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.ProjectCummCashFlow.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.ProjectCummCashFlow, dd["ProjectCummCashFlow"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnElecRevenue.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnElecRevenue, dd["AddOnElecRevenue"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnHeatRevenue.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnHeatRevenue, dd["AddOnHeatRevenue"])
-                model.addeconomics.OutputParameterDict[model.addeconomics.AddOnRevenue.Name] = self.PopulateStructureFromDictEntry(model.addeconomics.AddOnRevenue, dd["AddOnRevenue"])
+                for key in model.addeconomics.ParameterDict: model.addeconomics.ParameterDict[key] = self.PopulateStructureFromDict(model.addeconomics.ParameterDict[key], dd)
+                for key in model.addeconomics.OutputParameterDict: model.addeconomics.OutputParameterDict[key] = self.PopulateStructureFromDict(model.addeconomics.OutputParameterDict[key], dd)
 
             elif "EconomicsCCUS" in sclass:
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.FixedInternalRate.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.FixedInternalRate, dd["FixedInternalRate"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.ConstructionYears.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.ConstructionYears, dd["ConstructionYears"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.CCUSEndPrice.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CCUSEndPrice, dd["CCUSEndPrice"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.CCUSEscalationStart.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CCUSEscalationStart, dd["CCUSEscalationStart"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.CCUSEscalationRate.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CCUSEscalationRate, dd["CCUSEscalationRate"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.CCUSStartPrice.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CCUSStartPrice, dd["CCUSStartPrice"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.CCUSGridCO2.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CCUSGridCO2, dd["CCUSGridCO2"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.HeatStartPrice.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.HeatStartPrice, dd["HeatStartPrice"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.HeatEndPrice.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.HeatEndPrice, dd["HeatEndPrice"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.HeatEscalationStart.Name]  = self.PopulateStructureFromDictEntry(model.ccuseconomics.HeatEscalationStart, dd["HeatEscalationStart"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.HeatEscalationRate.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.HeatEscalationRate, dd["HeatEscalationRate"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.ElecStartPrice.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.ElecStartPrice, dd["ElecStartPrice"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.ElecEndPrice.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.ElecEndPrice, dd["ElecEndPrice"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.ElecEscalationStart.Name]  = self.PopulateStructureFromDictEntry(model.ccuseconomics.ElecEscalationStart, dd["ElecEscalationStart"])
-                model.ccuseconomics.ParameterDict[model.ccuseconomics.ElecEscalationRate.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.ElecEscalationRate, dd["ElecEscalationRate"])
+                for key in model.ccuseconomics.ParameterDict: model.ccuseconomics.ParameterDict[key] = self.PopulateStructureFromDict(model.ccuseconomics.ParameterDict[key], dd)
+                for key in model.ccuseconomics.OutputParameterDict: model.ccuseconomics.OutputParameterDict[key] = self.PopulateStructureFromDict(model.ccuseconomics.OutputParameterDict[key], dd)
 
-                #results
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.ProjectNPV.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.ProjectNPV, dd["ProjectNPV"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.ProjectIRR.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.ProjectIRR, dd["ProjectIRR"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.ProjectVIR.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.ProjectVIR, dd["ProjectVIR"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.ProjectPaybackPeriod.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.ProjectPaybackPeriod, dd["ProjectPaybackPeriod"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.ProjectMOIC.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.ProjectMOIC, dd["ProjectMOIC"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.ProjectCashFlow.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.ProjectCashFlow, dd["ProjectCashFlow"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.ProjectCummCashFlow.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.ProjectCummCashFlow, dd["ProjectCummCashFlow"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.CCUSPrice.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CCUSPrice, dd["CCUSPrice"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.CCUSRevenue.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CCUSRevenue, dd["CCUSRevenue"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.CCUSCashFlow.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CCUSCashFlow, dd["CCUSCashFlow"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.CCUSCummCashFlow.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CCUSCummCashFlow, dd["CCUSCummCashFlow"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.CarbonThatWouldHaveBeenProducedAnnually.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CarbonThatWouldHaveBeenProducedAnnually, dd["CarbonThatWouldHaveBeenProducedAnnually"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.CarbonThatWouldHaveBeenProducedTotal.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CarbonThatWouldHaveBeenProducedTotal, dd["CarbonThatWouldHaveBeenProducedTotal"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.CCUSOnElecPrice.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CCUSOnElecPrice, dd["CCUSOnElecPrice"])
-                model.ccuseconomics.OutputParameterDict[model.ccuseconomics.CCUSOnHeatPrice.Name] = self.PopulateStructureFromDictEntry(model.ccuseconomics.CCUSOnHeatPrice, dd["CCUSOnHeatPrice"])
+            elif "EconomicsS_DAC_GT" in sclass:
+                for key in model.sdacgteconomics.ParameterDict: model.sdacgteconomics.ParameterDict[key] = self.PopulateStructureFromDict(model.sdacgteconomics.ParameterDict[key], dd)
+                for key in model.sdacgteconomics.OutputParameterDict: model.sdacgteconomics.OutputParameterDict[key] = self.PopulateStructureFromDict(model.sdacgteconomics.OutputParameterDict[key], dd)
 
             return True
         except Error as ex:
@@ -460,78 +249,71 @@ class AdvGeoPHIRESUtils():
             return False
         return False
 
-    def PopulateStructureFromDictEntry(self, object, dd:dict)->any:
+    def PopulateStructureFromDict(self, object, dd:dict)->any:
         #rehydrate the object based on values in the JSON-based dictionary - copy the original values for the object for those that don't change, and use the dictionary values for the ones that might have changed
 
-        if not "value" in dd: return None   #don't do anythin if there isn't something in dd["value"]
+        #dd is a dictionary of dictionaries, we need to iterate thru all the entries looking for a match to the one we are looking for, setting dd to the right dictionary once we find it
+        for key in dd:
+            valdict = dd[key]
+            if not isinstance(valdict, dict): continue   #skip it if it is a not a dict
+            if not "value" in valdict: continue    #skip is there is a "value" entry - if there isn't, it must not be valid
+            if not "Name" in valdict: continue    #skip is there is a "Name" entry - if there isn't, it must not be valid
+            if valdict["Name"] == object.Name: 
+                ddx = valdict
+                break
+
         try:
             if isinstance(object, OutputParameter):
-                if isinstance(object.value, float): object.value = float(dd["value"])
-                elif isinstance(object.value, int): object.value = int(dd["value"])
-                elif isinstance(object.value, bool): object.value = bool(dd["value"])
-                elif isinstance(object.value, str): object.value = str(dd["value"])
-                elif isinstance(object.value, list): object.value = np.array(list(dd["value"]))
-                else: object.value = dd["value"]
+                if isinstance(object.value, float):
+                   if '[' in str(ddx["value"]): object.value = list(ddx["value"])    #if it has "[" it must be a list
+                   else: object.value = float(ddx["value"])
+                elif isinstance(object.value, int): object.value = int(ddx["value"])
+                elif isinstance(object.value, bool): object.value = bool(ddx["value"])
+                elif isinstance(object.value, str): object.value = str(ddx["value"])
+                elif isinstance(object.value, list): object.value = np.array(list(ddx["value"]))
+                else: object.value = ddx["value"]
                 return OutputParameter(object.Name, value = object.value, UnitType=object.UnitType, PreferredUnits=object.PreferredUnits, CurrentUnits=object.CurrentUnits, UnitsMatch=object.UnitsMatch)
             else:
-                object.Provided = bool(dd["Provided"])
-                object.Valid = bool(dd["Valid"])
+                if "Provided" in ddx: object.Provided = bool(ddx["Provided"])
+                if "Valid" in ddx:object.Valid = bool(ddx["Valid"])
                 #ignore all the other parameters because that can't won't be changed by users.  The only failure here is when the CurrentUnits change...
 
                 #different value types makes it a bit complicated
                 if isinstance(object, floatParameter):
-                    object.value = float(dd["value"])
+                    if not isinstance (ddx["value"], list): object.value = float(ddx["value"])
+                    else: object.value = list(ddx["value"])
                     return floatParameter(object.Name, value = object.value, Required=object.Required, Provided=object.Provided, Valid=object.Valid, ErrMessage=object.ErrMessage, InputComment=object.InputComment, ToolTipText=object.ToolTipText, UnitType=object.UnitType, PreferredUnits=object.PreferredUnits, CurrentUnits=object.CurrentUnits, UnitsMatch=object.UnitsMatch, DefaultValue=object.DefaultValue, Min=object.Min, Max=object.Max)
+
                 elif isinstance(object, intParameter):    # int is complicated becasue it can be a int or an enum
                     if isinstance(object.value, Enum):  #Enums are even more complicated but only exist for input parameters
-                        if 'MULTIPLE_PARALLEL_FRACTURES' in dd["value"]: object.value = ReservoirModel.MULTIPLE_PARALLEL_FRACTURES
-                        elif 'LINEAR_HEAT_SWEEP' in dd["value"]: object.value = ReservoirModel.LINEAR_HEAT_SWEEP
-                        elif 'SINGLE_FRACTURE' in dd["value"]: object.value = ReservoirModel.SINGLE_FRACTURE
-                        elif 'ANNUAL_PERCENTAGE' in dd["value"]: object.value = ReservoirModel.ANNUAL_PERCENTAGE
-                        elif 'USER_PROVIDED_PROFILE' in dd["value"]: object.value = ReservoirModel.USER_PROVIDED_PROFILE
-                        elif 'TOUGH2_SIMULATOR' in dd["value"]: object.value = ReservoirModel.TOUGH2_SIMULATOR
-                        elif 'FRAC_NUM_SEP' in dd["value"]: object.value = ReservoirVolume.FRAC_NUM_SEP
-                        elif 'RES_VOL_FRAC_SEP' in dd["value"]: object.value = ReservoirVolume.RES_VOL_FRAC_SEP
-                        elif 'RES_VOL_FRAC_NUM' in dd["value"]: object.value = ReservoirVolume.RES_VOL_FRAC_NUM
-                        elif 'RES_VOL_ONLY' in dd["value"]: object.value = ReservoirVolume.RES_VOL_ONLY
-                        elif 'CIRCULAR_AREA' in dd["value"]: object.value = FractureShape.CIRCULAR_AREA
-                        elif 'CIRCULAR_DIAMETER' in dd["value"]: object.value = FractureShape.CIRCULAR_DIAMETER
-                        elif 'SQUARE' in dd["value"]: object.value = FractureShape.SQUARE
-                        elif 'RECTANGULAR' in dd["value"]: object.value = FractureShape.RECTANGULAR
-                        elif 'ELECTRICITY' in dd["value"]: object.value = EndUseOptions.ELECTRICITY
-                        elif 'HEAT' in dd["value"]: object.value = EndUseOptions.HEAT
-                        elif 'COGENERATION_TOPPING_EXTRA_HEAT' in dd["value"]: object.value = EndUseOptions.COGENERATION_TOPPING_EXTRA_HEAT
-                        elif 'COGENERATION_TOPPING_EXTRA_ELECTRICTY' in dd["value"]: object.value = EndUseOptions.COGENERATION_TOPPING_EXTRA_ELECTRICTY
-                        elif 'COGENERATION_BOTTOMING_EXTRA_ELECTRICTY' in dd["value"]: object.value = EndUseOptions.COGENERATION_BOTTOMING_EXTRA_ELECTRICTY
-                        elif 'COGENERATION_BOTTOMING_EXTRA_HEAT' in dd["value"]: object.value = EndUseOptions.COGENERATION_BOTTOMING_EXTRA_HEAT
-                        elif 'COGENERATION_PARALLEL_EXTRA_HEAT' in dd["value"]: object.value = EndUseOptions.COGENERATION_PARALLEL_EXTRA_HEAT
-                        elif 'COGENERATION_PARALLEL_EXTRA_ELECTRICTY' in dd["value"]: object.value = EndUseOptions.COGENERATION_PARALLEL_EXTRA_ELECTRICTY
-                        elif 'SUB_CRITICAL_ORC' in dd["value"]: object.value = PowerPlantType.SUB_CRITICAL_ORC
-                        elif 'SUPER_CRITICAL_ORC' in dd["value"]: object.value = PowerPlantType.SUPER_CRITICAL_ORC
-                        elif 'SINGLE_FLASH' in dd["value"]: object.value = PowerPlantType.SINGLE_FLASH
-                        elif 'DOUBLE_FLASH' in dd["value"]: object.value = PowerPlantType.DOUBLE_FLASH
-                        elif 'AGS' in dd["value"]: object.value = EconomicModel.AGS
-                        elif 'FCR' in dd["value"]: object.value = EconomicModel.FCR
-                        elif 'STANDARDIZED_LEVELIZED_COST' in dd["value"]: object.value = EconomicModel.STANDARDIZED_LEVELIZED_COST
-                        elif 'BICYCLE' in dd["value"]: object.value = EconomicModel.BICYCLE
-                        elif 'VERTICAL_SMALL' in dd["value"]: object.value = WellDrillingCostCorrelation.VERTICAL_SMALL
-                        elif 'DEVIATED_SMALL' in dd["value"]: object.value = WellDrillingCostCorrelation.DEVIATED_SMALL
-                        elif 'VERTICAL_LARGE' in dd["value"]: object.value = WellDrillingCostCorrelation.VERTICAL_LARGE
-                        elif 'DEVIATED_LARGE' in dd["value"]: object.value = WellDrillingCostCorrelation.DEVIATED_LARGE
-                    else: object.value = int(dd["value"])
+                        if isinstance(object.value, ReservoirModel): object.value = ReservoirModel[object.value.name]
+                        elif isinstance(object.value, ReservoirVolume): object.value = ReservoirVolume[object.value.name]
+                        elif isinstance(object.value, FractureShape): object.value = FractureShape[object.value.name]
+                        elif isinstance(object.value, EndUseOptions): object.value = EndUseOptions[object.value.name]
+                        elif isinstance(object.value, PowerPlantType): object.value = PowerPlantType[object.value.name]
+                        elif isinstance(object.value, EconomicModel): object.value = EconomicModel[object.value.name]
+                        elif isinstance(object.value, WellDrillingCostCorrelation): object.value = WellDrillingCostCorrelation[object.value.name]
+                        elif isinstance(object.value, WorkingFluid): object.value = WorkingFluid[object.value.name]
+                        elif isinstance(object.value, Configuration):  object.value = Configuration[object.value.name]
+                    else: object.value = int(ddx["value"])
                     return intParameter(object.Name, value = object.value, Required=object.Required, Provided=object.Provided, Valid=object.Valid, ErrMessage=object.ErrMessage, InputComment=object.InputComment, ToolTipText=object.ToolTipText, UnitType=object.UnitType, PreferredUnits=object.PreferredUnits, CurrentUnits=object.CurrentUnits, UnitsMatch=object.UnitsMatch, DefaultValue=object.DefaultValue, AllowableRange=object.AllowableRange)
+
                 elif isinstance(object, boolParameter):
-                    object.value = bool(dd["value"])
+                    object.value = bool(ddx["value"])
                     return boolParameter(object.Name, value = object.value, Required=object.Required, Provided=object.Provided, Valid=object.Valid, ErrMessage=object.ErrMessage, InputComment=object.InputComment, ToolTipText=object.ToolTipText, UnitType=object.UnitType, PreferredUnits=object.PreferredUnits, CurrentUnits=object.CurrentUnits, UnitsMatch=object.UnitsMatch, DefaultValue=object.DefaultValue)
+
                 elif isinstance(object, strParameter):
-                    object.value = str(dd["value"])
+                    object.value = str(ddx["value"])
                     return strParameter(object.Name, value = object.value, Required=object.Required, Provided=object.Provided, Valid=object.Valid, ErrMessage=object.ErrMessage, InputComment=object.InputComment, ToolTipText=object.ToolTipText, UnitType=object.UnitType, PreferredUnits=object.PreferredUnits, CurrentUnits=object.CurrentUnits, UnitsMatch=object.UnitsMatch, DefaultValue=object.DefaultValue)
+
                 elif isinstance(object, listParameter):
-                    object.value = list(dd["value"])
+                    object.value = list(ddx["value"])
                     return listParameter(object.Name, value = object.value, Required=object.Required, Provided=object.Provided, Valid=object.Valid, ErrMessage=object.ErrMessage, InputComment=object.InputComment, ToolTipText=object.ToolTipText, UnitType=object.UnitType, PreferredUnits=object.PreferredUnits, CurrentUnits=object.CurrentUnits, UnitsMatch=object.UnitsMatch, DefaultValue=object.DefaultValue, Min=object.Min, Max=object.Max)
+
                 else:
-                    object.value = dd["value"]
+                    object.value = ddx["value"]
                     return strParameter(object.Name, value = object.value, Required=object.Required, Provided=object.Provided, Valid=object.Valid, ErrMessage=object.ErrMessage, InputComment=object.InputComment, ToolTipText=object.ToolTipText, UnitType=object.UnitType, PreferredUnits=object.PreferredUnits, CurrentUnits=object.CurrentUnits, UnitsMatch=object.UnitsMatch, DefaultValue=object.DefaultValue)
+
         except Error as ex:
             print (ex)
             return None

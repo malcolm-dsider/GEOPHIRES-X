@@ -351,14 +351,10 @@ class WellBores:
         #If you choose to sublass this master class, you can also choose to override this method (or not), and if you do, do it before or after you call you own version of this method.  If you do, you can also choose to call this method from you class, which can effectively run the calculations of the superclass, making all thr values available to your methods. but you had n=betteer have set all the paremeters!
 
         #special case: production and injection well diameters are input as inches and call calculations assume meters! Check and change if needed, assuming anything > 2 must be talking about inches
-        if self.injwelldiam.value > 2.0:
-           self.injwelldiam.value = self.injwelldiam.value * 0.0254
-           self.injwelldiam.CurrentUnits = LengthUnit.METERS
-           self.injwelldiam.UnitsMatch = False
-        if self.prodwelldiam.value > 2.0:
-           self.prodwelldiam.value = self.prodwelldiam.value * 0.0254
-           self.prodwelldiam.CurrentUnits = LengthUnit.METERS
-           self.prodwelldiam.UnitsMatch = False
+        injwelldiam = self.injwelldiam.value
+        if self.injwelldiam.value > 2.0: injwelldiam = self.injwelldiam.value * 0.0254
+        prodwelldiam = self.prodwelldiam.value
+        if self.prodwelldiam.value > 2.0: prodwelldiam = self.prodwelldiam.value * 0.0254
 
         #calculate wellbore temperature drop
         self.ProdTempDrop.value = self.tempdropprod.value   #if not Ramey, hard code a user-supplied tempweature drop.
@@ -366,7 +362,7 @@ class WellBores:
             if hasattr(model.reserv, "InputDepth"): d = model.reserv.InputDepth.value
             else: d = model.reserv.depth.value
             self.ProdTempDrop.value = self.RameyCalc(model.reserv.krock.value, model.reserv.rhorock.value, model.reserv.cprock.value,
-                                  self.prodwelldiam.value, model.reserv.timevector.value, model.surfaceplant.utilfactor.value, self.prodwellflowrate.value,
+                                  prodwelldiam, model.reserv.timevector.value, model.surfaceplant.utilfactor.value, self.prodwellflowrate.value,
                                   model.reserv.cpwater.value, model.reserv.Trock.value, model.reserv.Tresoutput.value, model.reserv.averagegradient.value, d)
 
         self.ProducedTemperature.value = model.reserv.Tresoutput.value-self.ProdTempDrop.value
@@ -382,24 +378,24 @@ class WellBores:
         #------------------------------------------
         #calculate pressure drops and pumping power
         #------------------------------------------
-        self.DPProdWell.value, f3, vprod, self.rhowaterprod = self.WellPressureDrop(model, model.reserv.Tresoutput.value-self.ProdTempDrop.value/4.0, self.prodwellflowrate.value, self.prodwelldiam.value, self.impedancemodelused.value, model.reserv.depth.value)
-        self.DPInjWell.value, f1, vinj, self.rhowaterinj = self.InjectionWellPressureDrop(model, self.Tinj.value, self.prodwellflowrate.value, self.injwelldiam.value, self.impedancemodelused.value, model.reserv.depth.value, self.nprod.value, self.ninj.value, model.reserv.waterloss.value)
+        self.DPProdWell.value, f3, vprod, self.rhowaterprod = self.WellPressureDrop(model, model.reserv.Tresoutput.value-self.ProdTempDrop.value/4.0, self.prodwellflowrate.value, prodwelldiam, self.impedancemodelused.value, model.reserv.depth.value)
+        self.DPInjWell.value, f1, vinj, self.rhowaterinj = self.InjectionWellPressureDrop(model, self.Tinj.value, self.prodwellflowrate.value, injwelldiam, self.impedancemodelused.value, model.reserv.depth.value, self.nprod.value, self.ninj.value, model.reserv.waterloss.value)
 
         if self.impedancemodelused.value: #assumed everything stays liquid throughout
             rhowaterreservoir = model.reserv.densitywater(0.1*self.Tinj.value+0.9*model.reserv.Tresoutput.value)    #based on TARB in Geophires v1.2
             self.DPOverall.value, self.PumpingPower.value, self.DPProdWell.value, self.DPReserv.value, self.DPBouyancy.value = self.ProdPressureDropsAndPumpingPowerUsingImpedenceModel(f3, vprod,
-                                          self.rhowaterinj, self.rhowaterprod, model.reserv.rhowater.value, model.reserv.depth.value, self.prodwellflowrate.value, self.prodwelldiam.value, self.impedance.value,
+                                          self.rhowaterinj, self.rhowaterprod, model.reserv.rhowater.value, model.reserv.depth.value, self.prodwellflowrate.value, prodwelldiam, self.impedance.value,
                                           self.nprod.value, model.reserv.waterloss.value, model.surfaceplant.pumpeff.value)
             self.DPOverall.value, self.PumpingPower.value, self.DPInjWell.value = self.InjPressureDropsAndPumpingPowerUsingImpedenceModel(f1, vinj,
-                                          self.rhowaterinj, model.reserv.depth.value, self.prodwellflowrate.value, self.injwelldiam.value,
+                                          self.rhowaterinj, model.reserv.depth.value, self.prodwellflowrate.value, injwelldiam,
                                           self.ninj.value, model.reserv.waterloss.value, model.surfaceplant.pumpeff.value, self.DPOverall.value)
 
         else: #PI and II are used
             self.PumpingPower.value, self.PumpingPowerProd.value, self.DPProdWell.value, self.Pprodwellhead.value =  self.ProdPressureDropAndPumpingPowerUsingIndexes(model, self.usebuiltinhydrostaticpressurecorrelation, self.productionwellpumping.value, self.usebuiltinppwellheadcorrelation,
                                         model.reserv.Trock.value, model.reserv.Tsurf.value, model.reserv.depth.value, model.reserv.averagegradient.value, self.ppwellhead.value, self.PI.value, self.prodwellflowrate.value, f3, vprod,
-                                        self.prodwelldiam.value, self.nprod.value, model.surfaceplant.pumpeff.value, self.rhowaterprod)
+                                        prodwelldiam, self.nprod.value, model.surfaceplant.pumpeff.value, self.rhowaterprod)
             self.PumpingPower.value, self.PumpingPowerInj.value, self.DPInjWell.value, model.surfaceplant.Pplantoutlet.value, self.Pprodwellhead.value =  self.InjPressureDropAndPumpingPowerUsingIndexes(model, self.usebuiltinhydrostaticpressurecorrelation, self.productionwellpumping.value, self.usebuiltinppwellheadcorrelation, model.surfaceplant.usebuiltinoutletplantcorrelation.value,
                                         model.reserv.Trock.value, model.reserv.Tsurf.value, model.reserv.depth.value, model.reserv.averagegradient.value, self.ppwellhead.value, self.II.value, self.prodwellflowrate.value, f1, vinj,
-                                        self.injwelldiam.value, self.nprod.value, self.ninj.value, model.reserv.waterloss.value, model.surfaceplant.pumpeff.value, self.rhowaterinj, model.surfaceplant.Pplantoutlet.value, self.PumpingPowerProd.value)
+                                        injwelldiam, self.nprod.value, self.ninj.value, model.reserv.waterloss.value, model.surfaceplant.pumpeff.value, self.rhowaterinj, model.surfaceplant.Pplantoutlet.value, self.PumpingPowerProd.value)
       
         model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
