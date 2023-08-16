@@ -90,7 +90,7 @@ class Economics:
         self.OtherIncentives = self.ParameterDict[self.OtherIncentives.Name] = floatParameter("Other Incentives", Min= -1000.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
         self.TaxRelief = self.ParameterDict[self.TaxRelief.Name] = floatParameter("Tax Relief Per Year", value = 0.0, DefaultValue=0.0, Min=0.0, Max = 100.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.PERCENT, CurrentUnits = PercentUnit.PERCENT, ErrMessage="assume no tax relief (0.0)", ToolTipText="Fixed percent reduction in annual tax rate")
         self.TotalGrant = self.ParameterDict[self.TotalGrant.Name] = floatParameter("One-time Grants Etc", Min= -1000.0, Max = 1000.0, UnitType = Units.CURRENCY, PreferredUnits=CurrencyUnit.MDOLLARS, CurrentUnits=CurrencyUnit.MDOLLARS)
-        self.FixedInternalRate = self.ParameterDict[self.FixedInternalRate.Name] = floatParameter("Fixed Internal Rate", value = 6.25, DefaultValue=6.25, Min=0.0, Max = 100.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.TENTH, CurrentUnits = PercentUnit.TENTH, ErrMessage="assume default for fixed internal rate (6.25%)", ToolTipText="Fixed Internal Rate (used in NPV calculation)")
+        self.FixedInternalRate = self.ParameterDict[self.FixedInternalRate.Name] = floatParameter("Fixed Internal Rate", value = 6.25, DefaultValue=6.25, Min=0.0, Max = 100.0, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.PERCENT, CurrentUnits = PercentUnit.PERCENT, ErrMessage="assume default for fixed internal rate (6.25%)", ToolTipText="Fixed Internal Rate (used in NPV calculation)")
 
     #local variable initialization
         self.Claborcorrelation = 0.0
