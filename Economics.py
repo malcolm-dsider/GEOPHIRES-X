@@ -513,6 +513,7 @@ class Economics:
                     CCAPP1 = 2231 - 2*(MaxProducedTemperature-150.) 
                 x = np.max(model.surfaceplant.ElectricityProduced.value)
                 y = np.max(model.surfaceplant.ElectricityProduced.value)
+                if y == 0.0: y = 15.0
                 z=math.pow(y/15.,-0.06)
                 self.Cplantcorrelation = CCAPP1*z*x*1000./1E6
 
