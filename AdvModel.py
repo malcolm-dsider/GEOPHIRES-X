@@ -91,7 +91,7 @@ class AdvModel(Model.Model, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
             self.sdacgtoutputs = OutputsS_DAC_GT.OutputsS_DAC_GT(self)
             self.sdacgtoutputs.read_parameters(self)
 
-        self.write_Object_Parameters_File("D:\\temp\\Objects.txt")
+        #self.write_Object_Parameters_File("D:\\temp\\Objects.txt")
         self.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
     def Calculate(self):

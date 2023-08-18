@@ -147,7 +147,7 @@ class HIP_RA():
         self.Rg = self.OutputParameterDict[self.Rg.Name] = OutputParameter(Name = "Recovery Factor", value=-999.9, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.PERCENT, CurrentUnits = PercentUnit.PERCENT)
         self.WA = self.OutputParameterDict[self.WA.Name] = OutputParameter(Name = "Available Heat", value=-999.9, UnitType = Units.HEAT, PreferredUnits = HeatUnit.KJ, CurrentUnits = HeatUnit.KJ)
         self.WE = self.OutputParameterDict[self.WE.Name] = OutputParameter(Name = "Produceable Heat", value=-999.9, UnitType = Units.HEAT, PreferredUnits = HeatUnit.KJ, CurrentUnits = HeatUnit.KJ)
-        self.We = self.OutputParameterDict[self.We.Name] = OutputParameter(Name = "Produceable Electricity", value=-999.9, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyUnit.MW, CurrentUnits = EnergyUnit.MW)
+        self.We = self.OutputParameterDict[self.We.Name] = OutputParameter(Name = "Produceable Electricity", value=-999.9, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyUnit.MWH, CurrentUnits = EnergyUnit.MWH)
 
         self.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
         

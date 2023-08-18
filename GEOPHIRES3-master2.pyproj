@@ -14,11 +14,11 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>Global|PythonCore|3.9</InterpreterId>
     <TestFramework>Pytest</TestFramework>
-    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\example1.txt</CommandLineArguments>
+    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\S-DAC-GT.txt</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
-    <Environment>MC_GEOPHIRES: AdvGeoPHIRESv3.py examples\example1_mc.txt D:\Work\GEOPHIRES3-master\MC_Settings_file.txt
-MC_HIP: HIP-RA.py examples\example1_GCGP.txt MC_HIP_Settings_file.txt
+    <Environment>MC_GEOPHIRES:GEOPHIRESv3.py D:\Work\GEOPHIRES3-master\Examples\example1.txt D:\Work\GEOPHIRES3-master\Examples\MC_GEOPHIRES_Settings_file.txt
+MC_HIP: HIP-RA.py examples\example1.txt examples\MC_HIP_Settings_file.txt
 HIP: D:\Work\GEOPHIRES3-master\Examples\HIPexample1.txt
 GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt
 GEOPHIRES Closed loops: D:\Work\GEOPHIRES3-master\Examples\Wanju_Yuan_Closed-Loop_Geothermal_Energy_Recovery.txt
@@ -301,8 +301,6 @@ D:\Work\GEOPHIRES3-master\Examples\S-DAC-GT.txt</Environment>
     <Content Include="HDR.out" />
     <Content Include="LACETable.txt" />
     <Content Include="license.txt" />
-    <Content Include="MC_HIP_Settings_file.txt" />
-    <Content Include="MC_Settings_file.txt" />
     <Content Include="README.md" />
     <Content Include="requirements.txt" />
     <Content Include="Results\20190829NASCC.txt" />
