@@ -1,8 +1,8 @@
-Reservoir Temperature, 250.0
-Rejection Temperature, 60.0
-Formation Porosity, 10.0
-Reservoir Area, 55.0
-Reservoir Thickness, 0.25
-Reservoir Life Cycle, 25
-Heat Capacity Of Water, -1
-Density Of Water, -1
+Reservoir Temperature, 250.0, #CELCIUS
+Rejection Temperature, 60.0, #CELCIUS
+Formation Porosity, 10.0, #PERCENT
+Reservoir Area, 55.0, #KM2
+Reservoir Thickness, 0.25, #KM
+Reservoir Life Cycle, 25, #YEARS
+Heat Capacity Of Water, -1, #INTERNALLY CALCULATED BASED ON WATER TEMPERATURE
+Density Of Water, -1, #INTERNALLY CALCULATED BASED ON WATER TEMPERATURE
