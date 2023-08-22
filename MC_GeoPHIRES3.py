@@ -60,10 +60,10 @@ def WorkPackage(Job_ID, Inputs, Outputs, args, Outputfile, working_dir):
             rando = np.random.triangular(float(input_value[2]), float(input_value[3]), float(input_value[4]))
             s = s + input_value[0] + ", " + str(rando) + "\r\n"
         if input_value[1].strip().startswith('lognormal'):
-            rando = np.random.normal(float(input_value[2]), float(input_value[3]))
+            rando = np.random.lognormal(float(input_value[2]), float(input_value[3]))
             s = s + input_value[0] + ", " + str(rando) + "\r\n"
         if input_value[1].strip().startswith('binomial'):
-            rando = np.random.normal(float(input_value[2]), float(input_value[3]))
+            rando = np.random.binomial(float(input_value[2]), float(input_value[3]))
             s = s + input_value[0] + ", " + str(rando) + "\r\n"
 
 #make up a temporary file name that will be shared among files for this iteration
@@ -216,7 +216,10 @@ def main():
         result_count = result_count + 1
         if (not "-9999.0" in line) and len(s) > 1:
             line=line.strip()
-            Results.append([float(y) for y in line.split(",")])
+            if len(line) > 0:
+                Results.append([float(y) for y in line.split(",")])
+            else:
+                print ("space found in line " + str(result_count))
         else:
             print ("-9999.0 or space found in line " + str(result_count))
             

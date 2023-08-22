@@ -77,6 +77,9 @@ class HIP_RA():
         return cpwater
 
     def recoverableheat(self, Twater)->float:
+        #rturn the user parameter if it isn't -1
+        if self.RecoverableHeat.value != -1:
+            return self.RecoverableHeat.value
         #assume 0.66 for high-T reservoirs (>150C), 0.43 for low-T reservoirs (>90, Garg and Combs (2011)
         if Twater < 90.0: return 0.43
         if Twater > 150.0: return 0.66

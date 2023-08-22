@@ -14,11 +14,11 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>Global|PythonCore|3.9</InterpreterId>
     <TestFramework>Pytest</TestFramework>
-    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\HIPexample1_Units.txt</CommandLineArguments>
+    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\HIPexample1.txt</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
     <Environment>MC_GEOPHIRES:GEOPHIRESv3.py D:\Work\GEOPHIRES3-master\Examples\example1.txt D:\Work\GEOPHIRES3-master\Examples\MC_GEOPHIRES_Settings_file.txt
-MC_HIP: D:\Work\GEOPHIRES3-master\Examples\HIPexample1.txt examples\MC_HIP_Settings_file.txt
+MC_HIP: HIP-RA.py D:\Work\GEOPHIRES3-master\Examples\HIPexample1.txt examples\MC_HIP_Settings_file.txt
 HIP: D:\Work\GEOPHIRES3-master\Examples\HIPexample1.txt
 GEOPHIRES: D:\Work\GEOPHIRES3-master\Examples\example1.txt
 GEOPHIRES Closed loops: D:\Work\GEOPHIRES3-master\Examples\Wanju_Yuan_Closed-Loop_Geothermal_Energy_Recovery.txt
