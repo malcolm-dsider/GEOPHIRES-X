@@ -73,13 +73,14 @@ class AdvReservoir(AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
         model.logger.info("Init " + str(__class__) + ": " + sys._getframe().f_code.co_name)
 
         #before we calculate anything, let's see if there is a suitable result already in the database
-        key = self.CheckForExistingResult(model, os.path.abspath(__file__))
+        key = self.CheckForExistingResult(model, self)
         if key == None: 
             super().Calculate(model)    #run calculation because there was nothing in the database
             
             #store the calculate result and associated object paremeters in the database
             resultkey = self.store_result(model, self)
-            if resultkey == None: model.logger.warn("Failed To Store "+ str(__class__) + " " + os.path.abspath(__file__))
+            if resultkey == None: pass
+            elif resultkey == -1: model.logger.warn("Failed To Store "+ str(__class__) + " " + os.path.abspath(__file__))
             else: model.logger.info("stored " + str(__class__) + " " + os.path.abspath(__file__) + " as: " + resultkey)
 
         model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)

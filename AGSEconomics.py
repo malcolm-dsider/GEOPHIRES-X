@@ -203,9 +203,10 @@ class AGSEconomics(Economics.Economics, AdvGeoPHIRESUtils.AdvGeoPHIRESUtils):
 
         #store the calculate result and associated object paremeters in the database
         resultkey = self.store_result(model, self)
-        if resultkey == None: model.logger.warn("Failed To Store "+ str(__class__) + " " + os.path.abspath(__file__))
-
-        model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
+        if resultkey == None: pass
+        elif resultkey == -1: model.logger.warn("Failed To Store "+ str(__class__) + " " + os.path.abspath(__file__))
+        else:
+            model.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
         
     def __str__(self):
         return "AGSEconomics"

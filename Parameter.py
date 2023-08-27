@@ -183,7 +183,7 @@ def ReadParameter(ParameterReadIn: ParameterEntry, ParamToModify, model):
         ParamToModify.UnitsMatch = True
 
     if isinstance(ParamToModify, intParameter):
-        New_val = int(ParameterReadIn.sValue)
+        New_val = int(float(ParameterReadIn.sValue))
         if New_val == ParamToModify.DefaultValue: #Warning - the value read in is the same as the default value, making it superfluous - add a warning and suggestion
             if len(ParamToModify.ErrMessage) > 0:
                 print("Warning: Parameter given (" + str(New_val) +") for " + ParamToModify.Name + " is being set by the input file to a value that is the same as the default. No change was made to that value. Recommendation: remove the " + ParamToModify.Name + " from the input file unless you wish to change it from the default value of (" + str(ParamToModify.DefaultValue) + ")" )

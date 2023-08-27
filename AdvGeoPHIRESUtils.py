@@ -30,7 +30,7 @@ def load_key():
     return open("key.key", "rb").read() #Opens the file, reads and returns the key stored in the file
 
 class AdvGeoPHIRESUtils():
-    UseDatabase = True
+    UseDatabase = False
     def RunStoredProcedure(self, store_procedure_name:str, parameters:list)->list:
         if not self.UseDatabase: return None
         res = details = warnings = obj = None
@@ -184,7 +184,7 @@ class AdvGeoPHIRESUtils():
         except Error as ex:
             print (ex)
             model.logger.error("Error " + str(ex) + "writing into the database with the result. Proceeding as if we did.")
-            return None
+            return -1
         
         model.logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
         return KeyAsHash
@@ -334,9 +334,11 @@ class AdvGeoPHIRESUtils():
             
             #store the calculated result and associated object parameters in the database
             resultkey = self.store_result(model, object)
-            if resultkey == None:
+            if resultkey == -1:
                 print("Failed To Store "+ str(object.MyClass) + " " + object.MyPath)
                 self.logger.warn("Failed To Store "+ str(object.MyClass) + " " + object.MyPath)
+            elif resultkey == None:
+                pass #Do nothing - not using database
             else:
                 print("stored " + str(object.MyClass) + " " + object.MyPath + " as: " + resultkey)
                 self.logger.info("stored " + str(object.MyClass) + " " + object.MyPath + " as: " + resultkey)

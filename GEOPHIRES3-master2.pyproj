@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{a83eb736-df6d-47f6-b75d-1fb69c228472}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>HIP-RA.py</StartupFile>
+    <StartupFile>GEOPHIRESv3.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -14,7 +14,7 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>Global|PythonCore|3.9</InterpreterId>
     <TestFramework>Pytest</TestFramework>
-    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\HIPexample1.txt</CommandLineArguments>
+    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\Beckers_et_al_2023_Tabulated_Database_Coaxial_sCO2_heat.txt</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
     <Environment>MC_GEOPHIRES:GEOPHIRESv3.py D:\Work\GEOPHIRES3-master\Examples\example1.txt D:\Work\GEOPHIRES3-master\Examples\MC_GEOPHIRES_Settings_file.txt
@@ -26,7 +26,9 @@ GEOPHIRES-X_Output_validation_tool: D:\Work\GEOPHIRES3-master\Examples\GEOPHIRES
 D:\Work\GEOPHIRES3-master\Examples\Beckers_et_al_2023_Tabulated_Database_Uloop_water_elec.txt
 D:\Work\GEOPHIRES3-master\Examples\CATF_SHR_Thunderbird.txt
 D:\Work\GEOPHIRES3-master\Examples\CATF_SHR_Thunderbird-mutlilateral.txt
-D:\Work\GEOPHIRES3-master\Examples\S-DAC-GT.txt</Environment>
+D:\Work\GEOPHIRES3-master\Examples\S-DAC-GT.txt
+MC_GEOPHORES_SALT: AdvGEOPHIRESv3.py D:\Work\GEOPHIRES3-master\Examples\Salt_Closed_loop_multilateral.txt D:\Work\GEOPHIRES3-master\Examples\MC_GEOPHIRES_Settings_files_salt.txt
+D:\Work\GEOPHIRES3-master\problem.txt</Environment>
     <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
@@ -262,6 +264,7 @@ D:\Work\GEOPHIRES3-master\Examples\S-DAC-GT.txt</Environment>
     <Content Include="Examples\Beckers_et_al_2023_Tabulated_Database_Uloop_sCO2_heat.txt" />
     <Content Include="Examples\Beckers_et_al_2023_Tabulated_Database_Uloop_water_elec.txt" />
     <Content Include="Examples\Beckers_et_al_2023_Tabulated_Database_Uloop_water_heat.txt" />
+    <Content Include="Examples\Demo_TexasGeopressure.txt" />
     <Content Include="Examples\example1.txt" />
     <Content Include="Examples\example1_addons.txt" />
     <Content Include="Examples\example2.txt" />
@@ -273,7 +276,10 @@ D:\Work\GEOPHIRES3-master\Examples\S-DAC-GT.txt</Environment>
     <Content Include="Examples\example9.txt" />
     <Content Include="Examples\HIPexample1.txt" />
     <Content Include="Examples\HIPexample1_Units.txt" />
+    <Content Include="Examples\MC_GEOPHIRES_Settings_file.txt" />
+    <Content Include="Examples\MC_HIP_Settings_file.txt" />
     <Content Include="Examples\ReservoirOutput.txt" />
+    <Content Include="Examples\Wanju_Yuan_Closed-Loop_Geothermal_Energy_Recovery.txt" />
     <Content Include="GEOPHIRES3_newunits.txt" />
     <Content Include="LACETable.txt" />
     <Content Include="license.txt" />
