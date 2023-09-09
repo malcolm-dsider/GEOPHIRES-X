@@ -44,7 +44,7 @@ def CheckAndReplaceMean(input_value, args) -> list:
         i = i + 1
     return(input_value)
 
-def WorkPackage(Job_ID, Inputs, Outputs, args, Outputfile, working_dir):
+def WorkPackage(Job_ID, Inputs, Outputs, args, Outputfile, working_dir, PythonPath: str):
     tmpoutputfile = tmpfilename = ""
 #get random values for each of the INPUTS based on the distributions and boundary values
     rando = 0.0
@@ -77,7 +77,7 @@ def WorkPackage(Job_ID, Inputs, Outputs, args, Outputfile, working_dir):
     with open(tmpfilename, "a") as f: f.write(s)
 
 #start GeoPHIRES/HIP-RA with that input file. Capture the output into a filename that is the same as the input file but has the suffix "_result.txt".
-    sprocess = subprocess.Popen(["python", args.Code_File, tmpfilename, tmpoutputfile], stdout=subprocess.DEVNULL)
+    sprocess = subprocess.Popen([PythonPath, args.Code_File, tmpfilename, tmpoutputfile], stdout=subprocess.DEVNULL)
     sprocess.wait()
 
 #look thru "_result.txt" file for the OUTPUT variables that the user asked for.  For each of them, write them as a column in results file
@@ -169,6 +169,7 @@ def main():
     Outputs = []
     Iterations = 0
     Outputfile = ""
+    PythonPath = "python"
     for line in flist:
         clean=line.strip()
         pair = clean.split(",")
@@ -177,6 +178,7 @@ def main():
         if pair[0].startswith("OUTPUT"): Outputs.append(pair[1])
         if pair[0].startswith("ITERATIONS"): Iterations = int(pair[1])
         if pair[0].startswith("MC_OUTPUT_FILE"): Outputfile = pair[1]
+        if pair[0].startswith("PYTHON_PATH"): PythonPath = pair[1]
     
     #check to see if there is a "#" in an input, if so, use the results file to replace it with the value
     for input_value in Inputs: input_value = CheckAndReplaceMean(input_value, args)
@@ -195,7 +197,7 @@ def main():
     print ("Starting Iteration:", end='')
     for i in range(1, Iterations+1):
         print (str(i), end=',')
-        proc = multiprocessing.Process(target=WorkPackage, args=(Job_ID, Inputs, Outputs, args, Outputfile, working_dir))
+        proc = multiprocessing.Process(target=WorkPackage, args=(Job_ID, Inputs, Outputs, args, Outputfile, working_dir, PythonPath))
         procs.append(proc)
         proc.start()
 

@@ -21,7 +21,7 @@ Production Well Diameter,8,					---[inch]
 Injection Well Diameter,8,					---[inch]
 Ramey Production Wellbore Model,1,				---Should be 0 (disable) or 1(enable)
 Injection Wellbore Temperature Gain,0,				---[deg.C]
-Production Flow Rate per Well,30,				---[kg/s]
+Production Flow Rate per Well,50,				---[kg/s]
 Fracture Shape,2,						---Should be 1 2 3 or 4. See manual for option details
 Fracture Height,300,						---[m]
 Reservoir Volume Option,2,					---Should be 1 2 3 or 4. See manual for option details
