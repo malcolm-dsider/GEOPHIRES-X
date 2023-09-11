@@ -74,14 +74,15 @@ def WorkPackage(Job_ID, Inputs, Outputs, args, Outputfile, working_dir, PythonPa
     shutil.copyfile(args.Input_file,tmpfilename)
 
 #append those values to the new input file in the format "variable name, new_randow_value". This will cause GeoPHIRES/HIP-RA to replace the value in the file with this random value in the calculation
-    with open(tmpfilename, "a") as f: f.write(s)
+    with open(tmpfilename, "a") as f:
+        f.write(s)
 
 #start GeoPHIRES/HIP-RA with that input file. Capture the output into a filename that is the same as the input file but has the suffix "_result.txt".
     sprocess = subprocess.Popen([PythonPath, args.Code_File, tmpfilename, tmpoutputfile], stdout=subprocess.DEVNULL)
     sprocess.wait()
 
 #look thru "_result.txt" file for the OUTPUT variables that the user asked for.  For each of them, write them as a column in results file
-    s=""
+    s1=""
     s2={}
     result_s = ""
     localOutputs=Outputs
@@ -92,21 +93,24 @@ def WorkPackage(Job_ID, Inputs, Outputs, args, Outputfile, working_dir, PythonPa
         exit(-33)
 
     with open(tmpoutputfile, "r") as f:
-        s=f.readline()
+        s1=f.readline()
         i=0
-        while s:
+        while s1:
             for out in localOutputs:
-                if out in s:
+                if out in s1:
                     localOutputs.remove(out)
-                    s2=s.split(":")
+                    s2=s1.split(":")
                     s2 =s2[1].strip()
                     s2=s2.split(" ")
                     s2=s2[0]
                     result_s = result_s + s2 + ", "
                     i = i + 1
-                    if i < (len(Outputs) - 1): f.seek(0)     #go back to the beginning of the file in case the outputs that the user specified aer not in the order that they appear in the file.
+                    if i < (len(Outputs) - 1):
+                        f.seek(0)     #go back to the beginning of the file in case the outputs that the user specified aer not in the order that they appear in the file.
                     break
-            s=f.readline()
+            s1=f.readline()
+        #append the input values to the output values so the optimal input values are easy to find, the form "inputVar:Rando;nextInputVar:Rando..."
+        result_s = result_s + "(" + s.replace("\r\n", ";", -1).replace(", ", ":", -1) + ")"
 
 #delete  temporary files
     os.remove(tmpfilename)
@@ -148,6 +152,8 @@ def main():
     #                ITERATIONS, 1000
     #         d) the name of the output file (it will contain one column for each of the output variables to track), in the form:
     #                MC_OUTPUT_FILE, "D:\Work\GEOPHIRES3-master\MC_Result.txt"
+    #         d) the path to the python executable, it it is not already linked to "python", in the form:
+    #                PYTHON_PATH, /user/local/bin/python3
 
     #get the values off the command line
     parser = argparse.ArgumentParser()
@@ -186,11 +192,13 @@ def main():
     #create the file output_file. Put headers in it for each of the OUTPUT variables
     #start by creating the string we will write as header
     s = ""
-    for output in Outputs: s = s + output + ", "
+    for output in Outputs:
+        s = s + output + ", "
     s = "".join(s.rsplit(" ", 1)) #get rid of last space
     s = "".join(s.rsplit(",", 1)) #get rid of last comma
-    s = s  + "\n"
-    with open(Outputfile, "w") as f: f.write(s)
+    s = s  + ", Inputs" + "\n"
+    with open(Outputfile, "w") as f:
+        f.write(s)
 
     #loop thru the specified number of iterations
     procs = []
@@ -218,7 +226,8 @@ def main():
         result_count = result_count + 1
         if (not "-9999.0" in line) and len(s) > 1:
             line=line.strip()
-            if len(line) > 0:
+            line, sep, tail = line.partition(', (')    # strip off the Input Variable Values
+            if len(line) > 5:
                 Results.append([float(y) for y in line.split(",")])
             else:
                 print ("space found in line " + str(result_count))
