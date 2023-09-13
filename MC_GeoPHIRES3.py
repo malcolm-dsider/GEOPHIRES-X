@@ -52,19 +52,19 @@ def WorkPackage(Job_ID, Inputs, Outputs, args, Outputfile, working_dir, PythonPa
     for input_value in Inputs:
         if input_value[1].strip().startswith('normal'):
             rando = np.random.normal(float(input_value[2]), float(input_value[3]))
-            s = s + input_value[0] + ", " + str(rando) + "\r\n"
+            s = s + input_value[0] + ", " + str(rando) + os.linesep
         elif input_value[1].strip().startswith('uniform'):
             rando = np.random.uniform(float(input_value[2]), float(input_value[3]))
-            s = s + input_value[0] + ", " + str(rando) + "\r\n"
+            s = s + input_value[0] + ", " + str(rando) + os.linesep
         elif input_value[1].strip().startswith('triangular'):
             rando = np.random.triangular(float(input_value[2]), float(input_value[3]), float(input_value[4]))
-            s = s + input_value[0] + ", " + str(rando) + "\r\n"
+            s = s + input_value[0] + ", " + str(rando) + os.linesep
         if input_value[1].strip().startswith('lognormal'):
             rando = np.random.lognormal(float(input_value[2]), float(input_value[3]))
-            s = s + input_value[0] + ", " + str(rando) + "\r\n"
+            s = s + input_value[0] + ", " + str(rando) + os.linesep
         if input_value[1].strip().startswith('binomial'):
             rando = np.random.binomial(float(input_value[2]), float(input_value[3]))
-            s = s + input_value[0] + ", " + str(rando) + "\r\n"
+            s = s + input_value[0] + ", " + str(rando) + os.linesep
 
 #make up a temporary file name that will be shared among files for this iteration
     tmpfilename = working_dir + str(uuid.uuid4()) + ".txt"
@@ -110,7 +110,7 @@ def WorkPackage(Job_ID, Inputs, Outputs, args, Outputfile, working_dir, PythonPa
                     break
             s1=f.readline()
         #append the input values to the output values so the optimal input values are easy to find, the form "inputVar:Rando;nextInputVar:Rando..."
-        result_s = result_s + "(" + s.replace("\r\n", ";", -1).replace(", ", ":", -1) + ")"
+        result_s = result_s + "(" + s.replace(os.linesep, ";", -1).replace(", ", ":", -1) + ")"
 
 #delete  temporary files
     os.remove(tmpfilename)
@@ -119,7 +119,7 @@ def WorkPackage(Job_ID, Inputs, Outputs, args, Outputfile, working_dir, PythonPa
 #write out the results
     result_s = result_s.strip(" ") #get rid of last space
     result_s = result_s.strip(",") #get rid of last comma
-    result_s = result_s  + "\n"
+    result_s = result_s  + os.linesep
     with open(Outputfile, "a") as f: f.write (result_s)
 
 def main():
@@ -133,7 +133,7 @@ def main():
     #set the starting directory to be the directory that this file is in
     working_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(working_dir)
-    working_dir = working_dir +"\\"
+    working_dir = working_dir + os.sep
 
     #from the command line, read what we need to know:
     #    0) Code_File: Python code to run
@@ -196,7 +196,7 @@ def main():
         s = s + output + ", "
     s = "".join(s.rsplit(" ", 1)) #get rid of last space
     s = "".join(s.rsplit(",", 1)) #get rid of last comma
-    s = s  + ", Inputs" + "\n"
+    s = s  + ", Inputs" + os.linesep
     with open(Outputfile, "w") as f:
         f.write(s)
 
@@ -212,7 +212,7 @@ def main():
     # complete the processes
     for proc in procs: proc.join()
     
-    print ("\nDone with calculations! Summarizing...\n")
+    print (os.linesep + "Done with calculations! Summarizing..." + os.linesep)
 
 #read the resuts into an array
     actual_records_count = Iterations
@@ -227,7 +227,7 @@ def main():
         if (not "-9999.0" in line) and len(s) > 1:
             line=line.strip()
             line, sep, tail = line.partition(', (')    # strip off the Input Variable Values
-            if len(line) > 5:
+            if len(line) > 3:
                 Results.append([float(y) for y in line.split(",")])
             else:
                 print ("space found in line " + str(result_count))
@@ -248,21 +248,21 @@ def main():
 #write them out
     with open(Outputfile, "a") as f:
         i=0
-        if Iterations != actual_records_count: f.write("\n\n" + str(actual_records_count) + " iterations finished successfully and were used to calculate the statistics\n\n")
+        if Iterations != actual_records_count: f.write(os.linesep + os.linesep + str(actual_records_count) + " iterations finished successfully and were used to calculate the statistics" + os.linesep + os.linesep)
         for output in Outputs:
-            f.write (output + ":" + "\n")
-            f.write (f"     minimum: {mins[i]:,.2f}\n")
-            f.write (f"     maximum: {maxs[i]:,.2f}\n")
-            f.write (f"     median: {medians[i]:,.2f}\n")
-            f.write (f"     average: {averages[i]:,.2f}\n")
-            f.write (f"     mean: {means[i]:,.2f}\n")
-            f.write (f"     standard deviation: {std[i]:,.2f}\n")
-            f.write (f"     variance: {var[i]:,.2f}\n")
+            f.write (output + ":" + os.linesep)
+            f.write (f"     minimum: {mins[i]:,.2f}" + os.linesep)
+            f.write (f"     maximum: {maxs[i]:,.2f}" + os.linesep)
+            f.write (f"     median: {medians[i]:,.2f}" + os.linesep)
+            f.write (f"     average: {averages[i]:,.2f}" + os.linesep)
+            f.write (f"     mean: {means[i]:,.2f}" + os.linesep)
+            f.write (f"     standard deviation: {std[i]:,.2f}" + os.linesep)
+            f.write (f"     variance: {var[i]:,.2f}" + os.linesep)
             i = i + 1
             
-    print (" Calculation Time: "+"{0:10.3f}".format((time.time()-tic)) +" sec\n")
-    print (" Calculation Time per iteration: "+"{0:10.3f}".format(((time.time()-tic))/actual_records_count) +" sec\n")
-    if Iterations != actual_records_count: print("\n\nNOTE:" + str(actual_records_count) + " iterations finished successfully and were used to calculate the statistics.\n\n")
+    print (" Calculation Time: "+"{0:10.3f}".format((time.time()-tic)) +" sec" + os.linesep)
+    print (" Calculation Time per iteration: "+"{0:10.3f}".format(((time.time()-tic))/actual_records_count) +" sec" + os.linesep)
+    if Iterations != actual_records_count: print(os.linesep + os.linesep + "NOTE:" + str(actual_records_count) + " iterations finished successfully and were used to calculate the statistics." + os.linesep + os.linesep)
 
     logger.info("Complete "+ str(__name__) + ": " + sys._getframe().f_code.co_name)
 

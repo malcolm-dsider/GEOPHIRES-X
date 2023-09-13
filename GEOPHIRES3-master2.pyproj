@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{a83eb736-df6d-47f6-b75d-1fb69c228472}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>MC_GeoPHIRES3.py</StartupFile>
+    <StartupFile>HIP-RA.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -14,7 +14,7 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>Global|PythonCore|3.9</InterpreterId>
     <TestFramework>Pytest</TestFramework>
-    <CommandLineArguments>HIP-RA.py D:\Work\GEOPHIRES3-master\Examples\HIPexample1.txt examples\MC_HIP_Settings_file.txt</CommandLineArguments>
+    <CommandLineArguments>D:\Work\GEOPHIRES3-master\Examples\HIPMenengai.txt</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
     <Environment>MC_GEOPHIRES:GEOPHIRESv3.py D:\Work\GEOPHIRES3-master\Examples\example1.txt D:\Work\GEOPHIRES3-master\Examples\MC_GEOPHIRES_Settings_file.txt
@@ -28,7 +28,9 @@ D:\Work\GEOPHIRES3-master\Examples\CATF_SHR_Thunderbird.txt
 D:\Work\GEOPHIRES3-master\Examples\CATF_SHR_Thunderbird-mutlilateral.txt
 D:\Work\GEOPHIRES3-master\Examples\S-DAC-GT.txt
 MC_GEOPHORES_SALT: AdvGEOPHIRESv3.py D:\Work\GEOPHIRES3-master\Examples\Salt_Closed_loop_multilateral.txt D:\Work\GEOPHIRES3-master\Examples\MC_GEOPHIRES_Settings_files_salt.txt
-D:\Work\GEOPHIRES3-master\problem.txt</Environment>
+D:\Work\GEOPHIRES3-master\problem.txt
+HIP-RA.py D:\Work\GEOPHIRES3-master\Examples\HIPMenengai.txt Examples\MC_HIP_Menengai_Settings_file.txt
+D:\Work\GEOPHIRES3-master\Examples\HIPMenengai.txt</Environment>
     <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />

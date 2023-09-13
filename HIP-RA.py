@@ -22,7 +22,7 @@ from GeoPHIRESUtils import read_input_file
 from Parameter import intParameter, floatParameter, OutputParameter, ReadParameter, ConvertUnitsBack, ConvertOutputUnits, LookupUnits
 from Units import *
 
-NL="\n"
+NL= os.linesep
 
 class HIP_RA():
     #set up logging.
@@ -150,7 +150,7 @@ class HIP_RA():
         self.Rg = self.OutputParameterDict[self.Rg.Name] = OutputParameter(Name = "Recovery Factor", value=-999.9, UnitType = Units.PERCENT, PreferredUnits = PercentUnit.PERCENT, CurrentUnits = PercentUnit.PERCENT)
         self.WA = self.OutputParameterDict[self.WA.Name] = OutputParameter(Name = "Available Heat", value=-999.9, UnitType = Units.HEAT, PreferredUnits = HeatUnit.KJ, CurrentUnits = HeatUnit.KJ)
         self.WE = self.OutputParameterDict[self.WE.Name] = OutputParameter(Name = "Produceable Heat", value=-999.9, UnitType = Units.HEAT, PreferredUnits = HeatUnit.KJ, CurrentUnits = HeatUnit.KJ)
-        self.We = self.OutputParameterDict[self.We.Name] = OutputParameter(Name = "Produceable Electricity", value=-999.9, UnitType = Units.ENERGYCOST, PreferredUnits = EnergyUnit.MWH, CurrentUnits = EnergyUnit.MWH)
+        self.We = self.OutputParameterDict[self.We.Name] = OutputParameter(Name = "Produceable Electricity", value=-999.9, UnitType = Units.POWER, PreferredUnits = PowerUnit.MW, CurrentUnits = PowerUnit.MW)
 
         self.logger.info("Complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
         
@@ -250,7 +250,7 @@ class HIP_RA():
         self.Rg.value = self.qWH.value / self.qR.value
         self.WA.value = self.mWH.value * self.e.value * self.Rg.value * self.recoverableheat(self.ReservoirTemperature.value)
         self.WE.value = self.WA.value * self.UtilEff_func(self.ReservoirTemperature.value)
-        self.We.value =(((self.WE.value*0.27777778)/(8760*self.ReservoirLifeCycle.value))/1_000_000)
+        self.We.value = (self.WE.value/3_600_000) / 8_760     #convert Kilojoules of heat to MWe 
  
         self.logger.info("complete "+ str(__class__) + ": " + sys._getframe().f_code.co_name)
 
@@ -285,11 +285,11 @@ class HIP_RA():
             outputfile = "HIP.out"
             if len(sys.argv) > 2: outputfile = sys.argv[2]
             with open(outputfile,'w', encoding='UTF-8') as f:    
-                f.write('                               *********************\n')
-                f.write('                               ***HIP CASE REPORT***\n')
-                f.write('                               *********************\n')
+                f.write('                               *********************' + NL)
+                f.write('                               ***HIP CASE REPORT***' + NL)
+                f.write('                               *********************' + NL)
                 f.write(NL)
-                f.write('                           ***SUMMARY OF RESULTS***\n')
+                f.write('                           ***SUMMARY OF RESULTS***')
                 f.write(NL)
 #               f.write(f"      Reservoir Temperature:   {self.TRC.value:10.2f} " + self.TRC.CurrentUnits.value + NL)
                 f.write(f"      Reservoir Temperature:   {self.ReservoirTemperature.value:10.2f} " + self.ReservoirTemperature.CurrentUnits.value + NL)
